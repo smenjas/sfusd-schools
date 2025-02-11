@@ -1,0 +1,43 @@
+body {
+    font-family: sans-serif;
+    background: #eee;
+    color: black;
+}
+
+a {
+    color: #005;
+}
+
+a:visited {
+    color: #505;
+}
+
+main {
+    background: white;
+    max-width: 51rem;
+    margin: auto;
+    padding: 1rem;
+}
+
+h1 {
+    margin: 0;
+}
+
+@media only screen and (prefers-color-scheme: dark) {
+    body {
+        background: #111;
+        color: white;
+    }
+
+    a {
+        color: #aaf;
+    }
+
+    a:visited {
+        color: #faf;
+    }
+
+    main {
+        background: black;
+    }
+}
