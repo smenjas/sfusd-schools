@@ -23,6 +23,23 @@ h1 {
     margin: 0;
 }
 
+#not-found main {
+    max-width: 26rem;
+}
+
+#not-found h1 {
+    text-align: center;
+}
+
+#not-found img {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    margin-top: -350px;
+    margin-left: -700px;
+    z-index: -1;
+}
+
 @media only screen and (prefers-color-scheme: dark) {
     body {
         background: #111;
