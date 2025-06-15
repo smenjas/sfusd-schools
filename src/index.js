@@ -16,6 +16,12 @@ const server = http.createServer((request, response) => {
         content = fs.readFileSync('public/index.html', 'utf8');
         console.log('HTTP', response.statusCode, request.url);
         break;
+    case '/index.js':
+    case '/school-data.js':
+        response.statusCode = 200;
+        response.setHeader('Content-Type', 'text/javascript');
+        content = fs.readFileSync('public' + path, 'utf8');
+        break;
     case '/main.css':
         response.statusCode = 200;
         response.setHeader('Content-Type', 'text/css');

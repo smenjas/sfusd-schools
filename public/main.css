@@ -23,6 +23,46 @@ h1 {
     margin: 0;
 }
 
+table, thead th, th, td {
+    border: 1px solid #7f7f7f;
+}
+
+table {
+    border-collapse: collapse;
+    margin: 1rem auto;
+}
+
+th {
+    padding: 0.5rem;
+    text-align: left;
+    vertical-align: top;
+}
+
+thead th {
+    background-color: white;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+td {
+    padding: 0.5rem;
+    vertical-align: top;
+}
+
+td ul {
+    margin: 0;
+    padding-left: 1rem;
+}
+
+td.num {
+    text-align: right;
+}
+
+tr:hover {
+    background-color: #ececec;
+}
+
 #not-found main {
     max-width: 26rem;
 }
@@ -42,7 +82,7 @@ h1 {
 
 @media only screen and (prefers-color-scheme: dark) {
     body {
-        background: #111;
+        background-color: #111;
         color: white;
     }
 
@@ -54,7 +94,11 @@ h1 {
         color: #faf;
     }
 
-    main {
-        background: black;
+    main, div, p, table, thead th {
+        background-color: black;
+    }
+
+    tr:hover {
+        background-color: #131313;
     }
 }
