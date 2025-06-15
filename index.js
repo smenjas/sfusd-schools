@@ -126,7 +126,7 @@ function renderSchoolRow(school) {
     //html += `<td class="num">${school.max}</td>`;
     html += `<td class="num">${school.students ?? ''}</td>`;
     html += `<td class="num">${school.teachers ?? ''}</td>`;
-    html += `<td class="num}">${renderRatio(school.ratio)}</td>`;
+    html += `<td class="num">${renderRatio(school.ratio)}</td>`;
     html += `<td class="num">${renderPercent(school.math)}</td>`;
     html += `<td class="num">${renderPercent(school.reading)}</td>`;
     html += `<td class="num">${renderPercent(school.science)}</td>`;
