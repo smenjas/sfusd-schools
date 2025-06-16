@@ -4257,7 +4257,7 @@ export default {
         charter: false,
         start: '8:00',
         neighborhood: 'Lakeshore',
-        address: '1101 Eucalytpus Dr',
+        address: '1101 Eucalyptus Dr',
         zip: '94132',
         usnews: 1,
         greatschools: 10,
