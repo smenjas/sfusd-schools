@@ -346,8 +346,8 @@ function addEventListeners(schoolData, filters) {
     const menus = document.querySelectorAll('select');
     for (const menu of menus) {
         menu.addEventListener('change', event => {
-            const name = event.srcElement.name;
-            const value = event.srcElement.value;
+            const name = event.target.name;
+            const value = event.target.value;
             filters[name] = value;
             localStorage.setItem('filters', JSON.stringify(filters));
             renderPage(schoolData, filters);
