@@ -287,11 +287,18 @@ function filterType(school, type) {
 }
 
 function filterGrade(school, grade) {
-    return grade === ''
-        || grade === 'pk' && school.pk
-        || grade === 'tk' && school.tk
-        || grade === 'k' && school.k
-        || grade >= school.min && grade <= school.max;
+    if (grade === '') return true;
+    if (grade === 'pk') return school.pk;
+    if (grade === 'tk') return school.tk;
+    if (grade === 'k') return school.k;
+    const gradeNum = parseInt(grade);
+    if (isNaN(gradeNum)) {
+        return true;
+    }
+    if (school.min === null || school.max === null) {
+        return false;
+    }
+    return gradeNum >= school.min && gradeNum <= school.max;
 }
 
 function filterNeighborhood(school, neighborhood) {
