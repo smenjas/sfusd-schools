@@ -283,11 +283,12 @@ function renderSchoolTable(schools) {
 
 function filterType(school, type) {
     return type === ''
+        || type === undefined
         || school.types.includes(type);
 }
 
 function filterGrade(school, grade) {
-    if (grade === '') return true;
+    if (grade === '' || grade === undefined) return true;
     if (grade === 'pk') return school.pk;
     if (grade === 'tk') return school.tk;
     if (grade === 'k') return school.k;
@@ -303,11 +304,12 @@ function filterGrade(school, grade) {
 
 function filterNeighborhood(school, neighborhood) {
     return neighborhood === ''
+        || neighborhood === undefined
         || neighborhood === school.neighborhood;
 }
 
 function filterLanguage(school, language) {
-    if (language === '') {
+    if (language === '' || language === undefined) {
         return true;
     }
     if (school.languages.includes(language)) {
