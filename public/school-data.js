@@ -3826,7 +3826,7 @@ export default {
         start: '8:40',
         neighborhood: 'Portola',
         address: '400 Mansell St',
-        zip: '84134',
+        zip: '94134',
         usnews: 8,
         greatschools: 6,
         pk: false,
