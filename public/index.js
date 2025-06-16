@@ -283,7 +283,7 @@ function renderSchoolTable(schools) {
 
 function filterType(school, type) {
     return type === ''
-        || school.types.includes(filters.type);
+        || school.types.includes(type);
 }
 
 function filterGrade(school, grade) {
