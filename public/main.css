@@ -12,7 +12,7 @@ a:visited {
     color: #505;
 }
 
-main {
+main, form {
     background: white;
     max-width: 51rem;
     margin: auto;
@@ -23,6 +23,10 @@ h1 {
     margin: 0;
 }
 
+fieldset {
+    border: none;
+}
+
 table, thead th, th, td {
     border: 1px solid #7f7f7f;
 }
@@ -30,6 +34,10 @@ table, thead th, th, td {
 table {
     border-collapse: collapse;
     margin: 1rem auto;
+}
+
+table caption {
+    white-space: nowrap;
 }
 
 th {
@@ -94,7 +102,7 @@ tr:hover {
         color: #faf;
     }
 
-    main, div, p, table, thead th {
+    main, div, form, p, table, thead th {
         background-color: black;
     }
 
