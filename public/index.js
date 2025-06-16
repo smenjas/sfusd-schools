@@ -368,5 +368,6 @@ function renderPage(schoolData, filters) {
     addEventListeners(schoolData, filters);
 }
 
-const filters = JSON.parse(localStorage.getItem('filters')) || {};
+const filtersJSON = localStorage.getItem('filters');
+const filters = filtersJSON ? JSON.parse(filtersJSON) : {};
 renderPage(schoolData, filters);
