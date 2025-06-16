@@ -343,6 +343,11 @@ function renderSchools(schoolData, filters) {
 }
 
 function addEventListeners(schoolData, filters) {
+    const oldMenus = document.querySelectorAll('select');
+    for (const menu of oldMenus) {
+        // Remove existing event listeners.
+        menu.replaceWith(menu.cloneNode(true));
+    }
     const menus = document.querySelectorAll('select');
     for (const menu of menus) {
         menu.addEventListener('change', event => {
