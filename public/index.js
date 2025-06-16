@@ -25,7 +25,7 @@ function renderList(array) {
         return '';
     }
     let html = '<ul>';
-    for (let element of array) {
+    for (const element of array) {
         html += `<li>${element}</li>`;
     }
     html += '</ul>';
@@ -52,6 +52,127 @@ function renderGender(male, female) {
 function renderRatio(antecedent, consequent = 1) {
     return (antecedent === null || consequent === null) ? ''
         : `${antecedent}:${consequent}`;
+}
+
+function renderOptions(map, selected) {
+    let html = '';
+    for (const [key, value] of map.entries()) {
+        const s = (key.toString() === selected) ? ' selected' : '';
+        html += `<option value="${key}"${s}>${value}</option>`;
+    }
+    return html;
+}
+
+function renderGradeMenu(grade) {
+    const gradeOptions = new Map([
+        ['', 'Any'],
+        ['pk', 'Pre-K'],
+        ['tk', 'TK'],
+        ['k', 'K'],
+        [1, 1],
+        [2, 2],
+        [3, 3],
+        [4, 4],
+        [5, 5],
+        [6, 6],
+        [7, 7],
+        [8, 8],
+        [9, 9],
+        [10, 10],
+        [11, 11],
+        [12, 12],
+    ]);
+    let html = '<label for="grade">Grade: </label>';
+    html += '<select name="grade" id="grade">';
+    html += renderOptions(gradeOptions, grade);
+    html += '</select>';
+    return html;
+}
+
+function getLanguages() {
+    const languages = [];
+    for (const key in schoolData) {
+        const school = schoolData[key];
+        const langs = school.languages;
+        for (const lang of langs) {
+            const language = lang.split(' ', 1)[0];
+            if (!languages.includes(language)) {
+                languages.push(language);
+            }
+        }
+    }
+    return languages.sort();
+}
+
+function renderLanguageMenu(language) {
+    const languages = getLanguages();
+    let html = '<label for="language">Language: </label>';
+    html += '<select name="language" id="language">';
+    html += '<option value="">Any</option>';
+    for (const lang of languages) {
+        const selected = (lang === language) ? ' selected' : '';
+        html += `<option value="${lang}"${selected}>${lang}</option>`;
+    }
+    html += '</select>';
+    return html;
+}
+
+function getNeighborhoods() {
+    const neighborhoods = [];
+    for (const key in schoolData) {
+        const school = schoolData[key];
+        const hood = school.neighborhood;
+        if (!neighborhoods.includes(hood)) {
+            neighborhoods.push(hood);
+        }
+    }
+    return neighborhoods.sort();
+}
+
+function renderNeighborhoodMenu(neighborhood) {
+    const neighborhoods = getNeighborhoods();
+    let html = '<label for="neighborhood">Neighborhood: </label>';
+    html += '<select name="neighborhood" id="neighborhood">';
+    html += '<option value="">Any</option>';
+    for (const hood of neighborhoods) {
+        const selected = (hood === neighborhood) ? ' selected' : '';
+        html += `<option value="${hood}"${selected}>${hood}</option>`;
+    }
+    html += '</select>';
+    return html;
+}
+
+function renderTypeMenu(type) {
+    const types = [
+        'Early Education',
+        'Elementary',
+        'Middle',
+        'High',
+    ];
+    let html = '<label for="type">Type: </label>';
+    html += '<select name="type" id="type">';
+    html += '<option value="">Any</option>';
+    for (const t of types) {
+        const selected = (t === type) ? ' selected' : '';
+        html += `<option value="${t}"${selected}>${t} School</option>`;
+    }
+    html += '</select>';
+    return html;
+}
+
+function renderSchoolForm(schoolData, filters) {
+    let html = '<form id="schoolForm">';
+    html += '<fieldset>';
+    html += renderTypeMenu(filters.type);
+    html += ' ';
+    html += renderGradeMenu(filters.grade);
+    html += ' ';
+    html += renderNeighborhoodMenu(filters.neighborhood);
+    html += ' ';
+    html += renderLanguageMenu(filters.language);
+    html += '</fieldset>';
+    html += '</form>';
+    return html;
 }
 
 function renderSchoolsHeader() {
@@ -142,23 +263,98 @@ function renderSchoolRow(school) {
 }
 
 // Render school data as an HTML table.
-function renderSchoolTable(schoolData) {
-    let html = `<table id="schools">`;
+function renderSchoolTable(schools) {
+    const numSchools = Object.keys(schools).length;
+    let html = '<table>';
+    html += `<caption>${numSchools} Schools</caption>`;
+    if (numSchools < 1) {
+        html += '</table>';
+        return html;
+    }
     html += renderSchoolsHeader();
     html += '<tbody>';
-    for (const key in schoolData) {
-        html += renderSchoolRow(schoolData[key]);
+    for (const key in schools) {
+        html += renderSchoolRow(schools[key]);
     }
     html += '</tbody>';
     html += '</table>';
     return html;
 }
 
-// Render a web page.
-function renderPage() {
-    document.title = 'SFUSD Schools';
-    return renderSchoolTable(schoolData);
+function filterType(school, type) {
+    return type === ''
+        || school.types.includes(filters.type);
 }
 
-const html = renderPage();
-document.body.insertAdjacentHTML('beforeend', html);
+function filterGrade(school, grade) {
+    return grade === ''
+        || grade === 'pk' && school.pk
+        || grade === 'tk' && school.tk
+        || grade === 'k' && school.k
+        || grade >= school.min && grade <= school.max;
+}
+
+function filterNeighborhood(school, neighborhood) {
+    return neighborhood === ''
+        || neighborhood === school.neighborhood;
+}
+
+function filterLanguage(school, language) {
+    if (language === '') {
+        return true;
+    }
+    if (school.languages.includes(language)) {
+        return true;
+    }
+    for (const lang of school.languages) {
+        if (lang.includes(language)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function filterSchools(schoolData, filters) {
+    const schools = {};
+    for (const key in schoolData) {
+        const school = schoolData[key];
+        if (filterType(school, filters.type) &&
+            filterGrade(school, filters.grade) &&
+            filterNeighborhood(school, filters.neighborhood) &&
+            filterLanguage(school, filters.language)) {
+            schools[key] = school;
+        }
+    }
+    return schools;
+}
+
+function renderSchools(schoolData, filters) {
+    const schools = filterSchools(schoolData, filters);
+    let html = renderSchoolForm(schoolData, filters);
+    html += renderSchoolTable(schools);
+    return html;
+}
+
+function addEventListeners(schoolData, filters) {
+    const menus = document.querySelectorAll('select');
+    for (const menu of menus) {
+        menu.addEventListener('change', event => {
+            const name = event.srcElement.name;
+            const value = event.srcElement.value;
+            filters[name] = value;
+            localStorage.setItem('filters', JSON.stringify(filters));
+            renderPage(schoolData, filters);
+        });
+    }
+}
+
+// Render a web page.
+function renderPage(schoolData, filters) {
+    document.title = 'SFUSD Schools';
+    const html = renderSchools(schoolData, filters);
+    document.getElementById('schools').innerHTML = html;
+    addEventListeners(schoolData, filters);
+}
+
+const filters = JSON.parse(localStorage.getItem('filters')) || {};
+renderPage(schoolData, filters);
