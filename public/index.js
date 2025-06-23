@@ -214,6 +214,7 @@ function getMaxGrade(school) {
     return school.max ? school.max : school.k ? 'K' : school.tk ? 'TK' : school.pk ? 'PK' : '';
 }
 
+// Render a school's grade range (e.g. "TK-5").
 function renderGradeRange(min, max) {
     if (min !== null && max !== null && min !== max) {
         return `${min}-${max}`;
@@ -226,6 +227,7 @@ function renderGradeRange(min, max) {
     }
 }
 
+// Render one school's data as a table row.
 function renderSchoolRow(school) {
     const schoolLink = renderLink(school.urls.main, school.name, true);
     const greatschoolsLink = renderLink(school.urls.greatschools, school.greatschools, true);
@@ -309,17 +311,22 @@ function filterNeighborhood(school, neighborhood) {
 }
 
 function filterLanguage(school, language) {
+    // Has a language been chosen?
     if (language === '' || language === undefined) {
         return true;
     }
+    // Do this school's languages match the chosen language exactly?
     if (school.languages.includes(language)) {
         return true;
     }
+    // Do this school's languages contain the chosen language as a substring?
+    // For example, the filter "Spanish" should match "Spanish Immersion".
     for (const lang of school.languages) {
         if (lang.includes(language)) {
             return true;
         }
     }
+    // The chosen language does not match any of this school's languages.
     return false;
 }
 
