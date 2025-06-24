@@ -38,6 +38,30 @@ const server = http.createServer((request, response) => {
         response.setHeader('Content-Type', 'image/jpeg');
         content = fs.readFileSync('public' + path);
         break;
+    case '/img/sfusd-16.png':
+    case '/img/sfusd-32.png':
+    case '/img/sfusd-57.png':
+    case '/img/sfusd-60.png':
+    case '/img/sfusd-70.png':
+    case '/img/sfusd-72.png':
+    case '/img/sfusd-76.png':
+    case '/img/sfusd-96.png':
+    case '/img/sfusd-120.png':
+    case '/img/sfusd-128.png':
+    case '/img/sfusd-152.png':
+    case '/img/sfusd-167.png':
+    case '/img/sfusd-180.png':
+    case '/img/sfusd-192.png':
+    case '/img/sfusd-400.png':
+        response.statusCode = 200;
+        response.setHeader('Content-Type', 'image/png');
+        content = fs.readFileSync('public' + path);
+        break;
+    case '/img/favicon.ico':
+        response.statusCode = 200;
+        response.setHeader('Content-Type', 'image/x-icon');
+        content = fs.readFileSync('public' + path);
+        break;
     default:
         response.statusCode = 404;
         response.setHeader('Content-Type', 'text/html');
