@@ -77,7 +77,7 @@ export default {
     'Revere': {
         code: 760,
         name: 'Paul Revere',
-        types: ['Elementary', 'Middle'],
+        types: ['Elementary', 'K-8', 'Middle'],
         charter: false,
         start: '9:30',
         neighborhood: 'Bernal Heights',
@@ -509,7 +509,7 @@ export default {
     'Mission Prep': {
         code: null,
         name: 'Mission Preparatory',
-        types: ['Elementary', 'Middle'],
+        types: ['Elementary', 'K-8', 'Middle'],
         charter: true,
         start: '8:10',
         neighborhood: 'Mission',
@@ -617,7 +617,7 @@ export default {
     'SFC': {
         code: 493,
         name: 'SF Community Alternative',
-        types: ['Elementary', 'Middle'],
+        types: ['Elementary', 'K-8', 'Middle'],
         charter: false,
         start: '9:30',
         neighborhood: 'Excelsior',
@@ -797,7 +797,7 @@ export default {
     'Carmichael': {
         code: 449,
         name: 'Bessie Carmichael',
-        types: ['Elementary', 'Middle'],
+        types: ['Elementary', 'K-8', 'Middle'],
         charter: false,
         start: '9:30',
         neighborhood: 'Soma',
@@ -1157,7 +1157,7 @@ export default {
     'Mann': {
         code: 618,
         name: 'Buena Vista Horace Mann',
-        types: ['Elementary', 'Middle'],
+        types: ['Elementary', 'K-8', 'Middle'],
         charter: false,
         start: '9:30',
         neighborhood: 'Mission',
@@ -1301,7 +1301,7 @@ export default {
     'Edison': {
         code: null,
         name: 'Thomas Edison',
-        types: ['Elementary', 'Middle'],
+        types: ['Elementary', 'K-8', 'Middle'],
         charter: true,
         start: '8:15',
         neighborhood: 'Noe Valley',
@@ -1697,7 +1697,7 @@ export default {
     'Rooftop': {
         code: 796,
         name: 'Rooftop',
-        types: ['Elementary', 'Middle'],
+        types: ['Elementary', 'K-8', 'Middle'],
         charter: false,
         start: '9:30',
         neighborhood: 'Twin Peaks',
@@ -1913,7 +1913,7 @@ export default {
     'Creative Arts': {
         code: null,
         name: 'Creative Arts',
-        types: ['Elementary', 'Middle'],
+        types: ['Elementary', 'K-8', 'Middle'],
         charter: true,
         start: '8:40',
         neighborhood: 'Western Addition',
@@ -1949,7 +1949,7 @@ export default {
     'AF Yu': {
         code: 485,
         name: 'Alice Fong Yu Alternative',
-        types: ['Elementary', 'Middle'],
+        types: ['Elementary', 'K-8', 'Middle'],
         charter: false,
         start: '9:30',
         neighborhood: 'Inner Sunset',
@@ -2417,7 +2417,7 @@ export default {
     'New': {
         code: null,
         name: 'New School of SF',
-        types: ['Elementary', 'Middle'],
+        types: ['Elementary', 'K-8', 'Middle'],
         charter: true,
         start: '8:40',
         neighborhood: 'Russian Hill',
@@ -2777,7 +2777,7 @@ export default {
     'Lawton': {
         code: 676,
         name: 'Lawton Alternative',
-        types: ['Elementary', 'Middle'],
+        types: ['Elementary', 'K-8', 'Middle'],
         charter: false,
         start: '9:30',
         neighborhood: 'Outer Sunset',
@@ -2993,7 +2993,7 @@ export default {
     'Lilienthal': {
         code: 479,
         name: 'Claire Lilienthal',
-        types: ['Elementary', 'Middle'],
+        types: ['Elementary', 'K-8', 'Middle'],
         charter: false,
         start: '9:30',
         neighborhood: 'Marina',
@@ -3065,7 +3065,7 @@ export default {
     'Sutro': {
         code: 848,
         name: 'Sutro',
-        types: ['Elementary', 'Middle'],
+        types: ['Elementary', 'K-8', 'Middle'],
         charter: false,
         start: '9:30',
         neighborhood: 'Inner Richmond',
