@@ -155,6 +155,7 @@ function renderTypeMenu(type) {
     const types = [
         'Early Education',
         'Elementary',
+        'K-8',
         'Middle',
         'High',
     ];
