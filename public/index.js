@@ -128,11 +128,11 @@ function getSchoolGrades(schools) {
 
 function renderGradeMenu(schools, grade) {
     const gradeOptions = getSchoolGrades(schools);
-    let html = '<label for="grade">Grade: </label>';
+    let html = '<span class="nobr"><label for="grade">Grade: </label>';
     html += '<select name="grade" id="grade">';
     html += '<option value="">Any</option>';
     html += renderOptions(gradeOptions, grade);
-    html += '</select>';
+    html += '</select></span>';
     return html;
 }
 
@@ -153,11 +153,11 @@ function getLanguages(schools) {
 
 function renderLanguageMenu(schools, language) {
     const languages = getLanguages(schools);
-    let html = '<label for="language">Language: </label>';
+    let html = '<span class="nobr"><label for="language">Language: </label>';
     html += '<select name="language" id="language">';
     html += '<option value="">Any</option>';
     html += renderOptions(languages, language);
-    html += '</select>';
+    html += '</select></span>';
     return html;
 }
 
@@ -175,11 +175,11 @@ function getNeighborhoods(schools) {
 
 function renderNeighborhoodMenu(schools, neighborhood) {
     const neighborhoods = getNeighborhoods(schools);
-    let html = '<label for="neighborhood">Neighborhood: </label>';
+    let html = '<span class="nobr"><label for="neighborhood">Neighborhood: </label>';
     html += '<select name="neighborhood" id="neighborhood">';
     html += '<option value="">Any</option>';
     html += renderOptions(neighborhoods, neighborhood);
-    html += '</select>';
+    html += '</select></span>';
     return html;
 }
 
@@ -212,11 +212,29 @@ function getSchoolTypes(schools) {
 
 function renderTypeMenu(schools, type) {
     const types = getSchoolTypes(schools);
-    let html = '<label for="type">Type: </label>';
+    let html = '<span class="nobr"><label for="type">Type: </label>';
     html += '<select name="type" id="type">';
     html += '<option value="">Any</option>';
     html += renderOptions(types, type);
-    html += '</select>';
+    html += '</select></span>';
+    return html;
+}
+
+function getStartTimes() {
+    return new Map([
+        [7, 'Before 8:00 am'],
+        [8, '8:00-8:59 am'],
+        [9, 'After 9:00 am'],
+    ]);
+}
+
+function renderStartTimeMenu(start) {
+    const starts = getStartTimes();
+    let html = '<span class="nobr"><label for="start">Start Time: </label>';
+    html += '<select name="start" id="start">';
+    html += '<option value="">Any</option>';
+    html += renderOptions(starts, start);
+    html += '</select></span>';
     return html;
 }
 
@@ -230,6 +248,8 @@ function renderSchoolForm(schools, filters) {
     html += renderNeighborhoodMenu(schools, filters.neighborhood);
     html += ' ';
     html += renderLanguageMenu(schools, filters.language);
+    html += ' ';
+    html += renderStartTimeMenu(filters.start);
     html += ' ';
     html += '<input type="reset">';
     html += '</fieldset>';
@@ -372,6 +392,17 @@ function filterNeighborhood(school, neighborhood) {
         || neighborhood === school.neighborhood;
 }
 
+function filterStartTime(school, start) {
+    if (start === '' || start === undefined || start === null) {
+        return true;
+    }
+    const hour = school.start.split(':')[0];
+    if (hour >= start && hour < parseInt(start) + 1) {
+        return true;
+    }
+    return false;
+}
+
 function filterLanguage(school, language) {
     // Has a language been chosen?
     if (language === '' || language === undefined) {
@@ -399,6 +430,7 @@ function filterSchools(schoolData, filters) {
         if (filterType(school, filters.type) &&
             filterGrade(school, filters.grade) &&
             filterNeighborhood(school, filters.neighborhood) &&
+            filterStartTime(school, filters.start) &&
             filterLanguage(school, filters.language)) {
             schools[key] = school;
         }
