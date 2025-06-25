@@ -23,8 +23,18 @@ h1 {
     margin: 0;
 }
 
-fieldset {
+form, fieldset {
     border: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+label, input, select {
+    margin-bottom: 1.5rem;
+}
+
+input[type=reset] {
+    float: right;
 }
 
 table, thead th, th, td {
@@ -37,6 +47,8 @@ table {
 }
 
 table caption {
+    margin-bottom: 0.5rem;
+    text-align: left;
     white-space: nowrap;
 }
 
