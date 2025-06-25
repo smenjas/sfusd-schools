@@ -220,6 +220,28 @@ function renderTypeMenu(schools, type) {
     return html;
 }
 
+function getStartTimes() {
+    const starts = [];
+    for (const key in schoolData) {
+        const school = schoolData[key];
+        const start = school.start;
+        if (!starts.includes(start)) {
+            starts.push(start);
+        }
+    }
+    return starts.sort();
+}
+
+function renderStartTimeMenu(start) {
+    const starts = getStartTimes();
+    let html = '<span class="nobr"><label for="start">Start Time: </label>';
+    html += '<select name="start" id="start">';
+    html += '<option value="">Any</option>';
+    html += renderOptions(starts, start);
+    html += '</select></span>';
+    return html;
+}
+
 function renderSchoolForm(schools, filters) {
     let html = '<form id="schoolForm">';
     html += '<fieldset>';
@@ -230,6 +252,8 @@ function renderSchoolForm(schools, filters) {
     html += renderNeighborhoodMenu(schools, filters.neighborhood);
     html += ' ';
     html += renderLanguageMenu(schools, filters.language);
+    html += ' ';
+    html += renderStartTimeMenu(filters.start);
     html += ' ';
     html += '<input type="reset">';
     html += '</fieldset>';
@@ -372,6 +396,12 @@ function filterNeighborhood(school, neighborhood) {
         || neighborhood === school.neighborhood;
 }
 
+function filterStartTime(school, start) {
+    return start === ''
+        || start === undefined
+        || start === school.start;
+}
+
 function filterLanguage(school, language) {
     // Has a language been chosen?
     if (language === '' || language === undefined) {
@@ -399,6 +429,7 @@ function filterSchools(schoolData, filters) {
         if (filterType(school, filters.type) &&
             filterGrade(school, filters.grade) &&
             filterNeighborhood(school, filters.neighborhood) &&
+            filterStartTime(school, filters.start) &&
             filterLanguage(school, filters.language)) {
             schools[key] = school;
         }
