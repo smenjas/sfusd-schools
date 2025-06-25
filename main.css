@@ -88,6 +88,10 @@ tr:hover {
     z-index: -1;
 }
 
+.nobr {
+    white-space: nowrap;
+}
+
 @media only screen and (prefers-color-scheme: dark) {
     body {
         background-color: #111;
