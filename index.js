@@ -230,6 +230,8 @@ function renderSchoolForm(schools, filters) {
     html += renderNeighborhoodMenu(schools, filters.neighborhood);
     html += ' ';
     html += renderLanguageMenu(schools, filters.language);
+    html += ' ';
+    html += '<input type="reset">';
     html += '</fieldset>';
     html += '</form>';
     return html;
@@ -412,11 +414,14 @@ function renderSchools(schoolData, filters) {
 }
 
 function addEventListeners(schoolData, filters) {
+    // Remove existing event listeners.
     const oldMenus = document.querySelectorAll('select');
     for (const menu of oldMenus) {
-        // Remove existing event listeners.
         menu.replaceWith(menu.cloneNode(true));
     }
+    const oldReset = document.querySelector('input[type=reset]');
+    oldReset.replaceWith(oldReset.cloneNode(true));
+    // Add event listeners.
     const menus = document.querySelectorAll('select');
     for (const menu of menus) {
         menu.addEventListener('change', event => {
@@ -427,6 +432,13 @@ function addEventListeners(schoolData, filters) {
             renderPage(schoolData, filters);
         });
     }
+    const reset = document.querySelector('input[type=reset]');
+    reset.addEventListener('click', event => {
+        for (const menu of menus) {
+            menu.value = '';
+            menu.dispatchEvent(new Event('change'));
+        }
+    });
 }
 
 // Render a web page.
