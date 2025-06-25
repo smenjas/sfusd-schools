@@ -54,7 +54,22 @@ function renderRatio(antecedent, consequent = 1) {
         : `${antecedent}:${consequent}`;
 }
 
-function renderOptions(map, selected) {
+// Convert an array to a map.
+function arrayToMap(collection) {
+    if (!Array.isArray(collection)) {
+        return collection;
+    }
+    const map = new Map();
+    for (const value of collection) {
+        map.set(value, value);
+    }
+    return map;
+}
+
+// Render options for a select menu.
+// Accepts an array, object, map, or set, and the value selected.
+function renderOptions(options, selected) {
+    const map = arrayToMap(options);
     let html = '';
     for (const [key, value] of map.entries()) {
         const s = (key.toString() === selected) ? ' selected' : '';
@@ -63,36 +78,68 @@ function renderOptions(map, selected) {
     return html;
 }
 
-function renderGradeMenu(grade) {
-    const gradeOptions = new Map([
-        ['', 'Any'],
-        ['pk', 'Pre-K'],
-        ['tk', 'TK'],
-        ['k', 'K'],
-        [1, 1],
-        [2, 2],
-        [3, 3],
-        [4, 4],
-        [5, 5],
-        [6, 6],
-        [7, 7],
-        [8, 8],
-        [9, 9],
-        [10, 10],
-        [11, 11],
-        [12, 12],
+function getSchoolGrades(schools) {
+    const grades = new Map([
+        ['pk', false],
+        ['tk', false],
+        ['k', false],
+        [1, false],
+        [2, false],
+        [3, false],
+        [4, false],
+        [5, false],
+        [6, false],
+        [7, false],
+        [8, false],
+        [9, false],
+        [10, false],
+        [11, false],
+        [12, false],
     ]);
+    let pk = false;
+    let tk = false;
+    let k = false;
+    let min = Infinity;
+    let max = -Infinity;
+    for (const key in schools) {
+        const school = schools[key];
+        if (school.pk) grades.set('pk', true);
+        if (school.tk) grades.set('tk', true);
+        if (school.k) grades.set('k', true);
+        if (school.min !== null && school.max !== null) {
+            for (let n = school.min; n <= school.max; n++) {
+                if (!grades.has(n)) {
+                    console.warn(school.name, 'has invalid school grade:', n);
+                    continue;
+                }
+                grades.set(n, true);
+            }
+        }
+    }
+    const options = [];
+    if (grades.get('pk')) options.push(['pk', 'Pre-K']);
+    if (grades.get('tk')) options.push(['tk', 'TK']);
+    if (grades.get('k')) options.push(['k', 'K']);
+    for (let n = 1; n <= 12; n++) {
+        if (grades.get(n)) options.push([n, n]);
+    }
+    return new Map(options);
+}
+
+function renderGradeMenu(schools, grade) {
+    const gradeOptions = getSchoolGrades(schools);
     let html = '<label for="grade">Grade: </label>';
     html += '<select name="grade" id="grade">';
+    html += '<option value="">Any</option>';
     html += renderOptions(gradeOptions, grade);
     html += '</select>';
     return html;
 }
 
-function getLanguages() {
+function getLanguages(schools) {
     const languages = [];
-    for (const key in schoolData) {
-        const school = schoolData[key];
+    for (const key in schools) {
+        const school = schools[key];
         const langs = school.languages;
         for (const lang of langs) {
             const language = lang.split(' ', 1)[0];
@@ -104,23 +151,20 @@ function getLanguages() {
     return languages.sort();
 }
 
-function renderLanguageMenu(language) {
-    const languages = getLanguages();
+function renderLanguageMenu(schools, language) {
+    const languages = getLanguages(schools);
     let html = '<label for="language">Language: </label>';
     html += '<select name="language" id="language">';
     html += '<option value="">Any</option>';
-    for (const lang of languages) {
-        const selected = (lang === language) ? ' selected' : '';
-        html += `<option value="${lang}"${selected}>${lang}</option>`;
-    }
+    html += renderOptions(languages, language);
     html += '</select>';
     return html;
 }
 
-function getNeighborhoods() {
+function getNeighborhoods(schools) {
     const neighborhoods = [];
-    for (const key in schoolData) {
-        const school = schoolData[key];
+    for (const key in schools) {
+        const school = schools[key];
         const hood = school.neighborhood;
         if (!neighborhoods.includes(hood)) {
             neighborhoods.push(hood);
@@ -129,47 +173,65 @@ function getNeighborhoods() {
     return neighborhoods.sort();
 }
 
-function renderNeighborhoodMenu(neighborhood) {
-    const neighborhoods = getNeighborhoods();
+function renderNeighborhoodMenu(schools, neighborhood) {
+    const neighborhoods = getNeighborhoods(schools);
     let html = '<label for="neighborhood">Neighborhood: </label>';
     html += '<select name="neighborhood" id="neighborhood">';
     html += '<option value="">Any</option>';
-    for (const hood of neighborhoods) {
-        const selected = (hood === neighborhood) ? ' selected' : '';
-        html += `<option value="${hood}"${selected}>${hood}</option>`;
-    }
+    html += renderOptions(neighborhoods, neighborhood);
     html += '</select>';
     return html;
 }
 
-function renderTypeMenu(type) {
-    const types = [
+function getSchoolTypes(schools) {
+    const allTypes = [
         'Early Education',
         'Elementary',
+        'K-8',
         'Middle',
         'High',
     ];
+    const types = [];
+    outer: for (const key in schools) {
+        const school = schools[key];
+        inner: for (const type of school.types) {
+            if (!types.includes(type)) {
+                types.push(type);
+                if (types.length >= allTypes.length) {
+                    break outer;
+                }
+            }
+        }
+    }
+    const orderedTypes = [];
+    for (const type of allTypes) {
+        if (types.includes(type)) orderedTypes.push(type);
+    }
+    return orderedTypes;
+}
+
+function renderTypeMenu(schools, type) {
+    const types = getSchoolTypes(schools);
     let html = '<label for="type">Type: </label>';
     html += '<select name="type" id="type">';
     html += '<option value="">Any</option>';
-    for (const t of types) {
-        const selected = (t === type) ? ' selected' : '';
-        html += `<option value="${t}"${selected}>${t} School</option>`;
-    }
+    html += renderOptions(types, type);
     html += '</select>';
     return html;
 }
 
-function renderSchoolForm(schoolData, filters) {
+function renderSchoolForm(schools, filters) {
     let html = '<form id="schoolForm">';
     html += '<fieldset>';
-    html += renderTypeMenu(filters.type);
+    html += renderTypeMenu(schools, filters.type);
     html += ' ';
-    html += renderGradeMenu(filters.grade);
+    html += renderGradeMenu(schools, filters.grade);
     html += ' ';
-    html += renderNeighborhoodMenu(filters.neighborhood);
+    html += renderNeighborhoodMenu(schools, filters.neighborhood);
     html += ' ';
-    html += renderLanguageMenu(filters.language);
+    html += renderLanguageMenu(schools, filters.language);
+    html += ' ';
+    html += '<input type="reset">';
     html += '</fieldset>';
     html += '</form>';
     return html;
@@ -346,17 +408,20 @@ function filterSchools(schoolData, filters) {
 
 function renderSchools(schoolData, filters) {
     const schools = filterSchools(schoolData, filters);
-    let html = renderSchoolForm(schoolData, filters);
+    let html = renderSchoolForm(schools, filters);
     html += renderSchoolTable(schools);
     return html;
 }
 
 function addEventListeners(schoolData, filters) {
+    // Remove existing event listeners.
     const oldMenus = document.querySelectorAll('select');
     for (const menu of oldMenus) {
-        // Remove existing event listeners.
         menu.replaceWith(menu.cloneNode(true));
     }
+    const oldReset = document.querySelector('input[type=reset]');
+    oldReset.replaceWith(oldReset.cloneNode(true));
+    // Add event listeners.
     const menus = document.querySelectorAll('select');
     for (const menu of menus) {
         menu.addEventListener('change', event => {
@@ -367,6 +432,13 @@ function addEventListeners(schoolData, filters) {
             renderPage(schoolData, filters);
         });
     }
+    const reset = document.querySelector('input[type=reset]');
+    reset.addEventListener('click', event => {
+        for (const menu of menus) {
+            menu.value = '';
+            menu.dispatchEvent(new Event('change'));
+        }
+    });
 }
 
 // Render a web page.
