@@ -221,15 +221,11 @@ function renderTypeMenu(schools, type) {
 }
 
 function getStartTimes() {
-    const starts = [];
-    for (const key in schoolData) {
-        const school = schoolData[key];
-        const start = school.start;
-        if (!starts.includes(start)) {
-            starts.push(start);
-        }
-    }
-    return starts.sort();
+    return new Map([
+        [7, 'Before 8:00 am'],
+        [8, '8:00-8:59 am'],
+        [9, 'After 9:00 am'],
+    ]);
 }
 
 function renderStartTimeMenu(start) {
@@ -397,9 +393,14 @@ function filterNeighborhood(school, neighborhood) {
 }
 
 function filterStartTime(school, start) {
-    return start === ''
-        || start === undefined
-        || start === school.start;
+    if (start === '' || start === undefined || start === null) {
+        return true;
+    }
+    const hour = school.start.split(':')[0];
+    if (hour >= start && hour < parseInt(start) + 1) {
+        return true;
+    }
+    return false;
 }
 
 function filterLanguage(school, language) {
