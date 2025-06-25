@@ -54,7 +54,22 @@ function renderRatio(antecedent, consequent = 1) {
         : `${antecedent}:${consequent}`;
 }
 
-function renderOptions(map, selected) {
+// Convert an array to a map.
+function arrayToMap(collection) {
+    if (!Array.isArray(collection)) {
+        return collection;
+    }
+    const map = new Map();
+    for (const value of collection) {
+        map.set(value, value);
+    }
+    return map;
+}
+
+// Render options for a select menu.
+// Accepts an array, object, map, or set, and the value selected.
+function renderOptions(options, selected) {
+    const map = arrayToMap(options);
     let html = '';
     for (const [key, value] of map.entries()) {
         const s = (key.toString() === selected) ? ' selected' : '';
@@ -109,10 +124,7 @@ function renderLanguageMenu(language) {
     let html = '<label for="language">Language: </label>';
     html += '<select name="language" id="language">';
     html += '<option value="">Any</option>';
-    for (const lang of languages) {
-        const selected = (lang === language) ? ' selected' : '';
-        html += `<option value="${lang}"${selected}>${lang}</option>`;
-    }
+    html += renderOptions(languages, language);
     html += '</select>';
     return html;
 }
@@ -134,10 +146,7 @@ function renderNeighborhoodMenu(neighborhood) {
     let html = '<label for="neighborhood">Neighborhood: </label>';
     html += '<select name="neighborhood" id="neighborhood">';
     html += '<option value="">Any</option>';
-    for (const hood of neighborhoods) {
-        const selected = (hood === neighborhood) ? ' selected' : '';
-        html += `<option value="${hood}"${selected}>${hood}</option>`;
-    }
+    html += renderOptions(neighborhoods, neighborhood);
     html += '</select>';
     return html;
 }
@@ -152,10 +161,7 @@ function renderTypeMenu(type) {
     let html = '<label for="type">Type: </label>';
     html += '<select name="type" id="type">';
     html += '<option value="">Any</option>';
-    for (const t of types) {
-        const selected = (t === type) ? ' selected' : '';
-        html += `<option value="${t}"${selected}>${t} School</option>`;
-    }
+    html += renderOptions(types, type);
     html += '</select>';
     return html;
 }
