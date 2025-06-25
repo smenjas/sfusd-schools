@@ -23,7 +23,7 @@ h1 {
     margin: 0;
 }
 
-form, fieldset {
+form, fieldset, p {
     border: none;
     margin-bottom: 0;
     padding-bottom: 0;
