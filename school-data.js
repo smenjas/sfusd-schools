@@ -578,7 +578,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6398-Malcolm-X-Academy/',
         },
     },
-    'Vis Valley': {
+    'Vis Valley Elementary': {
         code: 867,
         name: 'Visitacion Valley',
         types: ['Elementary'],
@@ -3458,7 +3458,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6392-Lick-James-Middle-School/',
         },
     },
-    'Gateway': {
+    'Gateway Middle': {
         code: null,
         name: 'Gateway',
         types: ['Middle'],
@@ -4142,7 +4142,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6452-Wells-Ida-B.-High-School/',
         },
     },
-    'Gateway': {
+    'Gateway High': {
         code: null,
         name: 'Gateway',
         types: ['High'],
