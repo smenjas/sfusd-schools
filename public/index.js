@@ -270,6 +270,7 @@ function renderSchoolsHeader() {
     html += '<th>Name</th>';
     html += '<th>Grades</th>';
     html += '<th>Start Time</th>';
+    html += '<th>Distance</th>';
     html += '<th>Neighborhood</th>';
     html += '<th>Address</th>';
     html += '<th>US News</th>';
@@ -315,6 +316,13 @@ function renderGradeRange(min, max) {
     }
 }
 
+function renderDistance(distance) {
+    if (distance === null || distance === undefined) {
+        return '';
+    }
+    return distance.toFixed(1) + ' mi.';
+}
+
 // Render one school's data as a table row.
 function renderSchoolRow(school) {
     const schoolLink = renderLink(school.urls.main, school.name, true);
@@ -324,11 +332,13 @@ function renderSchoolRow(school) {
     const mapLink = renderMapLink(search, school.address);
     const min = getMinGrade(school);
     const max = getMaxGrade(school);
+    const distance = distances[`${school.name} ${school.types[0]}`];
     let html = '';
     html += '<tr>';
     html += `<td>${schoolLink}</td>`;
     html += `<td>${renderGradeRange(min, max)}</td>`;
     html += `<td class="num">${school.start}</td>`;
+    html += `<td>${renderDistance(distance)}</td>`;
     html += `<td>${school.neighborhood}</td>`;
     html += `<td>${mapLink}</td>`;
     html += `<td class="num">${usnewsLink}</td>`;
@@ -451,11 +461,76 @@ function renderSchools(schoolData, filters) {
     return html;
 }
 
+// Convert degrees of latitude to miles.
+//
+// This is consistent everywhere on Earth's surface.
+function latToMiles(latDiff) {
+    return 69 * latDiff;
+}
+
+// Convert degrees of longitude to miles.
+//
+// This varies by distance from the equator.
+function lonToMiles(lonDiff, lat) {
+    return lonToMilesFactor(lat) * lonDiff;
+}
+
+// Calculate how many miles there are per degree of longitude, given a certain
+// latitude. This varies by distance from the equator, as shown below.
+//
+// 0°  69.0 Jakarta, Indonesia
+// 10° 68.0 San Jose, Costa Rica
+// 20° 64.8 Manila, Philippines
+// 30° 59.8 Cairo, Egypt
+// 40° 52.9 New York City, USA
+// 50° 44.4 Brussels, Belgium
+// 60° 34.5 St. Petersburg, Russia
+// 70° 23.6 Tromsø, Norway
+// 80° 12.0 Eureka, Canada
+// 90°  0.0 North Pole
+//
+// In San Francisco, California this is 54.5 at 37.8318° (the northernmost
+// address on Treasure Island), and 54.6 at 37.7080° (the southernmost address
+// next to Daly City), a 0.2% difference.
+function lonToMilesFactor(degrees) {
+    const radians = degrees * (Math.PI / 180);
+    return 69 * Math.abs(Math.cos(radians));
+}
+
+// Calculate the distance between two sets of geographic coordinates.
+//
+// Accepts two arrays containing latitude and longitude, in that order.
+function calculateDistance(a, b) {
+    if (!a || !b) {
+        return null;
+    }
+    const latDiff = Math.abs(a[0] - b[0]);
+    const lonDiff = Math.abs(a[1] - b[1]);
+    const lat = (latDiff / 2) + Math.min(a[0], b[0]);
+    const y = latToMiles(latDiff);
+    const x = lonToMiles(lonDiff, lat);
+    return Math.sqrt((x ** 2) + (y ** 2));
+}
+
 function updateAddressInput() {
     const addressInput = document.getElementById('address');
     const coordsSpan = document.getElementById('coords-link');
     addressInput.value = address;
     coordsSpan.innerHTML = renderCoordsLink(coords, 'Map');
+}
+
+// Update the distance between each school and the user's location.
+function updateDistances(coords) {
+    for (const key in schoolData) {
+        const school = schoolData[key];
+        const name = `${school.name} ${school.types[0]}`;
+        const schoolCoords = [school.lat, school.lon];
+        distances[name] = calculateDistance(coords, schoolCoords);
+    }
+    if (!coords) {
+        return;
+    }
+    renderPage(schoolData, filters);
 }
 
 function updatePossibleAddresses(addresses) {
@@ -526,7 +601,7 @@ function addEventListeners(schoolData, filters) {
         address = event.target.value;
         localStorage.setItem('address', JSON.stringify(address));
         const coords = findAddress(address);
-        coordsSpan.innerHTML = renderCoordsLink(coords, 'Map');
+        updateDistances(coords);
     });
 
     // Listen for select menus, to filter schools.
@@ -568,5 +643,8 @@ const coords = findAddress(address);
 
 const filtersJSON = localStorage.getItem('filters');
 const filters = filtersJSON ? JSON.parse(filtersJSON) : {};
+
+const distances = {};
+updateDistances(coords);
 
 renderPage(schoolData, filters);
