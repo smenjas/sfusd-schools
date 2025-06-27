@@ -1,4 +1,5 @@
 import schoolData from './school-data.js';
+import addressData from './address-data.js';
 
 function renderLink(url, text, newTab = false) {
     if (text === null || text === '') {
@@ -16,8 +17,18 @@ function renderLink(url, text, newTab = false) {
 }
 
 function renderMapLink(search, text) {
+    if (search === '') {
+        return '';
+    }
     const url = 'https://www.google.com/maps/search/' + search.replaceAll(' ', '+');
     return renderLink(url, text, true);
+}
+
+function renderCoordsLink(coords, text) {
+    if (!coords) {
+        return '';
+    }
+    return renderMapLink(coords.join(','), text);
 }
 
 function renderList(array) {
@@ -221,8 +232,20 @@ function renderStartTimeMenu(start) {
     return html;
 }
 
+function renderAddressInput() {
+    let html = '<span class="nobr"><label for="address">Address: </label>';
+    html += '<input name="address" id="address" list="addresses"></span>';
+    html += '<datalist id="addresses">';
+    html += '</datalist>';
+    html += ' <span id="coords-link"></span>';
+    return html;
+}
+
 function renderSchoolForm(schools, filters) {
     let html = '<form id="schoolForm">';
+    html += '<fieldset>';
+    html += renderAddressInput();
+    html += '</fieldset>';
     html += '<fieldset>';
     html += renderTypeMenu(schools, filters.type);
     html += ' ';
@@ -428,15 +451,85 @@ function renderSchools(schoolData, filters) {
     return html;
 }
 
+function updateAddressInput() {
+    const addressInput = document.getElementById('address');
+    const coordsSpan = document.getElementById('coords-link');
+    addressInput.value = address;
+    coordsSpan.innerHTML = renderCoordsLink(coords, 'Map');
+}
+
+function updatePossibleAddresses(addresses) {
+    const datalist = document.getElementById('addresses');
+    if (!datalist) {
+        return;
+    }
+    datalist.innerHTML = renderOptions(addresses);
+}
+
+// Expand the decimal portion of geographic coordinates to include the whole
+// numbers for San Francisco, California: 37°N, 122°W.
+function expandCoords(coords) {
+    const [lat, lon] = coords;
+    return [`37.${lat}`, `-122.${lon}`];
+}
+
+function findAddress(address) {
+    const addressParts = address.split(' ');
+    if (addressParts.length < 2) {
+        updatePossibleAddresses([]);
+        return;
+    }
+    if (isNaN(addressParts[0])) {
+        updatePossibleAddresses([]);
+        return;
+    }
+    const [num, ...streetParts] = addressParts;
+    const street = streetParts.join(' ').toUpperCase();
+    if (!(street in addressData)) {
+        const addresses = [];
+        for (const st in addressData) {
+            if (st.startsWith(street) && num in addressData[st]) {
+                addresses.push(`${num} ${st}`);
+            }
+        }
+        if (addresses.length <= 10) {
+            updatePossibleAddresses(addresses);
+        }
+        return;
+    }
+    if (!(num in addressData[street])) {
+        return;
+    }
+    return expandCoords(addressData[street][num]);
+}
+
 function addEventListeners(schoolData, filters) {
     // Remove existing event listeners.
+    const oldAddress = document.querySelector('input[name=address]');
+    oldAddress.replaceWith(oldAddress.cloneNode(true));
     const oldMenus = document.querySelectorAll('select');
     for (const menu of oldMenus) {
         menu.replaceWith(menu.cloneNode(true));
     }
     const oldReset = document.querySelector('input[type=reset]');
     oldReset.replaceWith(oldReset.cloneNode(true));
-    // Add event listeners.
+
+    // Listen for address input.
+    const addressInput = document.getElementById('address');
+    addressInput.addEventListener('keydown', event => {
+        if (event.key === 'Enter') {
+            // Don't submit the form and reload the page.
+            event.preventDefault();
+        }
+    });
+    addressInput.addEventListener('input', event => {
+        address = event.target.value;
+        localStorage.setItem('address', JSON.stringify(address));
+        const coords = findAddress(address);
+        coordsSpan.innerHTML = renderCoordsLink(coords, 'Map');
+    });
+
+    // Listen for select menus, to filter schools.
     const menus = document.querySelectorAll('select');
     for (const menu of menus) {
         menu.addEventListener('change', event => {
@@ -447,8 +540,12 @@ function addEventListeners(schoolData, filters) {
             renderPage(schoolData, filters);
         });
     }
+
+    // Listen for the reset button, to clear inputs.
     const reset = document.querySelector('input[type=reset]');
     reset.addEventListener('click', event => {
+        addressInput.value = '';
+        addressInput.dispatchEvent(new Event('input'));
         for (const menu of menus) {
             menu.value = '';
             menu.dispatchEvent(new Event('change'));
@@ -462,8 +559,14 @@ function renderPage(schoolData, filters) {
     const html = renderSchools(schoolData, filters);
     document.getElementById('schools').innerHTML = html;
     addEventListeners(schoolData, filters);
+    updateAddressInput();
 }
+
+const addressJSON = localStorage.getItem('address');
+let address = addressJSON ? JSON.parse(addressJSON) : '';
+const coords = findAddress(address);
 
 const filtersJSON = localStorage.getItem('filters');
 const filters = filtersJSON ? JSON.parse(filtersJSON) : {};
+
 renderPage(schoolData, filters);
