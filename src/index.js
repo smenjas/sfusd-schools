@@ -20,6 +20,7 @@ const server = http.createServer((request, response) => {
     case '/index.js':
     case '/school-data.js':
     case '/address-data.js':
+    case '/geo.js':
         response.statusCode = 200;
         response.setHeader('Content-Type', 'text/javascript');
         content = fs.readFileSync('public' + path, 'utf8');
