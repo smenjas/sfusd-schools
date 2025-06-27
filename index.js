@@ -1,5 +1,6 @@
 import schoolData from './school-data.js';
 import addressData from './address-data.js';
+import { calculateDistance, expandCoords, getMapURL } from './geo.js';
 
 function renderLink(url, text, newTab = false) {
     if (text === null || text === '') {
@@ -20,7 +21,7 @@ function renderMapLink(search, text) {
     if (search === '') {
         return '';
     }
-    const url = 'https://www.google.com/maps/search/' + search.replaceAll(' ', '+');
+    const url = getMapURL(search);
     return renderLink(url, text, true);
 }
 
@@ -270,6 +271,7 @@ function renderSchoolsHeader() {
     html += '<th>Name</th>';
     html += '<th>Grades</th>';
     html += '<th>Start Time</th>';
+    html += '<th>Distance</th>';
     html += '<th>Neighborhood</th>';
     html += '<th>Address</th>';
     html += '<th>US News</th>';
@@ -315,12 +317,20 @@ function renderGradeRange(min, max) {
     }
 }
 
+function renderDistance(distance) {
+    if (distance === null || distance === undefined) {
+        return '';
+    }
+    return distance.toFixed(1) + ' mi.';
+}
+
 // Render one school's data as a table row.
 function renderSchoolRow(school) {
     const schoolLink = renderLink(school.urls.main, school.name, true);
     const greatschoolsLink = renderLink(school.urls.greatschools, school.greatschools, true);
     const usnewsLink = renderLink(school.urls.usnews, school.usnews, true);
-    const search = `${school.name} ${school.types[0]} School in San Francisco, California`;
+    const fullName = getSchoolFullName(school);
+    const search = `${fullName} School in San Francisco, California`;
     const mapLink = renderMapLink(search, school.address);
     const min = getMinGrade(school);
     const max = getMaxGrade(school);
@@ -329,6 +339,7 @@ function renderSchoolRow(school) {
     html += `<td>${schoolLink}</td>`;
     html += `<td>${renderGradeRange(min, max)}</td>`;
     html += `<td class="num">${school.start}</td>`;
+    html += `<td class="num">${renderDistance(school.distance)}</td>`;
     html += `<td>${school.neighborhood}</td>`;
     html += `<td>${mapLink}</td>`;
     html += `<td class="num">${usnewsLink}</td>`;
@@ -458,19 +469,30 @@ function updateAddressInput() {
     coordsSpan.innerHTML = renderCoordsLink(coords, 'Map');
 }
 
+function getSchoolFullName(school) {
+    return `${school.name} ${school.types[0]}`;
+}
+
+// Update the distance between each school and the user's location.
+function updateDistances(coords) {
+    for (const key in schoolData) {
+        const school = schoolData[key];
+        const name = getSchoolFullName(school);
+        const schoolCoords = [school.lat, school.lon];
+        school.distance = calculateDistance(coords, schoolCoords);
+    }
+    if (!coords) {
+        return;
+    }
+    renderPage(schoolData, filters);
+}
+
 function updatePossibleAddresses(addresses) {
     const datalist = document.getElementById('addresses');
     if (!datalist) {
         return;
     }
     datalist.innerHTML = renderOptions(addresses);
-}
-
-// Expand the decimal portion of geographic coordinates to include the whole
-// numbers for San Francisco, California: 37°N, 122°W.
-function expandCoords(coords) {
-    const [lat, lon] = coords;
-    return [`37.${lat}`, `-122.${lon}`];
 }
 
 function findAddress(address) {
@@ -526,7 +548,7 @@ function addEventListeners(schoolData, filters) {
         address = event.target.value;
         localStorage.setItem('address', JSON.stringify(address));
         const coords = findAddress(address);
-        coordsSpan.innerHTML = renderCoordsLink(coords, 'Map');
+        updateDistances(coords);
     });
 
     // Listen for select menus, to filter schools.
@@ -568,5 +590,7 @@ const coords = findAddress(address);
 
 const filtersJSON = localStorage.getItem('filters');
 const filters = filtersJSON ? JSON.parse(filtersJSON) : {};
+
+updateDistances(coords);
 
 renderPage(schoolData, filters);
