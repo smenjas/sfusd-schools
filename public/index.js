@@ -328,11 +328,12 @@ function renderSchoolRow(school) {
     const schoolLink = renderLink(school.urls.main, school.name, true);
     const greatschoolsLink = renderLink(school.urls.greatschools, school.greatschools, true);
     const usnewsLink = renderLink(school.urls.usnews, school.usnews, true);
-    const search = `${school.name} ${school.types[0]} School in San Francisco, California`;
+    const fullName = getSchoolFullName(school);
+    const search = `${fullName} School in San Francisco, California`;
     const mapLink = renderMapLink(search, school.address);
     const min = getMinGrade(school);
     const max = getMaxGrade(school);
-    const distance = distances[`${school.name} ${school.types[0]}`];
+    const distance = distances[fullName];
     let html = '';
     html += '<tr>';
     html += `<td>${schoolLink}</td>`;
@@ -519,11 +520,15 @@ function updateAddressInput() {
     coordsSpan.innerHTML = renderCoordsLink(coords, 'Map');
 }
 
+function getSchoolFullName(school) {
+    return `${school.name} ${school.types[0]}`;
+}
+
 // Update the distance between each school and the user's location.
 function updateDistances(coords) {
     for (const key in schoolData) {
         const school = schoolData[key];
-        const name = `${school.name} ${school.types[0]}`;
+        const name = getSchoolFullName(school);
         const schoolCoords = [school.lat, school.lon];
         distances[name] = calculateDistance(coords, schoolCoords);
     }
