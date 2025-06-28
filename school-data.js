@@ -1,8 +1,8 @@
 /**
  * @module schoolData
  */
-export default {
-    'CR Drew': {
+export default [
+    {
         code: 507,
         name: 'Dr. Charles R. Drew',
         types: ['Elementary'],
@@ -40,7 +40,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6360-Drew-Charles-College-Preparatory-Academy/',
         },
     },
-    'ER Taylor': {
+    {
         code: 513,
         name: 'Edward R. Taylor',
         types: ['Elementary'],
@@ -78,7 +78,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6441-Taylor-Edward-R.-Elementary-School/',
         },
     },
-    'Revere': {
+    {
         code: 760,
         name: 'Paul Revere',
         types: ['Elementary', 'K-8', 'Middle'],
@@ -116,7 +116,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6425-Revere-Paul-Elementary-School/',
         },
     },
-    'Hillcrest': {
+    {
         code: 614,
         name: 'Hillcrest',
         types: ['Elementary'],
@@ -154,7 +154,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6379-Hillcrest-Elementary-School/',
         },
     },
-    'El Dorado': {
+    {
         code: 521,
         name: 'El Dorado',
         types: ['Elementary'],
@@ -192,7 +192,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6362-El-Dorado-Elementary-School/',
         },
     },
-    'GW Carver': {
+    {
         code: 625,
         name: 'Dr. George Washington Carver',
         types: ['Elementary'],
@@ -230,7 +230,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6347-Carver-George-Washington-Elementary-School/',
         },
     },
-    'LM Havard': {
+    {
         code: null,
         name: 'Leola M. Havard',
         types: ['Early Education'],
@@ -268,7 +268,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/24747-Havard-Leona-M-Early-Education-School/',
         },
     },
-    'Bryant': {
+    {
         code: 456,
         name: 'Bryant',
         types: ['Elementary'],
@@ -306,7 +306,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6341-Bryant-Elementary-School/',
         },
     },
-    'J Serra': {
+    {
         code: 656,
         name: 'Junipero Serra',
         types: ['Elementary'],
@@ -344,7 +344,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6429-Serra-Junipero-Elementary-School/',
         },
     },
-    'J Serra Annex': {
+    {
         code: null,
         name: 'Junipero Serra Annex',
         types: ['Early Education'],
@@ -382,7 +382,7 @@ export default {
             greatschools: null,
         },
     },
-    'Harte': {
+    {
         code: 453,
         name: 'Bret Harte',
         types: ['Elementary'],
@@ -420,7 +420,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6377-Harte-Bret-Elementary-School/',
         },
     },
-    'KIPP': {
+    {
         code: null,
         name: 'KIPP Bayview',
         types: ['Elementary'],
@@ -458,7 +458,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/33328-KIPP-Bayview-Elementary/',
         },
     },
-    'Flynn': {
+    {
         code: 680,
         name: 'Leonard R. Flynn',
         types: ['Elementary'],
@@ -496,7 +496,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6366-Flynn-Leonard-R.-Elementary-School/',
         },
     },
-    'Monroe': {
+    {
         code: 729,
         name: 'Monroe',
         types: ['Elementary'],
@@ -534,7 +534,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6412-Monroe-Elementary-School/',
         },
     },
-    'Mission Prep': {
+    {
         code: null,
         name: 'Mission Preparatory',
         types: ['Elementary', 'K-8', 'Middle'],
@@ -572,7 +572,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/25813-Mission-Preparatory-School/',
         },
     },
-    'Malcolm X': {
+    {
         code: 830,
         name: 'Malcolm X Academy',
         types: ['Elementary'],
@@ -610,7 +610,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6398-Malcolm-X-Academy/',
         },
     },
-    'Vis Valley Elementary': {
+    {
         code: 867,
         name: 'Visitacion Valley',
         types: ['Elementary'],
@@ -648,7 +648,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6446-Visitacion-Valley-Elementary-School/',
         },
     },
-    'SFC': {
+    {
         code: 493,
         name: 'SF Community Alternative',
         types: ['Elementary', 'K-8', 'Middle'],
@@ -686,7 +686,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6430-San-Francisco-Community-Alternative-School/',
         },
     },
-    'Starr King': {
+    {
         code: 838,
         name: 'Thomas Starr King',
         types: ['Elementary'],
@@ -724,7 +724,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6435-King-Starr-Elementary-School/',
         },
     },
-    'Huerta': {
+    {
         code: 537,
         name: 'Dolores Huerta',
         types: ['Elementary'],
@@ -762,7 +762,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6364-Fairmount-Elementary-School/',
         },
     },
-    'Glen Park': {
+    {
         code: 575,
         name: 'Glen Park',
         types: ['Elementary'],
@@ -800,7 +800,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6373-Glen-Park-Elementary-School/',
         },
     },
-    'Cleveland': {
+    {
         code: 481,
         name: 'Cleveland',
         types: ['Elementary'],
@@ -838,7 +838,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6352-Cleveland-Elementary-School/',
         },
     },
-    'Carmichael': {
+    {
         code: 449,
         name: 'Bessie Carmichael',
         types: ['Elementary', 'K-8', 'Middle'],
@@ -876,7 +876,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6346-Carmichael-Bessie-Fec/',
         },
     },
-    'San Miguel': {
+    {
         code: null,
         name: 'San Miguel',
         types: ['Early Education'],
@@ -914,7 +914,7 @@ export default {
             greatschools: null,
         },
     },
-    'McLaren': {
+    {
         code: 950,
         name: 'John McLaren',
         types: ['Early Education'],
@@ -952,7 +952,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/22250-Mclaren-John-Children-Centers/',
         },
     },
-    'Webster': {
+    {
         code: 497,
         name: 'Daniel Webster',
         types: ['Elementary'],
@@ -990,7 +990,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6451-Daniel-Webster-Elementary-School/',
         },
     },
-    'Moscone': {
+    {
         code: 723,
         name: 'George Moscone',
         types: ['Elementary'],
@@ -1028,7 +1028,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6413-Moscone-George-R.-Elementary-School/',
         },
     },
-    'Zaida': {
+    {
         code: 965,
         name: 'Zaida T. Rodriguez',
         types: ['Early Education'],
@@ -1066,7 +1066,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/22296-Zaida-Rodriguiz-Early-Ed-School/',
         },
     },
-    'Mission Ed': {
+    {
         code: 724,
         name: 'Mission Education Center',
         types: ['Elementary'],
@@ -1104,7 +1104,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6410-Mission-Education-Center/',
         },
     },
-    'Sunnyside': {
+    {
         code: 842,
         name: 'Sunnyside',
         types: ['Elementary'],
@@ -1142,7 +1142,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6437-Sunnyside-Elementary-School/',
         },
     },
-    'Chavez': {
+    {
         code: 603,
         name: 'Cesar Chavez',
         types: ['Elementary'],
@@ -1180,7 +1180,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6348-Chavez-Cesar-Elementary-School/',
         },
     },
-    'Longfellow': {
+    {
         code: 691,
         name: 'Longfellow',
         types: ['Elementary'],
@@ -1218,7 +1218,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6396-Longfellow-Elementary-School/',
         },
     },
-    'Mann': {
+    {
         code: 618,
         name: 'Buena Vista Horace Mann',
         types: ['Elementary', 'K-8', 'Middle'],
@@ -1256,7 +1256,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6399-Buena-Vista--Horace-Mann-K-8/',
         },
     },
-    'Marshall': {
+    {
         code: 714,
         name: 'Marshall',
         types: ['Elementary'],
@@ -1294,7 +1294,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6403-Marshall-Elementary-School/',
         },
     },
-    'Guadalupe': {
+    {
         code: 593,
         name: 'Guadalupe',
         types: ['Elementary'],
@@ -1332,7 +1332,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6376-Guadalupe-Elementary-School/',
         },
     },
-    'Ortega': {
+    {
         code: 746,
         name: 'Jose Ortega',
         types: ['Elementary'],
@@ -1370,7 +1370,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6418-Ortega-Jose-Elementary-School/',
         },
     },
-    'Edison': {
+    {
         code: null,
         name: 'Thomas Edison',
         types: ['Elementary', 'K-8', 'Middle'],
@@ -1408,7 +1408,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/12048-Edison-Charter-Academy/',
         },
     },
-    'TS Mahler': {
+    {
         code: 923,
         name: 'Theresa S. Mahler',
         types: ['Early Education'],
@@ -1446,7 +1446,7 @@ export default {
             greatschools: null,
         },
     },
-    'Tenderloin': {
+    {
         code: 859,
         name: 'Tenderloin Community',
         types: ['Elementary'],
@@ -1484,7 +1484,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6442-Tenderloin-Community/',
         },
     },
-    'Alvarado': {
+    {
         code: 420,
         name: 'Alvarado',
         types: ['Elementary'],
@@ -1522,7 +1522,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6336-Alvarado-Elementary-School/',
         },
     },
-    'Miraloma': {
+    {
         code: 722,
         name: 'Miraloma',
         types: ['Elementary'],
@@ -1560,7 +1560,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6409-Miraloma-Elementary-School/',
         },
     },
-    'Sloat': {
+    {
         code: 488,
         name: 'Commodore Sloat',
         types: ['Elementary'],
@@ -1598,7 +1598,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6433-Sloat-Commodore-Elementary-School/',
         },
     },
-    'Milk': {
+    {
         code: 505,
         name: 'Harvey Milk',
         types: ['Elementary'],
@@ -1636,7 +1636,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6408-Milk-Harvey-Civil-Rights-Elementary-School/',
         },
     },
-    'Weill': {
+    {
         code: null,
         name: 'Raphael Weill',
         types: ['Early Education'],
@@ -1674,7 +1674,7 @@ export default {
             greatschools: null,
         },
     },
-    'Lakeshore': {
+    {
         code: 670,
         name: 'Lakeshore Alternative',
         types: ['Elementary'],
@@ -1712,7 +1712,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6388-Lakeshore-Alternative-Elementary-School/',
         },
     },
-    'West Portal': {
+    {
         code: 876,
         name: 'West Portal',
         types: ['Elementary'],
@@ -1750,7 +1750,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6448-West-Portal-Elementary-School/',
         },
     },
-    'Redding': {
+    {
         code: 790,
         name: 'Redding',
         types: ['Elementary'],
@@ -1788,7 +1788,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6424-Redding-Elementary-School/',
         },
     },
-    'Rooftop': {
+    {
         code: 796,
         name: 'Rooftop',
         types: ['Elementary', 'K-8', 'Middle'],
@@ -1826,7 +1826,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6426-Rooftop-Elementary-School/',
         },
     },
-    'Clarendon': {
+    {
         code: 478,
         name: 'Clarendon',
         types: ['Elementary'],
@@ -1864,7 +1864,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6351-Clarendon-Alternative-Elementary-School/',
         },
     },
-    'Sanchez': {
+    {
         code: 816,
         name: 'Sanchez',
         types: ['Elementary'],
@@ -1902,7 +1902,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6428-Sanchez-Elementary-School/',
         },
     },
-    'Muir': {
+    {
         code: 650,
         name: 'John Muir',
         types: ['Elementary'],
@@ -1940,7 +1940,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6414-Muir-John-Elementary-School/',
         },
     },
-    'Parks': {
+    {
         code: 786,
         name: 'Rosa Parks',
         types: ['Elementary'],
@@ -1978,7 +1978,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6420-Parks-Rosa-Elementary-School/',
         },
     },
-    'McKinley': {
+    {
         code: 718,
         name: 'McKinley',
         types: ['Elementary'],
@@ -2016,7 +2016,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6407-McKinley-Elementary-School/',
         },
     },
-    'Creative Arts': {
+    {
         code: null,
         name: 'Creative Arts',
         types: ['Elementary', 'K-8', 'Middle'],
@@ -2054,7 +2054,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6355-Creative-Arts-Charter-School/',
         },
     },
-    'AF Yu': {
+    {
         code: 485,
         name: 'Alice Fong Yu Alternative',
         types: ['Elementary', 'K-8', 'Middle'],
@@ -2092,7 +2092,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6455-Yu-Alice-Fong-Elementary-School/',
         },
     },
-    'Sheridan': {
+    {
         code: 820,
         name: 'Sheridan',
         types: ['Elementary'],
@@ -2130,7 +2130,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6431-Sheridan-Elementary-School/',
         },
     },
-    'Newcomer': {
+    {
         code: 476,
         name: 'Edwin & Anita Lee Newcomer',
         types: ['Elementary'],
@@ -2168,7 +2168,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6350-Chinese-Education-Center/',
         },
     },
-    'JY Chin': {
+    {
         code: 872,
         name: 'John Yehall Chin',
         types: ['Elementary'],
@@ -2206,7 +2206,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6349-Chin-John-Yehall-Elementary-School/',
         },
     },
-    'Spring Valley': {
+    {
         code: 834,
         name: 'Spring Valley Science',
         types: ['Elementary'],
@@ -2244,7 +2244,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6434-Spring-Valley-Elementary-School/',
         },
     },
-    'Sherman': {
+    {
         code: 823,
         name: 'Sherman',
         types: ['Elementary'],
@@ -2282,7 +2282,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6432-Sherman-Elementary-School/',
         },
     },
-    'Ulloa': {
+    {
         code: 862,
         name: 'Ulloa',
         types: ['Elementary'],
@@ -2320,7 +2320,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6445-Ulloa-Elementary-School/',
         },
     },
-    'GJ Lau': {
+    {
         code: 490,
         name: 'Gordon J. Lau',
         types: ['Elementary'],
@@ -2358,7 +2358,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6389-Lau-Gordon-J.-Elementary-School/',
         },
     },
-    'Stockton': {
+    {
         code: 915,
         name: 'Commodore Stockton',
         types: ['Early Education'],
@@ -2396,7 +2396,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/22348-Stockton-Commodore-Children-Center/',
         },
     },
-    'Parker': {
+    {
         code: 638,
         name: 'Jean Parker',
         types: ['Elementary'],
@@ -2434,7 +2434,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6419-Parker-Jean-Elementary-School/',
         },
     },
-    'Feinstein': {
+    {
         code: 539,
         name: 'Dianne Feinstein',
         types: ['Elementary'],
@@ -2472,7 +2472,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/16863-Feinstein-Dianne-Elementary-School/',
         },
     },
-    'Grattan': {
+    {
         code: 589,
         name: 'Grattan',
         types: ['Elementary'],
@@ -2510,7 +2510,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6375-Grattan-Elementary-School/',
         },
     },
-    'RL Stevenson': {
+    {
         code: 782,
         name: 'Robert Louis Stevenson',
         types: ['Elementary'],
@@ -2548,7 +2548,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6436-Stevenson-Robert-Louis-Elementary-School/',
         },
     },
-    'New': {
+    {
         code: null,
         name: 'New School of SF',
         types: ['Elementary', 'K-8', 'Middle'],
@@ -2586,7 +2586,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/31959-The-New-School-Of-San-Francisco/',
         },
     },
-    'DeAvila': {
+    {
         code: 509,
         name: 'DeAvila',
         types: ['Elementary'],
@@ -2624,7 +2624,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/25096-Chinese-Immersion-School-At-Deavila/',
         },
     },
-    'Garfield': {
+    {
         code: 562,
         name: 'Garfield',
         types: ['Elementary'],
@@ -2662,7 +2662,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6370-Garfield-Elementary-School/',
         },
     },
-    'WL Cobb': {
+    {
         code: 525,
         name: 'William L. Cobb',
         types: ['Elementary'],
@@ -2700,7 +2700,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6353-Cobb-William-L.-Elementary-School/',
         },
     },
-    'Montessori': {
+    {
         code: 814,
         name: 'SF Public Montessori',
         types: ['Elementary'],
@@ -2738,7 +2738,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/25336-San-Francisco-Public-Montessori-School/',
         },
     },
-    'Jefferson': {
+    {
         code: 644,
         name: 'Jefferson',
         types: ['Elementary'],
@@ -2776,7 +2776,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6384-Jefferson-Elementary-School/',
         },
     },
-    'Jefferson Pre K': {
+    {
         code: 948,
         name: 'Jefferson',
         types: ['Early Education'],
@@ -2814,7 +2814,7 @@ export default {
             greatschools: null,
         },
     },
-    'Wo': {
+    {
         code: 801,
         name: 'Yick Wo Alternative',
         types: ['Elementary'],
@@ -2852,7 +2852,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6454-Yick-Wo-Elementary-School/',
         },
     },
-    'New Traditions': {
+    {
         code: 735,
         name: 'New Traditions',
         types: ['Elementary'],
@@ -2890,7 +2890,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6415-New-Traditions-Elementary-School/',
         },
     },
-    'Sunset': {
+    {
         code: 750,
         name: 'Sunset',
         types: ['Elementary'],
@@ -2928,7 +2928,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6438-Sunset-Elementary-School/',
         },
     },
-    'Lawton': {
+    {
         code: 676,
         name: 'Lawton Alternative',
         types: ['Elementary', 'K-8', 'Middle'],
@@ -2966,7 +2966,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6390-Lawton-Alternative-Elementary-School/',
         },
     },
-    'Noriega': {
+    {
         code: 928,
         name: 'Noriega',
         types: ['Early Education'],
@@ -3004,7 +3004,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/24740-Noriega-Children-Center/',
         },
     },
-    'Peabody': {
+    {
         code: 569,
         name: 'George Peabody',
         types: ['Elementary'],
@@ -3042,7 +3042,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6421-Peabody-George-Elementary-School/',
         },
     },
-    'Key': {
+    {
         code: 544,
         name: 'Francis Scott Key',
         types: ['Elementary'],
@@ -3080,7 +3080,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6385-Key-Francis-Scott-Elementary-School/',
         },
     },
-    'McCoppin': {
+    {
         code: 549,
         name: 'Frank McCoppin',
         types: ['Elementary'],
@@ -3118,7 +3118,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6406-Mccoppin-Frank-Elementary-School/',
         },
     },
-    'Tule Elk Park': {
+    {
         code: 997,
         name: 'Tule Elk Park',
         types: ['Early Education'],
@@ -3156,7 +3156,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/24745-Tule-Elk-Park-Children-Center/',
         },
     },
-    'Lilienthal': {
+    {
         code: 479,
         name: 'Claire Lilienthal',
         types: ['Elementary', 'K-8', 'Middle'],
@@ -3194,7 +3194,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6394-Lilienthal-Claire-Elementary-School/',
         },
     },
-    'Madison': {
+    {
         code: 479,
         name: 'Claire Lilienthal - Madison',
         types: ['Elementary'],
@@ -3232,7 +3232,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6394-Lilienthal-Claire-Elementary-School/',
         },
     },
-    'Sutro': {
+    {
         code: 848,
         name: 'Sutro',
         types: ['Elementary', 'K-8', 'Middle'],
@@ -3270,7 +3270,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6439-Sutro-Elementary-School/',
         },
     },
-    'Argonne Pre K': {
+    {
         code: 903,
         name: 'Argonne',
         types: ['Early Education'],
@@ -3308,7 +3308,7 @@ export default {
             greatschools: null,
         },
     },
-    'Argonne': {
+    {
         code: 435,
         name: 'Argonne',
         types: ['Elementary'],
@@ -3346,7 +3346,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6338-Argonne-Elementary-School/',
         },
     },
-    'Alamo': {
+    {
         code: 413,
         name: 'Alamo',
         types: ['Elementary'],
@@ -3384,7 +3384,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6335-Alamo-Elementary-School/',
         },
     },
-    'Lafayette': {
+    {
         code: 664,
         name: 'Lafayette',
         types: ['Elementary'],
@@ -3422,7 +3422,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6387-Lafayette-Elementary-School/',
         },
     },
-    'Brown': {
+    {
         code: 858,
         name: 'Willie L. Brown Jr.',
         types: ['Middle'],
@@ -3460,7 +3460,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/32187-Brown-Jr.-Willie-L-Middle/',
         },
     },
-    'MLK': {
+    {
         code: 710,
         name: 'Dr. Martin Luther King Jr.',
         types: ['Middle'],
@@ -3498,7 +3498,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6386-King-Jr.-Martin-Luther-Academic-Middle-School/',
         },
     },
-    'KIPP Bayview Academy': {
+    {
         code: null,
         name: 'KIPP Bayview Academy',
         types: ['Middle'],
@@ -3536,7 +3536,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/12638-KIPP-Bayview-Academy/',
         },
     },
-    'Vis Valley Middle': {
+    {
         code: 868,
         name: 'Visitacion Valley',
         types: ['Middle'],
@@ -3574,7 +3574,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6447-Visitacion-Valley-Middle-School/',
         },
     },
-    'Denman': {
+    {
         code: 632,
         name: 'James Denman',
         types: ['Middle'],
@@ -3612,7 +3612,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6358-Denman-James-Middle-School/',
         },
     },
-    'Lick': {
+    {
         code: 634,
         name: 'James Lick',
         types: ['Middle'],
@@ -3650,7 +3650,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6392-Lick-James-Middle-School/',
         },
     },
-    'Gateway Middle': {
+    {
         code: null,
         name: 'Gateway',
         types: ['Middle'],
@@ -3688,7 +3688,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/25633-Gateway-Middle-School/',
         },
     },
-    'Everett': {
+    {
         code: 529,
         name: 'Everett',
         types: ['Middle'],
@@ -3726,7 +3726,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6363-Everett-Middle-School/',
         },
     },
-    'Aptos': {
+    {
         code: 431,
         name: 'Aptos',
         types: ['Middle'],
@@ -3764,7 +3764,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6337-Aptos-Middle-School/',
         },
     },
-    'Hoover': {
+    {
         code: 607,
         name: 'Herbert Hoover',
         types: ['Middle'],
@@ -3802,7 +3802,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6378-Hoover-Herbert-Middle-School/',
         },
     },
-    'Roosevelt': {
+    {
         code: 797,
         name: 'Roosevelt',
         types: ['Middle'],
@@ -3840,7 +3840,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6427-Roosevelt-Middle-School/',
         },
     },
-    'Giannini': {
+    {
         code: 404,
         name: 'AP Giannini',
         types: ['Middle'],
@@ -3878,7 +3878,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6372-Giannini-A.P.-Middle-School/',
         },
     },
-    'Francisco': {
+    {
         code: 546,
         name: 'Francisco',
         types: ['Middle'],
@@ -3916,7 +3916,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6367-Francisco-Middle-School/',
         },
     },
-    'Marina': {
+    {
         code: 708,
         name: 'Marina',
         types: ['Middle'],
@@ -3954,7 +3954,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6400-Marina-Middle-School/',
         },
     },
-    'Presidio': {
+    {
         code: 778,
         name: 'Presidio',
         types: ['Middle'],
@@ -3992,7 +3992,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6423-Presidio-Middle-School/',
         },
     },
-    'T Marshall': {
+    {
         code: 853,
         name: 'Thurgood Marshall',
         types: ['High'],
@@ -4030,7 +4030,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6404-Marshall-Thurgood-High-School/',
         },
     },
-    'Burton': {
+    {
         code: 764,
         name: 'Phillip and Sala Burton',
         types: ['High'],
@@ -4068,7 +4068,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6344-Burton-Phillip-And-Sala-Academic-High-School/',
         },
     },
-    'Downtown': {
+    {
         code: 742,
         name: 'Downtown',
         types: ['High'],
@@ -4106,7 +4106,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6359-Downtown-High-School/',
         },
     },
-    'SF Int\'l': {
+    {
         code: 621,
         name: 'SF International',
         types: ['High'],
@@ -4144,7 +4144,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/25018-S.F.-International-High-School/',
         },
     },
-    'Jordan': {
+    {
         code: 757,
         name: 'June Jordan',
         types: ['High'],
@@ -4182,7 +4182,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/12283-Jordan-June-School-For-Equity/',
         },
     },
-    'Balboa': {
+    {
         code: 439,
         name: 'Balboa',
         types: ['High'],
@@ -4220,7 +4220,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6340-Balboa-High-School/',
         },
     },
-    'Academy': {
+    {
         code: 832,
         name: 'The Academy - SF @Mcateer',
         types: ['High'],
@@ -4258,7 +4258,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/25079-Academy-Of-Arts-And-Sciences/',
         },
     },
-    'SotA': {
+    {
         code: 815,
         name: 'Ruth Asawa School of the Arts',
         types: ['High'],
@@ -4296,7 +4296,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6339-Asawa-Ruth-San-Francisco-School-Of-The-Arts-A-Public-School./',
         },
     },
-    'O\'Connell': {
+    {
         code: 651,
         name: 'John O\'Connell',
         types: ['High'],
@@ -4334,7 +4334,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6417-Oconnell-John-High-School/',
         },
     },
-    'Wells': {
+    {
         code: 74743,
         name: 'Ida B. Wells',
         types: ['High'],
@@ -4372,7 +4372,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6452-Wells-Ida-B.-High-School/',
         },
     },
-    'Gateway High': {
+    {
         code: null,
         name: 'Gateway',
         types: ['High'],
@@ -4410,7 +4410,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6371-Gateway-High-School/',
         },
     },
-    'Mission': {
+    {
         code: 725,
         name: 'Mission',
         types: ['High'],
@@ -4448,7 +4448,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6411-Mission-High-School/',
         },
     },
-    'Independence': {
+    {
         code: 466,
         name: 'Independence',
         types: ['High'],
@@ -4486,7 +4486,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/11136-Independence-High-School/',
         },
     },
-    'Life Learning': {
+    {
         code: null,
         name: 'Life Learning Academy',
         types: ['High'],
@@ -4524,7 +4524,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6393-Life-Learning-Academy-Charter/',
         },
     },
-    'Lowell': {
+    {
         code: 697,
         name: 'Lowell',
         types: ['High'],
@@ -4562,7 +4562,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6397-Lowell-High-School/',
         },
     },
-    'Lincoln': {
+    {
         code: 405,
         name: 'Abraham Lincoln',
         types: ['High'],
@@ -4600,7 +4600,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6395-Lincoln-Abraham-High-School/',
         },
     },
-    'Wallenberg': {
+    {
         code: 785,
         name: 'Raoul Wallenberg',
         types: ['High'],
@@ -4638,7 +4638,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6449-Wallenberg-Raoul-Traditional-High-School/',
         },
     },
-    'Washington': {
+    {
         code: 571,
         name: 'George Washington',
         types: ['High'],
@@ -4676,7 +4676,7 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6450-Washington-George-High-School/',
         },
     },
-    'Galileo': {
+    {
         code: 559,
         name: 'Galileo',
         types: ['High'],
@@ -4714,4 +4714,4 @@ export default {
             greatschools: 'https://www.greatschools.org/california/san-francisco/6369-Galileo-High-School/',
         },
     },
-};
+];

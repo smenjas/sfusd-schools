@@ -233,6 +233,31 @@ function renderStartTimeMenu(start) {
     return html;
 }
 
+function getSortables() {
+    return [
+        'Name',
+        'Distance',
+        'Neighborhood',
+        'US News Ranking',
+        'GreatSchools Score',
+        'Ratio',
+        'Math',
+        'Reading',
+        'Science',
+        'Graduated',
+        'Seats/App',
+    ];
+}
+
+function renderSortMenu(sort) {
+    const sorts = getSortables();
+    let html = '<span class="nobr"><label for="sort">Sort by: </label>';
+    html += '<select name="sort" id="sort">';
+    html += renderOptions(sorts, sort);
+    html += '</select></span>';
+    return html;
+}
+
 function renderAddressInput() {
     let html = '<span class="nobr"><label for="address">Address: </label>';
     html += '<input name="address" id="address" list="addresses"></span>';
@@ -257,6 +282,8 @@ function renderSchoolForm(schools, filters) {
     html += renderLanguageMenu(schools, filters.language);
     html += ' ';
     html += renderStartTimeMenu(filters.start);
+    html += ' ';
+    html += renderSortMenu(filters.sort);
     html += ' ';
     html += '<input type="reset">';
     html += '</fieldset>';
@@ -441,22 +468,64 @@ function filterLanguage(school, language) {
 }
 
 function filterSchools(schoolData, filters) {
-    const schools = {};
-    for (const key in schoolData) {
-        const school = schoolData[key];
+    const schools = [];
+    for (const school of schoolData) {
         if (filterType(school, filters.type) &&
             filterGrade(school, filters.grade) &&
             filterNeighborhood(school, filters.neighborhood) &&
             filterStartTime(school, filters.start) &&
             filterLanguage(school, filters.language)) {
-            schools[key] = school;
+            schools.push(school);
         }
     }
     return schools;
 }
 
+function sortSchools(schools, sort) {
+    let sortFunction = () => {};
+    switch (sort) {
+        case 'Name':
+            sortFunction = (a, b) => a.name.localeCompare(b.name);
+            break;
+        case 'Distance':
+            sortFunction = (a, b) => a.distance - b.distance;
+            break;
+        case 'Neighborhood':
+            sortFunction = (a, b) => a.neighborhood.localeCompare(b.neighborhood);
+            break;
+        case 'US News Ranking':
+            sortFunction = (a, b) => a.usnews - b.usnews;
+            break;
+        case 'GreatSchools Score':
+            sortFunction = (a, b) => b.greatschools - a.greatschools;
+            break;
+        case 'Ratio':
+            sortFunction = (a, b) => a.ratio - b.ratio;
+            break;
+        case 'Math':
+            sortFunction = (a, b) => b.math - a.math;
+            break;
+        case 'Reading':
+            sortFunction = (a, b) => b.reading - a.reading;
+            break;
+        case 'Science':
+            sortFunction = (a, b) => b.science - a.science;
+            break;
+        case 'Graduated':
+            sortFunction = (a, b) => b.graduated - a.graduated;
+            break;
+        case 'Seats/App':
+            sortFunction = (a, b) => a.seatsPerApp - b.seatsPerApp;
+            break;
+        default:
+            return;
+    }
+    schools.sort(sortFunction);
+}
+
 function renderSchools(schoolData, filters) {
     const schools = filterSchools(schoolData, filters);
+    sortSchools(schools, filters.sort);
     let html = renderSchoolForm(schools, filters);
     html += renderSchoolTable(schools);
     return html;
@@ -475,8 +544,7 @@ function getSchoolFullName(school) {
 
 // Update the distance between each school and the user's location.
 function updateDistances(coords) {
-    for (const key in schoolData) {
-        const school = schoolData[key];
+    for (const school of schoolData) {
         const name = getSchoolFullName(school);
         const schoolCoords = [school.lat, school.lon];
         school.distance = calculateDistance(coords, schoolCoords);
@@ -567,6 +635,9 @@ function addEventListeners(schoolData, filters) {
     const reset = document.querySelector('input[type=reset]');
     reset.addEventListener('click', event => {
         addressInput.value = '';
+        if (filters.sort === 'Distance') {
+            filters.sort = 'Name';
+        }
         addressInput.dispatchEvent(new Event('input'));
         for (const menu of menus) {
             menu.value = '';
