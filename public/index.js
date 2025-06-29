@@ -196,13 +196,30 @@ function renderNeighborhoodMenu(schools, neighborhood) {
 }
 
 function getSchoolTypes(schools) {
-    return [
+    const allTypes = [
         'Early Education',
         'Elementary',
         'K-8',
         'Middle',
         'High',
     ];
+    const types = [];
+    outer: for (const key in schools) {
+        const school = schools[key];
+        inner: for (const type of school.types) {
+            if (!types.includes(type)) {
+                types.push(type);
+                if (types.length >= allTypes.length) {
+                    break outer;
+                }
+            }
+        }
+    }
+    const orderedTypes = [];
+    for (const type of allTypes) {
+        if (types.includes(type)) orderedTypes.push(type);
+    }
+    return orderedTypes;
 }
 
 function renderTypeMenu(schools, type) {
