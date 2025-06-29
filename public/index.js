@@ -121,7 +121,7 @@ function getSchoolGrades(schools) {
         if (school.min !== null && school.max !== null) {
             for (let n = school.min; n <= school.max; n++) {
                 if (!grades.has(n)) {
-                    console.warn(school.name, 'has invalid school grade:', n);
+                    console.warn(school.name, school.types[0], 'has invalid school grade:', n);
                     continue;
                 }
                 grades.set(n, true);
@@ -353,7 +353,8 @@ function renderDistance(distance) {
 
 // Render one school's data as a table row.
 function renderSchoolRow(school) {
-    const schoolLink = renderLink(school.urls.main, school.name, true);
+    const name = getSchoolName(school);
+    const schoolLink = renderLink(school.urls.main, name, true);
     const greatschoolsLink = renderLink(school.urls.greatschools, school.greatschools, true);
     const usnewsLink = renderLink(school.urls.usnews, school.usnews, true);
     const fullName = getSchoolFullName(school);
@@ -539,7 +540,11 @@ function updateAddressInput() {
 }
 
 function getSchoolFullName(school) {
-    return `${school.name} ${school.types[0]}`;
+    return `${getSchoolName(school)} ${school.types[0]}`;
+}
+
+function getSchoolName(school) {
+    return `${school.prefix} ${school.name} ${school.suffix}`.trim();
 }
 
 // Update the distance between each school and the user's location.
