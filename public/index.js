@@ -579,7 +579,7 @@ function findAddress(address) {
         return;
     }
     const [num, ...streetParts] = addressParts;
-    const street = streetParts.join(' ').toUpperCase();
+    const street = streetParts.join(' ').toUpperCase().replaceAll('.', '');
     if (!(street in addressData)) {
         const addresses = [];
         for (const st in addressData) {
