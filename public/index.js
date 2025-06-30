@@ -573,7 +573,8 @@ function updateDistances(coords) {
     document.getElementById('address').select();
 }
 
-function updatePossibleAddresses(addresses) {
+// Suggest addresses matching what the user has typed so far.
+function suggestAddresses(addresses) {
     const datalist = document.getElementById('addresses');
     if (!datalist) {
         return;
@@ -581,27 +582,58 @@ function updatePossibleAddresses(addresses) {
     datalist.innerHTML = renderOptions(addresses);
 }
 
-function findAddress(address) {
-    const addressParts = address.split(' ');
-    if (addressParts.length < 2) {
-        updatePossibleAddresses([]);
-        return;
-    }
-    if (isNaN(addressParts[0])) {
-        updatePossibleAddresses([]);
-        return;
-    }
-    const [num, ...streetParts] = addressParts;
-    const street = streetParts.join(' ').toUpperCase().replaceAll('.', '');
-    if (!(street in addressData)) {
-        const addresses = [];
-        for (const st in addressData) {
-            if (st.startsWith(street) && num in addressData[st]) {
-                addresses.push(`${num} ${st}`);
-            }
+// Find addresses matching what the user has typed so far.
+//
+// Accepts a street number, a street name (maybe with punctuation, like an
+// apostrophe), and a street name without punctuation.
+//
+// Returns an array of suggested street addresses.
+function findAddressSuggestions(num, str, street) {
+    const addresses = [];
+    for (const st in addressData) {
+        if (st.startsWith(street) && num in addressData[st]) {
+            addresses.push(`${num} ${st}`);
         }
+    }
+    if (str === street) {
+        return addresses;
+    }
+    const puncts = {
+        'O\'FARRELL ST': 'OFARRELL ST',
+        'O\'REILLY AVE': 'OREILLY AVE',
+        'O\'SHAUGHNESSY BLVD': 'OSHAUGHNESSY BLVD',
+    };
+    for (const punct in puncts) {
+        const st = puncts[punct];
+        if (punct.startsWith(str) && num in addressData[st]) {
+            addresses.push(`${num} ${punct}`);
+        }
+    }
+    return addresses;
+}
+
+// Search for an address in San Francisco, California.
+//
+// Accepts a string from a text input.
+//
+// Returns an array of degrees latitude and longitude, if found.
+function findAddress(address) {
+    const parts = address.split(' ');
+    if (parts.length < 2) {
+        suggestAddresses([]);
+        return;
+    }
+    if (isNaN(parts[0])) {
+        suggestAddresses([]);
+        return;
+    }
+    const num = parts.shift();
+    const str = parts.join(' ').toUpperCase();
+    const street = str.replace(/[^A-Z0-9\s]/g, '');
+    if (!(street in addressData)) {
+        const addresses = findAddressSuggestions(num, str, street);
         if (addresses.length <= 10) {
-            updatePossibleAddresses(addresses);
+            suggestAddresses(addresses);
         }
         return;
     }
