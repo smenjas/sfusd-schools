@@ -570,6 +570,7 @@ function updateDistances(coords) {
         return;
     }
     renderPage(schoolData, filters);
+    document.getElementById('address').select();
 }
 
 function updatePossibleAddresses(addresses) {
