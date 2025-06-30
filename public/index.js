@@ -573,6 +573,7 @@ function updateDistances(coords) {
     document.getElementById('address').select();
 }
 
+// Suggest addresses matching what the user has typed so far.
 function updatePossibleAddresses(addresses) {
     const datalist = document.getElementById('addresses');
     if (!datalist) {
@@ -582,22 +583,37 @@ function updatePossibleAddresses(addresses) {
 }
 
 function findAddress(address) {
-    const addressParts = address.split(' ');
-    if (addressParts.length < 2) {
+    const parts = address.split(' ');
+    if (parts.length < 2) {
         updatePossibleAddresses([]);
         return;
     }
-    if (isNaN(addressParts[0])) {
+    if (isNaN(parts[0])) {
         updatePossibleAddresses([]);
         return;
     }
-    const [num, ...streetParts] = addressParts;
-    const street = streetParts.join(' ').toUpperCase().replaceAll('.', '');
+    const num = parts.shift();
+    const str = parts.join(' ').toUpperCase();
+    const street = str.replace(/[^A-Z0-9\s]/g, '');
     if (!(street in addressData)) {
+        // Suggest addresses matching what the user has typed so far.
         const addresses = [];
         for (const st in addressData) {
             if (st.startsWith(street) && num in addressData[st]) {
                 addresses.push(`${num} ${st}`);
+            }
+        }
+        if (str !== street) {
+            const punctuated = {
+                'O\'FARRELL ST': 'OFARRELL ST',
+                'O\'REILLY AVE': 'OREILLY AVE',
+                'O\'SHAUGHNESSY BLVD': 'OSHAUGHNESSY BLVD',
+            };
+            for (const key in punctuated) {
+                const st = punctuated[key];
+                if (key.startsWith(str) && num in addressData[st]) {
+                    addresses.push(`${num} ${key}`);
+                }
             }
         }
         if (addresses.length <= 10) {
