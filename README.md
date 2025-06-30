@@ -1,9 +1,14 @@
 # SFUSD Schools
 
-This app helps you choose between the many public schools in the San Francisco
-Unified School District (SFUSD). You should also [tour nearby
+Compare the many public schools in the [San Francisco Unified School District
+(SFUSD)](https://www.sfusd.edu/). You should also [tour nearby
 schools](https://sfusd.edu/tours) and talk to other caregivers and educators
 about what works best for your child.
+
+SFUSD did not create, and is not affiliated with this web app. It is made by a
+parent, for parents and caregivers of current and prospective SFUSD students.
+[Report bugs and request features
+here.](https://github.com/smenjas/sfusd-schools/issues)
 
 ## Privacy
 
