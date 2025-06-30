@@ -1,5 +1,9 @@
+import schoolData from '../public/school-data.js';
 import addressData from '../public/address-data.js';
-import { expandCoords, getMapURL, lonToMilesFactor } from '../public/geo.js';
+import { calculateDistance,
+         expandCoords,
+         getMapURL,
+         lonToMilesFactor } from '../public/geo.js';
 
 function getCoordsURL(coords) {
     if (!coords) {
@@ -55,17 +59,70 @@ for (const st in addressData) {
     }
 }
 
+// How many miles per degree of longitude are there at the northernmost addess?
 const maxFactor = lonToMilesFactor(`37.${maxLat}`);
 console.log({maxLat, maxFactor});
 
+// How many miles per degree of longitude are there at the southernmost addess?
 const minFactor = lonToMilesFactor(`37.${minLat}`);
 console.log({minLat, minFactor});
 
+// Which addresses are farthest north, south, east, and west in San Francisco?
 console.log('Northernmost address:', getCoordsURL([maxLat, maxLatLon]), north);
 console.log('Southernmost address:', getCoordsURL([minLat, minLatLon]), south);
 console.log('Easternmost address: ', getCoordsURL([minLonLat, minLon]), east);
 console.log('Westernmost address: ', getCoordsURL([maxLonLat, maxLon]), west);
 
+// How many miles per degree of longitude are there at various latitudes?
 for (let lat = 0; lat <= 90; lat += 10) {
     console.log(lat, Math.round(lonToMilesFactor(lat) * 10) / 10);
 }
+
+// How far away are each school's coordinates from those of its address?
+let minFeet = Infinity;
+let minName = '';
+let maxFeet = -Infinity;
+let maxName = '';
+const discrepancies = [];
+
+for (const school of schoolData) {
+    const name = `${school.name} ${school.types[0]}`;
+    const parts = school.address.split(' ');
+    const num = parts.shift();
+    const street = parts.join(' ').toUpperCase().replace(/[^A-Z0-9\s]/g, '');
+    if (!(street in addressData)) {
+        console.log('Street not found:', street, 'for', name);
+        continue;
+    }
+    if (!(num in addressData[street])) {
+        console.log(num, 'not found on', street, 'for', name);
+        continue;
+    }
+    const coords = expandCoords(addressData[street][num]);
+    const schoolCoords = [school.lat, school.lon];
+    const feet = Math.round(calculateDistance(schoolCoords, coords) * 5280);
+    discrepancies.push({
+        name: name,
+        address: school.address,
+        feet: feet,
+        school: schoolCoords,
+        sfdata: [parseFloat(coords[0]), parseFloat(coords[1])],
+    });
+    if (feet < minFeet) {
+        minFeet = feet;
+        minName = name;
+    }
+    if (feet > maxFeet) {
+        maxFeet = feet;
+        maxName = name;
+    }
+    console.log(school.name, school.address, schoolCoords, coords, feet);
+}
+
+discrepancies.sort((a, b) => a.feet - b.feet);
+
+for (const discrepancy of discrepancies) {
+    console.log(discrepancy);
+}
+
+console.log({minName, minFeet, maxName, maxFeet});
