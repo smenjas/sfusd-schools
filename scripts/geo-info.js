@@ -126,3 +126,16 @@ for (const discrepancy of discrepancies) {
 }
 
 console.log({minName, minFeet, maxName, maxFeet});
+
+// How long is the longest street address?
+let maxLength = 0;
+let maxStreet = '';
+for (const st in addressData) {
+    if (st.length > maxLength) {
+        maxLength = st.length;
+        maxStreet = st;
+    }
+}
+const maxStreetNums = Object.keys(addressData[maxStreet]);
+const maxStreetNum = maxStreetNums[maxStreetNums.length - 1];
+console.log(maxStreetNum, maxStreet, maxLength + maxStreetNum.length + 1);

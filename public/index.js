@@ -277,9 +277,8 @@ function renderSortMenu(sort) {
 
 function renderAddressInput() {
     let html = '<span class="nobr"><label for="address">Address: </label>';
-    html += '<input name="address" id="address" list="addresses"></span>';
-    html += '<datalist id="addresses">';
-    html += '</datalist>';
+    html += '<input name="address" id="address" list="addresses" size="32"></span>';
+    html += '<datalist id="addresses"></datalist>';
     html += ' <span id="coords-link"></span>';
     return html;
 }
