@@ -90,7 +90,7 @@ function renderOptions(options, selected) {
     return html;
 }
 
-function getSchoolGrades(schools) {
+function getSchoolGrades(schools, selected) {
     const grades = new Map([
         ['pk', false],
         ['tk', false],
@@ -129,17 +129,17 @@ function getSchoolGrades(schools) {
         }
     }
     const options = [];
-    if (grades.get('pk')) options.push(['pk', 'Pre-K']);
-    if (grades.get('tk')) options.push(['tk', 'TK']);
-    if (grades.get('k')) options.push(['k', 'K']);
+    if (selected === 'pk' || grades.get('pk')) options.push(['pk', 'Pre-K']);
+    if (selected === 'tk' || grades.get('tk')) options.push(['tk', 'TK']);
+    if (selected === 'k' || grades.get('k')) options.push(['k', 'K']);
     for (let n = 1; n <= 12; n++) {
-        if (grades.get(n)) options.push([n, n]);
+        if (selected === n || grades.get(n)) options.push([n, n]);
     }
     return new Map(options);
 }
 
 function renderGradeMenu(schools, grade) {
-    const gradeOptions = getSchoolGrades(schools);
+    const gradeOptions = getSchoolGrades(schools, grade);
     let html = '<span class="nobr"><label for="grade">Grade: </label>';
     html += '<select name="grade" id="grade">';
     html += '<option value="">Any</option>';
@@ -148,7 +148,7 @@ function renderGradeMenu(schools, grade) {
     return html;
 }
 
-function getLanguages(schools) {
+function getLanguages(schools, selected) {
     const languages = [];
     for (const key in schools) {
         const school = schools[key];
@@ -160,11 +160,14 @@ function getLanguages(schools) {
             }
         }
     }
+    if (selected !== '' && !languages.includes(selected)) {
+        languages.push(selected);
+    }
     return languages.sort();
 }
 
 function renderLanguageMenu(schools, language) {
-    const languages = getLanguages(schools);
+    const languages = getLanguages(schools, language);
     let html = '<span class="nobr"><label for="language">Language: </label>';
     html += '<select name="language" id="language">';
     html += '<option value="">Any</option>';
@@ -173,7 +176,7 @@ function renderLanguageMenu(schools, language) {
     return html;
 }
 
-function getNeighborhoods(schools) {
+function getNeighborhoods(schools, selected) {
     const neighborhoods = [];
     for (const key in schools) {
         const school = schools[key];
@@ -182,11 +185,14 @@ function getNeighborhoods(schools) {
             neighborhoods.push(hood);
         }
     }
+    if (selected !== '' && !neighborhoods.includes(selected)) {
+        neighborhoods.push(selected);
+    }
     return neighborhoods.sort();
 }
 
 function renderNeighborhoodMenu(schools, neighborhood) {
-    const neighborhoods = getNeighborhoods(schools);
+    const neighborhoods = getNeighborhoods(schools, neighborhood);
     let html = '<span class="nobr"><label for="neighborhood">Neighborhood: </label>';
     html += '<select name="neighborhood" id="neighborhood">';
     html += '<option value="">Any</option>';
@@ -195,7 +201,7 @@ function renderNeighborhoodMenu(schools, neighborhood) {
     return html;
 }
 
-function getSchoolTypes(schools) {
+function getSchoolTypes(schools, selected) {
     const allTypes = [
         'Early Education',
         'Elementary',
@@ -217,13 +223,15 @@ function getSchoolTypes(schools) {
     }
     const orderedTypes = [];
     for (const type of allTypes) {
-        if (types.includes(type)) orderedTypes.push(type);
+        if (selected === type || types.includes(type)) {
+            orderedTypes.push(type);
+        }
     }
     return orderedTypes;
 }
 
 function renderTypeMenu(schools, type) {
-    const types = getSchoolTypes(schools);
+    const types = getSchoolTypes(schools, type);
     let html = '<span class="nobr"><label for="type">Type: </label>';
     html += '<select name="type" id="type">';
     html += '<option value="">Any</option>';
