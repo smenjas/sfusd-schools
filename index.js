@@ -576,6 +576,8 @@ function getSchoolName(school) {
 }
 
 // Update the distance between each school and the user's location.
+//
+// Returns true if the page rendered, or false otherwise.
 function updateDistances(coords) {
     for (const school of schoolData) {
         const name = getSchoolFullName(school);
@@ -583,10 +585,11 @@ function updateDistances(coords) {
         school.distance = calculateDistance(coords, schoolCoords);
     }
     if (!coords) {
-        return;
+        return false;
     }
     renderPage(schoolData, inputs);
     document.getElementById('address').select();
+    return true;
 }
 
 // Suggest addresses matching what the user has typed so far.
@@ -735,6 +738,4 @@ const inputs = inputsJSON ? JSON.parse(inputsJSON) : {
 };
 
 const coords = findAddress(inputs.address);
-updateDistances(coords);
-
-renderPage(schoolData, inputs);
+updateDistances(coords) || renderPage(schoolData, inputs);
