@@ -138,4 +138,13 @@ for (const st in addressData) {
 }
 const maxStreetNums = Object.keys(addressData[maxStreet]);
 const maxStreetNum = maxStreetNums[maxStreetNums.length - 1];
-console.log(maxStreetNum, maxStreet, maxLength + maxStreetNum.length + 1);
+const totalLength = `${maxStreetNum} ${maxStreet}`.length;
+console.log('Longest address:', maxStreetNum, maxStreet, totalLength);
+
+let count = 0;
+for (const st in addressData) {
+    for (const num in addressData[st]) {
+        count++;
+    }
+}
+console.log(count, 'SF addresses');
