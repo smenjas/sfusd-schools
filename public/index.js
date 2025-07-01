@@ -283,20 +283,20 @@ function renderAddressInput() {
     return html;
 }
 
-function renderSchoolForm(schools, filters) {
+function renderSchoolForm(schools, inputs) {
     let html = '<form id="schoolForm">';
     html += '<fieldset>';
     html += renderAddressInput();
-    html += renderSortMenu(filters.sort);
+    html += renderSortMenu(inputs.menus.sort);
     html += '<input type="reset">';
     html += '</fieldset>';
     html += '<fieldset class="filters">';
     html += '<legend>Filter by:</legend>';
-    html += renderTypeMenu(schools, filters.type);
-    html += renderGradeMenu(schools, filters.grade);
-    html += renderNeighborhoodMenu(schools, filters.neighborhood);
-    html += renderLanguageMenu(schools, filters.language);
-    html += renderStartTimeMenu(filters.start);
+    html += renderTypeMenu(schools, inputs.menus.type);
+    html += renderGradeMenu(schools, inputs.menus.grade);
+    html += renderNeighborhoodMenu(schools, inputs.menus.neighborhood);
+    html += renderLanguageMenu(schools, inputs.menus.language);
+    html += renderStartTimeMenu(inputs.menus.start);
     html += '</fieldset>';
     html += '</form>';
     return html;
@@ -479,14 +479,31 @@ function filterLanguage(school, language) {
     return false;
 }
 
-function filterSchools(schoolData, filters) {
+function filterSchool(school, menus) {
+    const filters = {
+        type: filterType,
+        grade: filterGrade,
+        neighborhood: filterNeighborhood,
+        start: filterStartTime,
+        language: filterLanguage,
+    };
+    for (const filter in filters) {
+        if (!(filter in menus)) {
+            // No saved form inputs for this user.
+            continue;
+        }
+        const filterFunction = filters[filter];
+        if (!filterFunction(school, menus[filter])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function filterSchools(schoolData, menus) {
     const schools = [];
     for (const school of schoolData) {
-        if (filterType(school, filters.type) &&
-            filterGrade(school, filters.grade) &&
-            filterNeighborhood(school, filters.neighborhood) &&
-            filterStartTime(school, filters.start) &&
-            filterLanguage(school, filters.language)) {
+        if (!menus || filterSchool(school, menus)) {
             schools.push(school);
         }
     }
@@ -535,15 +552,15 @@ function sortSchools(schools, sort) {
     schools.sort(sortFunction);
 }
 
-function renderSchools(schoolData, filters) {
-    const schools = filterSchools(schoolData, filters);
-    sortSchools(schools, filters.sort);
-    let html = renderSchoolForm(schools, filters);
+function renderSchools(schoolData, inputs) {
+    const schools = filterSchools(schoolData, inputs.menus);
+    sortSchools(schools, inputs.menus.sort);
+    let html = renderSchoolForm(schools, inputs);
     html += renderSchoolTable(schools);
     return html;
 }
 
-function updateAddressInput() {
+function updateAddressInput(address) {
     const addressInput = document.getElementById('address');
     const coordsSpan = document.getElementById('coords-link');
     addressInput.value = address;
@@ -568,7 +585,7 @@ function updateDistances(coords) {
     if (!coords) {
         return;
     }
-    renderPage(schoolData, filters);
+    renderPage(schoolData, inputs);
     document.getElementById('address').select();
 }
 
@@ -642,7 +659,7 @@ function findAddress(address) {
     return expandCoords(addressData[street][num]);
 }
 
-function addEventListeners(schoolData, filters) {
+function addEventListeners(schoolData, inputs) {
     // Remove existing event listeners.
     const oldAddress = document.querySelector('input[name=address]');
     oldAddress.replaceWith(oldAddress.cloneNode(true));
@@ -662,9 +679,9 @@ function addEventListeners(schoolData, filters) {
         }
     });
     addressInput.addEventListener('input', event => {
-        address = event.target.value;
-        localStorage.setItem('address', JSON.stringify(address));
-        const coords = findAddress(address);
+        inputs.address = event.target.value;
+        localStorage.setItem('inputs', JSON.stringify(inputs));
+        const coords = findAddress(inputs.address);
         updateDistances(coords);
     });
 
@@ -674,9 +691,9 @@ function addEventListeners(schoolData, filters) {
         menu.addEventListener('change', event => {
             const name = event.target.name;
             const value = event.target.value;
-            filters[name] = value;
-            localStorage.setItem('filters', JSON.stringify(filters));
-            renderPage(schoolData, filters);
+            inputs.menus[name] = value;
+            localStorage.setItem('inputs', JSON.stringify(inputs));
+            renderPage(schoolData, inputs);
         });
     }
 
@@ -684,8 +701,8 @@ function addEventListeners(schoolData, filters) {
     const reset = document.querySelector('input[type=reset]');
     reset.addEventListener('click', event => {
         addressInput.value = '';
-        if (filters.sort === 'Distance') {
-            filters.sort = 'Name';
+        if (inputs.sort === 'Distance') {
+            inputs.sort = 'Name';
         }
         addressInput.dispatchEvent(new Event('input'));
         for (const menu of menus) {
@@ -696,21 +713,28 @@ function addEventListeners(schoolData, filters) {
 }
 
 // Render a web page.
-function renderPage(schoolData, filters) {
+function renderPage(schoolData, inputs) {
     document.title = 'SFUSD Schools';
-    const html = renderSchools(schoolData, filters);
+    const html = renderSchools(schoolData, inputs);
     document.getElementById('schools').innerHTML = html;
-    addEventListeners(schoolData, filters);
-    updateAddressInput();
+    addEventListeners(schoolData, inputs);
+    updateAddressInput(inputs.address);
 }
 
-const addressJSON = localStorage.getItem('address');
-let address = addressJSON ? JSON.parse(addressJSON) : '';
-const coords = findAddress(address);
+const inputsJSON = localStorage.getItem('inputs');
+const inputs = inputsJSON ? JSON.parse(inputsJSON) : {
+    address: '',
+    menus: {
+        sort: 'Name',
+        type: '',
+        grade: '',
+        neighborhood: '',
+        start: '',
+        language: '',
+    },
+};
 
-const filtersJSON = localStorage.getItem('filters');
-const filters = filtersJSON ? JSON.parse(filtersJSON) : {};
-
+const coords = findAddress(inputs.address);
 updateDistances(coords);
 
-renderPage(schoolData, filters);
+renderPage(schoolData, inputs);
