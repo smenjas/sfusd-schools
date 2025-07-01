@@ -578,7 +578,7 @@ function getSchoolName(school) {
 // Update the distance between each school and the user's location.
 //
 // Returns true if the page rendered, or false otherwise.
-function updateDistances(coords) {
+function updateDistances(schoolData, inputs, coords) {
     for (const school of schoolData) {
         const name = getSchoolFullName(school);
         const schoolCoords = [school.lat, school.lon];
@@ -586,6 +586,9 @@ function updateDistances(coords) {
     }
     if (!coords) {
         return false;
+    }
+    if (inputs.menus.sort === 'Name') {
+        inputs.menus.sort = 'Distance';
     }
     renderPage(schoolData, inputs);
     document.getElementById('address').select();
@@ -685,7 +688,7 @@ function addEventListeners(schoolData, inputs) {
         inputs.address = event.target.value;
         localStorage.setItem('inputs', JSON.stringify(inputs));
         const coords = findAddress(inputs.address);
-        updateDistances(coords);
+        updateDistances(schoolData, inputs, coords);
     });
 
     // Listen for select menus, to filter schools.
@@ -738,4 +741,4 @@ const inputs = inputsJSON ? JSON.parse(inputsJSON) : {
 };
 
 const coords = findAddress(inputs.address);
-updateDistances(coords) || renderPage(schoolData, inputs);
+updateDistances(schoolData, inputs, coords) || renderPage(schoolData, inputs);
