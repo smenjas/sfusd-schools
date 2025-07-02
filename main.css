@@ -110,6 +110,12 @@ tr:hover {
     white-space: nowrap;
 }
 
+@media only screen and (width <= 440px) {
+    main, form {
+        max-width: 30rem;
+    }
+}
+
 @media only screen and (prefers-color-scheme: dark) {
     body {
         background-color: #111;
