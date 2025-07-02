@@ -27,7 +27,7 @@ function renderMapLink(search, text) {
 
 function renderCoordsLink(coords, text) {
     if (!coords) {
-        return '';
+        return text;
     }
     return renderMapLink(coords.join(','), text);
 }
@@ -574,11 +574,11 @@ function sortSchools(schools, sort) {
     schools.sort(sortFunction);
 }
 
-function updateAddressInput(address) {
+function updateAddressInput(address, coords) {
     const addressInput = document.getElementById('address');
-    const coordsSpan = document.getElementById('coords-link');
+    const addressLabel = document.querySelector('label[for=address]');
     addressInput.value = address;
-    coordsSpan.innerHTML = renderCoordsLink(coords, 'Map');
+    addressLabel.innerHTML = renderCoordsLink(coords, 'Address: ');
 }
 
 function getSchoolFullName(school) {
@@ -604,7 +604,7 @@ function updateDistances(schoolData, inputs, coords) {
     if (inputs.menus.sort === 'Name') {
         inputs.menus.sort = 'Distance';
     }
-    renderPage(schoolData, inputs);
+    renderPage(schoolData, inputs, coords);
     document.getElementById('address').select();
     return true;
 }
@@ -679,7 +679,7 @@ function findAddress(address) {
     return expandCoords(addressData[street][num]);
 }
 
-function addEventListeners(schoolData, inputs) {
+function addEventListeners(schoolData, inputs, coords) {
     // Remove existing event listeners.
     const oldAddress = document.querySelector('input[name=address]');
     oldAddress.replaceWith(oldAddress.cloneNode(true));
@@ -701,7 +701,7 @@ function addEventListeners(schoolData, inputs) {
     addressInput.addEventListener('input', event => {
         inputs.address = event.target.value;
         localStorage.setItem('inputs', JSON.stringify(inputs));
-        const coords = findAddress(inputs.address);
+        coords = findAddress(inputs.address);
         updateDistances(schoolData, inputs, coords);
     });
 
@@ -713,7 +713,7 @@ function addEventListeners(schoolData, inputs) {
             const value = event.target.value;
             inputs.menus[name] = value;
             localStorage.setItem('inputs', JSON.stringify(inputs));
-            renderPage(schoolData, inputs);
+            renderPage(schoolData, inputs, coords);
         });
     }
 
@@ -725,6 +725,7 @@ function addEventListeners(schoolData, inputs) {
             inputs.sort = 'Name';
         }
         addressInput.dispatchEvent(new Event('input'));
+        updateAddressInput('', null);
         for (const menu of menus) {
             menu.value = '';
             menu.dispatchEvent(new Event('change'));
@@ -733,14 +734,14 @@ function addEventListeners(schoolData, inputs) {
 }
 
 // Render a web page.
-function renderPage(schoolData, inputs) {
+function renderPage(schoolData, inputs, coords) {
     document.title = 'SFUSD Schools';
     const schools = filterSchools(schoolData, inputs.menus);
     sortSchools(schools, inputs.menus.sort);
     document.getElementById('input').innerHTML = renderForm(schools, inputs);
     document.getElementById('schools').innerHTML = renderTable(schools);
-    addEventListeners(schoolData, inputs);
-    updateAddressInput(inputs.address);
+    addEventListeners(schoolData, inputs, coords);
+    updateAddressInput(inputs.address, coords);
 }
 
 const inputsJSON = localStorage.getItem('inputs');
@@ -757,4 +758,5 @@ const inputs = inputsJSON ? JSON.parse(inputsJSON) : {
 };
 
 const coords = findAddress(inputs.address);
-updateDistances(schoolData, inputs, coords) || renderPage(schoolData, inputs);
+updateDistances(schoolData, inputs, coords)
+    || renderPage(schoolData, inputs, coords);
