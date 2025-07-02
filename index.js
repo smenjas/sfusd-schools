@@ -561,10 +561,6 @@ function sortSchools(schools, sort) {
 }
 
 function renderSchools(schoolData, inputs) {
-    const schools = filterSchools(schoolData, inputs.menus);
-    sortSchools(schools, inputs.menus.sort);
-    let html = renderSchoolForm(schools, inputs);
-    html += renderSchoolTable(schools);
     return html;
 }
 
@@ -729,8 +725,10 @@ function addEventListeners(schoolData, inputs) {
 // Render a web page.
 function renderPage(schoolData, inputs) {
     document.title = 'SFUSD Schools';
-    const html = renderSchools(schoolData, inputs);
-    document.getElementById('schools').innerHTML = html;
+    const schools = filterSchools(schoolData, inputs.menus);
+    sortSchools(schools, inputs.menus.sort);
+    document.getElementById('input').innerHTML = renderSchoolForm(schools, inputs);
+    document.getElementById('schools').innerHTML = renderSchoolTable(schools);
     addEventListeners(schoolData, inputs);
     updateAddressInput(inputs.address);
 }
