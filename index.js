@@ -310,7 +310,7 @@ function renderForm(schools, inputs) {
     html += '</div>';
     html += '<div>';
     html += renderSortMenu(inputs.menus.sort);
-    html += '<input type="reset">';
+    html += '<button type="reset">Reset</button>';
     html += '</div>';
     html += '</fieldset>';
     html += '<fieldset class="filters">';
@@ -702,7 +702,7 @@ function addEventListeners(schoolData, inputs, coords) {
     for (const menu of oldMenus) {
         menu.replaceWith(menu.cloneNode(true));
     }
-    const oldReset = document.querySelector('input[type=reset]');
+    const oldReset = document.querySelector('[type=reset]');
     oldReset.replaceWith(oldReset.cloneNode(true));
 
     // Listen for address input.
@@ -733,7 +733,7 @@ function addEventListeners(schoolData, inputs, coords) {
     }
 
     // Listen for the reset button, to clear inputs.
-    const reset = document.querySelector('input[type=reset]');
+    const reset = document.querySelector('[type=reset]');
     reset.addEventListener('click', event => {
         addressInput.value = '';
         if (inputs.sort === 'Distance') {
