@@ -42,12 +42,14 @@ const server = http.createServer((request, response) => {
         break;
     case '/img/sfusd-16.png':
     case '/img/sfusd-32.png':
+    case '/img/sfusd-36.png':
     case '/img/sfusd-57.png':
     case '/img/sfusd-60.png':
     case '/img/sfusd-70.png':
     case '/img/sfusd-72.png':
     case '/img/sfusd-76.png':
     case '/img/sfusd-96.png':
+    case '/img/sfusd-108.png':
     case '/img/sfusd-120.png':
     case '/img/sfusd-128.png':
     case '/img/sfusd-152.png':

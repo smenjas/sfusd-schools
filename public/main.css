@@ -24,6 +24,11 @@ h1, h2 {
     margin: 0;
 }
 
+h1 img {
+    float: right;
+    margin: 0.25rem;
+}
+
 fieldset, p {
     padding: 0.1rem 0.5rem;
     margin: 0 0 0.5rem;
