@@ -26,7 +26,7 @@ h1, h2 {
 
 h1 img {
     float: right;
-    margin: 0;
+    margin: -2px 1px 0 0;
 }
 
 fieldset, p {
