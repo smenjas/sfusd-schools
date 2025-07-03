@@ -1,7 +1,10 @@
 body {
     font-family: sans-serif;
-    background: #eee;
     color: black;
+}
+
+body, form {
+    background: #eee;
 }
 
 a {
@@ -126,7 +129,7 @@ tr:hover {
 }
 
 @media only screen and (prefers-color-scheme: dark) {
-    body {
+    body, form {
         background-color: #111;
         color: white;
     }
@@ -139,11 +142,7 @@ tr:hover {
         color: #faf;
     }
 
-    main, div, form, p, table, thead th {
-        background-color: black;
-    }
-
-    button, input, select {
+    main, fieldset, button, input, select, table, thead th {
         background-color: black;
         color: white;
     }
