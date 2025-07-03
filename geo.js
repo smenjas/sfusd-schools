@@ -30,6 +30,21 @@ export function expandCoords(coords) {
 }
 
 /**
+ * Generate a Google Maps URL for directions.
+ *
+ * @param {string} fro - The search terms for the origin
+ * @param {string} to - The search terms for the destination
+ * @returns {string} A URL
+ */
+export function getDirectionsURL(fro, to) {
+    if (fro === '' || to === '') {
+        return '';
+    }
+    const search = `${fro}/${to}`;
+    return 'https://www.google.com/maps/dir/' + search.replaceAll(' ', '+');
+}
+
+/**
  * Generate a Google Maps URL.
  *
  * @param {string} search - The search terms for a place

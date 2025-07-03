@@ -1,6 +1,9 @@
 import schoolData from './school-data.js';
 import addressData from './address-data.js';
-import { calculateDistance, expandCoords, getMapURL } from './geo.js';
+import { calculateDistance,
+         expandCoords,
+         getDirectionsURL,
+         getMapURL } from './geo.js';
 
 function renderLink(url, text, newTab = false) {
     if (text === null || text === '') {
@@ -15,6 +18,14 @@ function renderLink(url, text, newTab = false) {
     }
     link += ` href="${url}">${text}</a>`;
     return link;
+}
+
+function renderDirectionsLink(fro, to, text) {
+    const url = getDirectionsURL(fro, to);
+    if (url === '') {
+        return text;
+    }
+    return renderLink(url, text, true);
 }
 
 function renderMapLink(search, text) {
@@ -385,13 +396,17 @@ function renderDistance(distance) {
 }
 
 // Render one school's data as a table row.
-function renderRow(school) {
+function renderRow(school, address) {
     const name = getSchoolName(school);
     const schoolLink = renderLink(school.urls.main, name, true);
     const greatschoolsLink = renderLink(school.urls.greatschools, school.greatschools, true);
     const usnewsLink = renderLink(school.urls.usnews, school.usnews, true);
     const fullName = getSchoolFullName(school);
-    const search = `${fullName} School in San Francisco, California`;
+    const city = 'San Francisco, CA';
+    const origin = `${address}, ${city}, USA`;
+    const search = `${fullName} School, ${school.address}, ${city} ${school.zip}`;
+    const distance = renderDistance(school.distance);
+    const directionsLink = renderDirectionsLink(origin, search, distance);
     const mapLink = renderMapLink(search, school.address);
     const min = getMinGrade(school);
     const max = getMaxGrade(school);
@@ -400,7 +415,7 @@ function renderRow(school) {
     html += `<td>${schoolLink}</td>`;
     html += `<td>${renderGradeRange(min, max)}</td>`;
     html += `<td class="num">${school.start}</td>`;
-    html += `<td class="num">${renderDistance(school.distance)}</td>`;
+    html += `<td class="num">${directionsLink}</td>`;
     html += `<td>${school.neighborhood}</td>`;
     html += `<td>${mapLink}</td>`;
     html += `<td class="num">${usnewsLink}</td>`;
@@ -425,7 +440,7 @@ function renderRow(school) {
 }
 
 // Render school data as an HTML table.
-function renderTable(schools) {
+function renderTable(schools, address) {
     const numSchools = Object.keys(schools).length;
     let html = '<table>';
     html += `<caption>${numSchools} Schools</caption>`;
@@ -436,7 +451,7 @@ function renderTable(schools) {
     html += renderHeader();
     html += '<tbody>';
     for (const key in schools) {
-        html += renderRow(schools[key]);
+        html += renderRow(schools[key], address);
     }
     html += '</tbody>';
     html += '</table>';
@@ -739,7 +754,7 @@ function renderPage(schoolData, inputs, coords) {
     const schools = filterSchools(schoolData, inputs.menus);
     sortSchools(schools, inputs.menus.sort);
     document.getElementById('input').innerHTML = renderForm(schools, inputs);
-    document.getElementById('schools').innerHTML = renderTable(schools);
+    document.getElementById('schools').innerHTML = renderTable(schools, inputs.address);
     addEventListeners(schoolData, inputs, coords);
     updateAddressInput(inputs.address, coords);
 }
