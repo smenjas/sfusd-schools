@@ -3,7 +3,7 @@ body {
     color: black;
 }
 
-body, form {
+body, form, table caption {
     background: #eee;
 }
 
@@ -80,7 +80,6 @@ table {
 }
 
 table caption {
-    background-color: #111;
     font-weight: bold;
     padding: 0.25rem;
     text-align: left;
@@ -139,7 +138,7 @@ tr:hover {
 }
 
 @media only screen and (prefers-color-scheme: dark) {
-    body, form {
+    body, form, table caption {
         background-color: #111;
         color: white;
     }
