@@ -59,7 +59,9 @@ table {
 }
 
 table caption {
-    margin-bottom: 0.5rem;
+    background-color: #111;
+    font-weight: bold;
+    padding: 0.25rem;
     text-align: left;
     white-space: nowrap;
 }
