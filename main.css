@@ -89,6 +89,7 @@ table caption {
 thead th {
     background-color: white;
     position: sticky;
+    text-align: left;
     top: 0;
     z-index: 10;
 }
