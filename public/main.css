@@ -152,7 +152,7 @@ tr:hover {
         color: #faf;
     }
 
-    main, fieldset, button, input, select, table, thead th {
+    main, fieldset, legend, button, input, select, table, thead th {
         background-color: black;
         color: white;
     }
