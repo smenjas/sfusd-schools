@@ -151,11 +151,11 @@ function getSchoolGrades(schools, selected) {
 
 function renderGradeMenu(schools, grade) {
     const gradeOptions = getSchoolGrades(schools, grade);
-    let html = '<span class="nobr"><label for="grade">Grade: </label>';
+    let html = '<label for="grade">Grade</label>';
     html += '<select name="grade" id="grade">';
     html += '<option value="">Any</option>';
     html += renderOptions(gradeOptions, grade);
-    html += '</select></span>';
+    html += '</select>';
     return html;
 }
 
@@ -179,11 +179,11 @@ function getLanguages(schools, selected) {
 
 function renderLanguageMenu(schools, language) {
     const languages = getLanguages(schools, language);
-    let html = '<span class="nobr"><label for="language">Language: </label>';
+    let html = '<label for="language">Language</label>';
     html += '<select name="language" id="language">';
     html += '<option value="">Any</option>';
     html += renderOptions(languages, language);
-    html += '</select></span>';
+    html += '</select>';
     return html;
 }
 
@@ -204,11 +204,11 @@ function getNeighborhoods(schools, selected) {
 
 function renderNeighborhoodMenu(schools, neighborhood) {
     const neighborhoods = getNeighborhoods(schools, neighborhood);
-    let html = '<span class="nobr"><label for="neighborhood">Neighborhood: </label>';
+    let html = '<label for="neighborhood">Neighborhood</label>';
     html += '<select name="neighborhood" id="neighborhood">';
     html += '<option value="">Any</option>';
     html += renderOptions(neighborhoods, neighborhood);
-    html += '</select></span>';
+    html += '</select>';
     return html;
 }
 
@@ -243,11 +243,11 @@ function getSchoolTypes(schools, selected) {
 
 function renderTypeMenu(schools, type) {
     const types = getSchoolTypes(schools, type);
-    let html = '<span class="nobr"><label for="type">Type: </label>';
+    let html = '<label for="type">Type</label>';
     html += '<select name="type" id="type">';
     html += '<option value="">Any</option>';
     html += renderOptions(types, type);
-    html += '</select></span>';
+    html += '</select>';
     return html;
 }
 
@@ -261,11 +261,11 @@ function getStartTimes() {
 
 function renderStartTimeMenu(start) {
     const starts = getStartTimes();
-    let html = '<span class="nobr"><label for="start">Start Time: </label>';
+    let html = '<label for="start">Start Time</label>';
     html += '<select name="start" id="start">';
     html += '<option value="">Any</option>';
     html += renderOptions(starts, start);
-    html += '</select></span>';
+    html += '</select>';
     return html;
 }
 
@@ -287,50 +287,46 @@ function getSortables() {
 
 function renderSortMenu(sort) {
     const sorts = getSortables();
-    let html = '<span class="nobr"><label for="sort">Sort by: </label>';
+    let html = '<label for="sort">Sort by</label>';
     html += '<select name="sort" id="sort">';
     html += renderOptions(sorts, sort);
-    html += '</select></span>';
+    html += '</select>';
     return html;
 }
 
 function renderAddressInput() {
-    let html = '<span class="nobr"><label for="address">Address: </label>';
-    html += '<input name="address" id="address" list="addresses" size="32"></span>';
+    let html = '<label for="address">Address</label>';
+    html += '<input name="address" id="address" list="addresses" size="32">';
     html += '<datalist id="addresses"></datalist>';
-    html += ' <span id="coords-link"></span>';
     return html;
 }
 
 function renderForm(schools, inputs) {
     let html = '<form id="schoolForm">';
-    html += '<fieldset>';
-    html += '<div>';
+    html += '<div class="form-group">';
     html += renderAddressInput();
     html += '</div>';
-    html += '<div>';
+    html += '<div class="form-group">';
     html += renderSortMenu(inputs.menus.sort);
-    html += '<button type="reset">Reset</button>';
     html += '</div>';
-    html += '</fieldset>';
-    html += '<fieldset class="filters">';
-    html += '<legend>Filter by:</legend>';
-    html += '<div>';
+    html += '<div class="form-group">';
     html += renderTypeMenu(schools, inputs.menus.type);
     html += '</div>';
-    html += '<div>';
+    html += '<div class="form-group">';
     html += renderGradeMenu(schools, inputs.menus.grade);
     html += '</div>';
-    html += '<div>';
+    html += '<div class="form-group">';
     html += renderNeighborhoodMenu(schools, inputs.menus.neighborhood);
     html += '</div>';
-    html += '<div>';
+    html += '<div class="form-group">';
     html += renderLanguageMenu(schools, inputs.menus.language);
     html += '</div>';
-    html += '<div>';
+    html += '<div class="form-group">';
     html += renderStartTimeMenu(inputs.menus.start);
     html += '</div>';
-    html += '</fieldset>';
+    html += '<div class="form-group">';
+    html += '<button type="reset">Reset</button>';
+    html += '</div>';
     html += '</form>';
     return html;
 }
@@ -593,7 +589,7 @@ function updateAddressInput(address, coords) {
     const addressInput = document.getElementById('address');
     const addressLabel = document.querySelector('label[for=address]');
     addressInput.value = address;
-    addressLabel.innerHTML = renderCoordsLink(coords, 'Address: ');
+    addressLabel.innerHTML = renderCoordsLink(coords, 'Address');
 }
 
 function getSchoolFullName(school) {
