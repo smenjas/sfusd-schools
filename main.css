@@ -3,7 +3,7 @@ body {
     color: black;
 }
 
-body, form, table caption {
+body, table caption {
     background: white;
 }
 
@@ -16,17 +16,19 @@ a:visited {
 }
 
 main, form, table {
+    background: #f5f5ff;
     max-width: 51rem;
     margin: auto;
     padding: 0;
 }
 
-main, fieldset, legend, table {
-    background: #f5f5ff;
+main, form {
+    border-radius: 1rem;
+    padding: 1rem;
 }
 
-h1, h2 {
-    padding: 0.5rem;
+h1 {
+    padding: 0;
     margin: 0;
 }
 
@@ -35,25 +37,27 @@ h1 img {
     margin: -2px 1px 0 0;
 }
 
-fieldset, p {
-    padding: 0.1rem 0.5rem;
-    margin: 0 0 0.5rem;
+form {
+    display: grid;
+    gap: 1rem;
+
+    @media (width >= 720px) {
+        grid-template-columns: 1fr 1fr;
+    }
 }
 
-fieldset, legend {
-    border: 1px solid #7f7f7f;
-    border-radius: 0.3rem;
+.form-group {
+    display: grid;
+    gap: 0.25lh;
 }
 
-legend {
-    border-bottom: none;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-    padding: 0.25rem 0.5rem;
+main, p {
+    margin: 0 auto 0.5rem;
 }
 
-button, label, input, select {
-    margin: 0.5rem 0;
+label {
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
 }
 
 button, input, select {
@@ -61,7 +65,11 @@ button, input, select {
     color: black;
     border: 2px solid #7f7f7f;
     border-radius: 0.3rem;
-    font-size: 1rem;
+    font: inherit;
+}
+
+input {
+    width: 100%;
 }
 
 select, form #coords-link {
@@ -69,7 +77,7 @@ select, form #coords-link {
 }
 
 [type=reset] {
-    float: right;
+    justify-self: end;
 }
 
 table {
@@ -136,12 +144,8 @@ tr:hover {
     font-size: 80%;
 }
 
-.nobr {
-    white-space: nowrap;
-}
-
 @media only screen and (prefers-color-scheme: dark) {
-    body, form, table caption {
+    body, table caption {
         background-color: black;
         color: white;
     }
@@ -154,8 +158,12 @@ tr:hover {
         color: #faf;
     }
 
-    main, fieldset, legend, button, input, select, table, thead th {
+    main, form, table, thead th {
         background-color: #223;
+    }
+
+    button, input, select {
+        background-color: black;
         color: white;
     }
 
