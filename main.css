@@ -18,7 +18,7 @@ a:visited {
 main, form, table {
     background: #f5f5ff;
     max-width: 51rem;
-    margin: auto;
+    margin: 0 auto 0.5rem;
     padding: 0;
 }
 
@@ -29,12 +29,16 @@ main, form {
 
 h1 {
     padding: 0;
-    margin: 0;
+    margin: 0 0 0.5rem;
 }
 
 h1 img {
     float: right;
     margin: -2px 1px 0 0;
+}
+
+p {
+    margin: 0.5rem 0 0;
 }
 
 form {
@@ -49,10 +53,6 @@ form {
 .form-group {
     display: grid;
     gap: 0.25lh;
-}
-
-main, p {
-    margin: 0 auto 0.5rem;
 }
 
 label {
