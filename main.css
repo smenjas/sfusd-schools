@@ -4,7 +4,7 @@ body {
 }
 
 body, form, table caption {
-    background: #eee;
+    background: white;
 }
 
 a {
@@ -22,7 +22,7 @@ main, form, table {
 }
 
 main, fieldset, legend, table {
-    background: white;
+    background: #f5f5ff;
 }
 
 h1, h2 {
@@ -109,8 +109,10 @@ td.num {
     text-align: right;
 }
 
+button:hover,
+select:hover,
 tr:hover {
-    background-color: #ececec;
+    background-color: #ececfc;
 }
 
 #not-found main {
@@ -140,7 +142,7 @@ tr:hover {
 
 @media only screen and (prefers-color-scheme: dark) {
     body, form, table caption {
-        background-color: #111;
+        background-color: black;
         color: white;
     }
 
@@ -153,11 +155,13 @@ tr:hover {
     }
 
     main, fieldset, legend, button, input, select, table, thead th {
-        background-color: black;
+        background-color: #223;
         color: white;
     }
 
+    button:hover,
+    select:hover,
     tr:hover {
-        background-color: #131313;
+        background-color: #112;
     }
 }
