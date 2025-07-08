@@ -639,28 +639,28 @@ function suggestAddresses(addresses) {
 // apostrophe), and a street name without punctuation.
 //
 // Returns an array of suggested street addresses.
-function findAddressSuggestions(num, str, street) {
+function findAddressSuggestions(num, punct, nopunct) {
     const addresses = [];
     for (const st in addressData) {
-        if (st.startsWith(street) && num in addressData[st]) {
+        if (st.startsWith(nopunct) && num in addressData[st]) {
             addresses.push(`${num} ${st}`);
         }
     }
-    if (str === street) {
-        return addresses;
+    if (punct === nopunct) {
+        return addresses.sort();
     }
     const puncts = {
         'O\'FARRELL ST': 'OFARRELL ST',
         'O\'REILLY AVE': 'OREILLY AVE',
         'O\'SHAUGHNESSY BLVD': 'OSHAUGHNESSY BLVD',
     };
-    for (const punct in puncts) {
-        const st = puncts[punct];
-        if (punct.startsWith(str) && num in addressData[st]) {
-            addresses.push(`${num} ${punct}`);
+    for (const p in puncts) {
+        const st = puncts[p];
+        if (p.startsWith(punct) && num in addressData[st]) {
+            addresses.push(`${num} ${p}`);
         }
     }
-    return addresses;
+    return addresses.sort();
 }
 
 // Search for an address in San Francisco, California.
@@ -679,19 +679,20 @@ function findAddress(address) {
         return;
     }
     const num = parts.shift();
-    const str = parts.join(' ').toUpperCase();
-    const street = str.replace(/[^A-Z0-9\s]/g, '');
-    if (!(street in addressData)) {
-        const addresses = findAddressSuggestions(num, str, street);
+    const punct = parts.join(' ').toUpperCase();
+    const nopunct = punct.replace(/[^A-Z0-9\s]/g, '');
+    if (!(nopunct in addressData)) {
+        const addresses = findAddressSuggestions(num, punct, nopunct);
+        console.log(num, punct, nopunct, addresses.length, 'addresses');
         if (addresses.length <= 10) {
             suggestAddresses(addresses);
         }
         return;
     }
-    if (!(num in addressData[street])) {
+    if (!(num in addressData[nopunct])) {
         return;
     }
-    return expandCoords(addressData[street][num]);
+    return expandCoords(addressData[nopunct][num]);
 }
 
 function addEventListeners(schoolData, inputs, coords) {
