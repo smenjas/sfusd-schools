@@ -68,6 +68,11 @@ button, input, select {
     font: inherit;
 }
 
+button {
+    height: 1.5rem;
+    margin-top: 1rem;
+}
+
 input {
     width: 98%;
 }
