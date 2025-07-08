@@ -679,7 +679,6 @@ function findAddress(address) {
     const nopunct = punct.replace(/[^A-Z0-9\s]/g, '');
     if (!(nopunct in addressData)) {
         const addresses = findAddressSuggestions(num, punct, nopunct);
-        console.log(num, punct, nopunct, addresses.length, 'addresses');
         if (addresses.length <= 10) {
             suggestAddresses(addresses);
         }
