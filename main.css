@@ -69,6 +69,10 @@ button, input, select {
 }
 
 input {
+    width: 98%;
+}
+
+select {
     width: 100%;
 }
 
