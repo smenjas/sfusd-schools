@@ -295,7 +295,7 @@ function renderSortMenu(sort) {
 }
 
 function renderAddressInput() {
-    let html = '<label for="address">Address</label>';
+    let html = '<label for="address">Your Address</label>';
     html += '<input name="address" id="address" list="addresses" size="32">';
     html += '<datalist id="addresses"></datalist>';
     return html;
@@ -319,10 +319,10 @@ function renderForm(schools, inputs) {
     html += renderStartTimeMenu(inputs.menus.start);
     html += '</div>';
     html += '<div class="form-group">';
-    html += renderAddressInput();
+    html += renderSortMenu(inputs.menus.sort);
     html += '</div>';
     html += '<div class="form-group">';
-    html += renderSortMenu(inputs.menus.sort);
+    html += renderAddressInput();
     html += '</div>';
     html += '<div class="form-group">';
     html += '<button type="reset">Reset</button>';
@@ -589,7 +589,7 @@ function updateAddressInput(address, coords) {
     const addressInput = document.getElementById('address');
     const addressLabel = document.querySelector('label[for=address]');
     addressInput.value = address;
-    addressLabel.innerHTML = renderCoordsLink(coords, 'Address');
+    addressLabel.innerHTML = renderCoordsLink(coords, 'Your Address');
 }
 
 function getSchoolFullName(school) {
