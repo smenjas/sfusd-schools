@@ -4769,7 +4769,7 @@ export default [
         suffix: '',
         types: ['High'],
         charter: false,
-        start: '8:00',
+        start: '8:40',
         neighborhood: 'Lakeshore',
         address: '1101 Eucalyptus Dr',
         zip: '94132',
