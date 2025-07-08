@@ -4,7 +4,7 @@ body {
 }
 
 body, table caption {
-    background: white;
+    background-color: white;
 }
 
 a {
@@ -16,7 +16,7 @@ a:visited {
 }
 
 main, form, table {
-    background: #f5f5ff;
+    background-color: #f5f5ff;
     max-width: 51rem;
     margin: 0 auto 0.5rem;
     padding: 0;
@@ -104,7 +104,7 @@ table caption {
 }
 
 thead th {
-    background-color: white;
+    background-color: #e5e5f5;
     position: sticky;
     text-align: left;
     top: 0;
@@ -167,8 +167,12 @@ tr:hover {
         color: #faf;
     }
 
-    main, form, table, thead th {
+    main, form, table {
         background-color: #223;
+    }
+
+    thead th {
+        background-color: #001;
     }
 
     button, input, select {
