@@ -15,6 +15,9 @@ here.](https://github.com/smenjas/sfusd-schools/issues)
 [This app](https://smenjas.github.io/sfusd-schools/) does not collect your
 data. Neither the developers nor the hosting provider can see your input.
 
+![Mobile app: light mode](screenshots/sfusd-schools-light.jpg)
+![Mobile app: dark mode](screenshots/sfusd-schools-dark.jpg)
+
 ## Development
 Install the dependencies by running:
 ```sh
