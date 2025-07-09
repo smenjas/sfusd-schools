@@ -238,7 +238,11 @@ function getSchoolTypes(schools, selected) {
             orderedTypes.push(type);
         }
     }
-    return orderedTypes;
+    const typesMap = new Map();
+    for (const type of orderedTypes) {
+        typesMap.set(type, `${type} School`);
+    }
+    return typesMap;
 }
 
 function renderTypeMenu(schools, type) {
