@@ -68,6 +68,11 @@ button, input, select {
     font: inherit;
 }
 
+input::selection {
+    background-color: #bdf;
+    color: black;
+}
+
 button {
     height: 1.5rem;
     margin-top: 1rem;
@@ -165,6 +170,11 @@ tr:hover {
 
     button, input, select {
         background-color: black;
+        color: white;
+    }
+
+    input::selection {
+        background-color: royalblue;
         color: white;
     }
 
