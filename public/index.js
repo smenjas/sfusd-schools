@@ -36,13 +36,6 @@ function renderMapLink(search, text) {
     return renderLink(url, text, true);
 }
 
-function renderCoordsLink(coords, text) {
-    if (!coords) {
-        return text;
-    }
-    return renderMapLink(coords.join(','), text);
-}
-
 function renderList(array) {
     if (array.length === 0) {
         return '';
@@ -151,9 +144,8 @@ function getSchoolGrades(schools, selected) {
 
 function renderGradeMenu(schools, grade) {
     const gradeOptions = getSchoolGrades(schools, grade);
-    let html = '<label for="grade">Grade</label>';
-    html += '<select name="grade" id="grade">';
-    html += '<option value="">Any</option>';
+    let html = '<select name="grade" id="grade">';
+    html += '<option value="">Any Grade</option>';
     html += renderOptions(gradeOptions, grade);
     html += '</select>';
     return html;
@@ -179,9 +171,8 @@ function getLanguages(schools, selected) {
 
 function renderLanguageMenu(schools, language) {
     const languages = getLanguages(schools, language);
-    let html = '<label for="language">Language</label>';
-    html += '<select name="language" id="language">';
-    html += '<option value="">Any</option>';
+    let html = '<select name="language" id="language">';
+    html += '<option value="">Any Language</option>';
     html += renderOptions(languages, language);
     html += '</select>';
     return html;
@@ -204,9 +195,8 @@ function getNeighborhoods(schools, selected) {
 
 function renderNeighborhoodMenu(schools, neighborhood) {
     const neighborhoods = getNeighborhoods(schools, neighborhood);
-    let html = '<label for="neighborhood">Neighborhood</label>';
-    html += '<select name="neighborhood" id="neighborhood">';
-    html += '<option value="">Any</option>';
+    let html = '<select name="neighborhood" id="neighborhood">';
+    html += '<option value="">Any Neighborhood</option>';
     html += renderOptions(neighborhoods, neighborhood);
     html += '</select>';
     return html;
@@ -247,9 +237,8 @@ function getSchoolTypes(schools, selected) {
 
 function renderTypeMenu(schools, type) {
     const types = getSchoolTypes(schools, type);
-    let html = '<label for="type">Type</label>';
-    html += '<select name="type" id="type">';
-    html += '<option value="">Any</option>';
+    let html = '<select name="type" id="type">';
+    html += '<option value="">Any School Type</option>';
     html += renderOptions(types, type);
     html += '</select>';
     return html;
@@ -265,16 +254,15 @@ function getStartTimes() {
 
 function renderStartTimeMenu(start) {
     const starts = getStartTimes();
-    let html = '<label for="start">Start Time</label>';
-    html += '<select name="start" id="start">';
-    html += '<option value="">Any</option>';
+    let html = '<select name="start" id="start">';
+    html += '<option value="">Any Start Time</option>';
     html += renderOptions(starts, start);
     html += '</select>';
     return html;
 }
 
 function getSortables() {
-    return [
+    const fields = [
         'Name',
         'Distance',
         'Neighborhood',
@@ -287,26 +275,36 @@ function getSortables() {
         'Graduated',
         'Seats/App',
     ];
+    const fieldMap = new Map();
+    for (const field of fields) {
+        fieldMap.set(field, `Sort by ${field}`);
+    }
+    return fieldMap;
 }
 
 function renderSortMenu(sort) {
     const sorts = getSortables();
-    let html = '<label for="sort">Sort by</label>';
-    html += '<select name="sort" id="sort">';
+    let html = '<select name="sort" id="sort">';
     html += renderOptions(sorts, sort);
     html += '</select>';
     return html;
 }
 
 function renderAddressInput() {
-    let html = '<label for="address">Your Address</label>';
-    html += '<input name="address" id="address" list="addresses" size="32">';
+    let html = '<input name="address" id="address" list="addresses" placeholder="Your Address">';
     html += '<datalist id="addresses"></datalist>';
+    html += '<span id="coords-link"></span>';
     return html;
 }
 
 function renderForm(schools, inputs) {
     let html = '<form id="schoolForm">';
+    html += '<div class="form-group">';
+    html += renderAddressInput();
+    html += '</div>';
+    html += '<div class="form-group">';
+    html += renderSortMenu(inputs.menus.sort);
+    html += '</div>';
     html += '<div class="form-group">';
     html += renderGradeMenu(schools, inputs.menus.grade);
     html += '</div>';
@@ -321,12 +319,6 @@ function renderForm(schools, inputs) {
     html += '</div>';
     html += '<div class="form-group">';
     html += renderStartTimeMenu(inputs.menus.start);
-    html += '</div>';
-    html += '<div class="form-group">';
-    html += renderSortMenu(inputs.menus.sort);
-    html += '</div>';
-    html += '<div class="form-group">';
-    html += renderAddressInput();
     html += '</div>';
     html += '<div class="form-group">';
     html += '<button type="reset">Reset</button>';
@@ -589,13 +581,6 @@ function sortSchools(schools, sort) {
     schools.sort(sortFunction);
 }
 
-function updateAddressInput(address, coords) {
-    const addressInput = document.getElementById('address');
-    const addressLabel = document.querySelector('label[for=address]');
-    addressInput.value = address;
-    addressLabel.innerHTML = renderCoordsLink(coords, 'Your Address');
-}
-
 function getSchoolFullName(school) {
     return `${getSchoolName(school)} ${school.types[0]}`;
 }
@@ -740,7 +725,7 @@ function addEventListeners(schoolData, inputs, coords) {
             inputs.menus.sort = 'Name';
         }
         addressInput.dispatchEvent(new Event('input'));
-        updateAddressInput('', null);
+        addressInput.value = '';
         for (const menu of menus) {
             menu.value = '';
             menu.dispatchEvent(new Event('change'));
@@ -756,7 +741,7 @@ function renderPage(schoolData, inputs, coords) {
     document.getElementById('input').innerHTML = renderForm(schools, inputs);
     document.getElementById('schools').innerHTML = renderTable(schools, inputs.address);
     addEventListeners(schoolData, inputs, coords);
-    updateAddressInput(inputs.address, coords);
+    document.getElementById('address').value = inputs.address;
 }
 
 const inputsJSON = localStorage.getItem('inputs');
