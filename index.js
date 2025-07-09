@@ -94,6 +94,34 @@ function renderOptions(options, selected) {
     return html;
 }
 
+function formatOrdinal(num) {
+    const str = num.toString();
+    switch (str.slice(-2)) {
+        case '11':
+        case '12':
+        case '13':
+            return str + 'th';
+    }
+    switch (str.slice(-1)) {
+        case '1':
+            return str + 'st';
+        case '2':
+            return str + 'nd';
+        case '3':
+            return str + 'rd';
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+        case '0':
+            return str + 'th';
+        default:
+            return num;
+    }
+}
+
 function getSchoolGrades(schools, selected) {
     const grades = new Map([
         ['pk', false],
@@ -137,7 +165,9 @@ function getSchoolGrades(schools, selected) {
     if (selected === 'tk' || grades.get('tk')) options.push(['tk', 'TK']);
     if (selected === 'k' || grades.get('k')) options.push(['k', 'K']);
     for (let n = 1; n <= 12; n++) {
-        if (selected === n || grades.get(n)) options.push([n, n]);
+        if (selected === n || grades.get(n)) {
+            options.push([n, formatOrdinal(n) + ' Grade']);
+        }
     }
     return new Map(options);
 }
