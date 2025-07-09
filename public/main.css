@@ -73,18 +73,6 @@ button {
     margin-top: 1rem;
 }
 
-input {
-    width: 98%;
-}
-
-select {
-    width: 100%;
-}
-
-select, form #coords-link {
-    margin-right: 0.75rem;
-}
-
 [type=reset] {
     justify-self: end;
 }
