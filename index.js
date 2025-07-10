@@ -321,11 +321,14 @@ function getStartTimes(schools, selected) {
     return startTimes;
 }
 
-function renderStartTimeMenu(schools, start) {
-    const starts = getStartTimes(schools, start);
+function renderStartTimeMenu(schoolData, menus) {
+    const filters = copyFilters(menus);
+    filters.start = '';
+    const schools = filterSchools(schoolData, filters);
+    const starts = getStartTimes(schools, menus.start);
     let html = '<select name="start" id="start">';
     html += '<option value="">Any Start Time</option>';
-    html += renderOptions(starts, start);
+    html += renderOptions(starts, menus.start);
     html += '</select>';
     return html;
 }
@@ -366,7 +369,7 @@ function renderAddressInput() {
     return html;
 }
 
-function renderForm(schoolData, schools, inputs) {
+function renderForm(schoolData, inputs) {
     let html = '<form id="schoolForm">';
     html += '<div class="form-group">';
     html += renderAddressInput();
@@ -387,7 +390,7 @@ function renderForm(schoolData, schools, inputs) {
     html += renderNeighborhoodMenu(schoolData, inputs.menus);
     html += '</div>';
     html += '<div class="form-group">';
-    html += renderStartTimeMenu(schools, inputs.menus.start);
+    html += renderStartTimeMenu(schoolData, inputs.menus);
     html += '</div>';
     html += '<div class="form-group">';
     html += '<button type="reset">Reset</button>';
@@ -807,7 +810,7 @@ function renderPage(schoolData, inputs, coords) {
     document.title = 'SFUSD Schools';
     const schools = filterSchools(schoolData, inputs.menus);
     sortSchools(schools, inputs.menus.sort);
-    document.getElementById('input').innerHTML = renderForm(schoolData, schools, inputs);
+    document.getElementById('input').innerHTML = renderForm(schoolData, inputs);
     document.getElementById('schools').innerHTML = renderTable(schools, inputs.address);
     addEventListeners(schoolData, inputs, coords);
     document.getElementById('address').value = inputs.address;
