@@ -55,11 +55,6 @@ form {
     gap: 0.25lh;
 }
 
-label {
-    text-box-trim: trim-both;
-    text-box-edge: cap alphabetic;
-}
-
 button, input, select {
     background-color: white;
     color: black;
@@ -73,9 +68,8 @@ input::selection {
     color: black;
 }
 
-button {
+button, select {
     height: 1.5rem;
-    margin-top: 1rem;
 }
 
 [type=reset] {
