@@ -94,6 +94,16 @@ function renderOptions(options, selected) {
     return html;
 }
 
+function copyFilters(menus) {
+    return {
+        grade: menus.grade,
+        language: menus.language,
+        neighborhood: menus.neighborhood,
+        start: menus.start,
+        type: menus.type,
+    };
+}
+
 function formatOrdinal(num) {
     const str = num.toString();
     switch (str.slice(-2)) {
@@ -172,11 +182,14 @@ function getSchoolGrades(schools, selected) {
     return new Map(options);
 }
 
-function renderGradeMenu(schools, grade) {
-    const gradeOptions = getSchoolGrades(schools, grade);
+function renderGradeMenu(schoolData, menus) {
+    const filters = copyFilters(menus);
+    filters.grade = '';
+    const schools = filterSchools(schoolData, filters);
+    const gradeOptions = getSchoolGrades(schools, menus.grade);
     let html = '<select name="grade" id="grade">';
     html += '<option value="">Any Grade</option>';
-    html += renderOptions(gradeOptions, grade);
+    html += renderOptions(gradeOptions, menus.grade);
     html += '</select>';
     return html;
 }
@@ -199,11 +212,14 @@ function getLanguages(schools, selected) {
     return languages.sort();
 }
 
-function renderLanguageMenu(schools, language) {
-    const languages = getLanguages(schools, language);
+function renderLanguageMenu(schoolData, menus) {
+    const filters = copyFilters(menus);
+    filters.language = '';
+    const schools = filterSchools(schoolData, filters);
+    const languages = getLanguages(schools, menus.language);
     let html = '<select name="language" id="language">';
     html += '<option value="">Any Language</option>';
-    html += renderOptions(languages, language);
+    html += renderOptions(languages, menus.language);
     html += '</select>';
     return html;
 }
@@ -223,11 +239,14 @@ function getNeighborhoods(schools, selected) {
     return neighborhoods.sort();
 }
 
-function renderNeighborhoodMenu(schools, neighborhood) {
-    const neighborhoods = getNeighborhoods(schools, neighborhood);
+function renderNeighborhoodMenu(schoolData, menus) {
+    const filters = copyFilters(menus);
+    filters.neighborhood = '';
+    const schools = filterSchools(schoolData, filters);
+    const neighborhoods = getNeighborhoods(schools, menus.neighborhood);
     let html = '<select name="neighborhood" id="neighborhood">';
     html += '<option value="">Any Neighborhood</option>';
-    html += renderOptions(neighborhoods, neighborhood);
+    html += renderOptions(neighborhoods, menus.neighborhood);
     html += '</select>';
     return html;
 }
@@ -261,11 +280,14 @@ function getSchoolTypes(schools, selected) {
     return orderedTypes;
 }
 
-function renderTypeMenu(schools, type) {
-    const types = getSchoolTypes(schools, type);
+function renderTypeMenu(schoolData, menus) {
+    const filters = copyFilters(menus);
+    filters.type = '';
+    const schools = filterSchools(schoolData, filters);
+    const types = getSchoolTypes(schools, menus.type);
     let html = '<select name="type" id="type">';
     html += '<option value="">Any School Type</option>';
-    html += renderOptions(types, type);
+    html += renderOptions(types, menus.type);
     html += '</select>';
     return html;
 }
@@ -299,11 +321,14 @@ function getStartTimes(schools, selected) {
     return startTimes;
 }
 
-function renderStartTimeMenu(schools, start) {
-    const starts = getStartTimes(schools, start);
+function renderStartTimeMenu(schoolData, menus) {
+    const filters = copyFilters(menus);
+    filters.start = '';
+    const schools = filterSchools(schoolData, filters);
+    const starts = getStartTimes(schools, menus.start);
     let html = '<select name="start" id="start">';
     html += '<option value="">Any Start Time</option>';
-    html += renderOptions(starts, start);
+    html += renderOptions(starts, menus.start);
     html += '</select>';
     return html;
 }
@@ -344,7 +369,7 @@ function renderAddressInput() {
     return html;
 }
 
-function renderForm(schools, inputs) {
+function renderForm(schoolData, inputs) {
     let html = '<form id="schoolForm">';
     html += '<div class="form-group">';
     html += renderAddressInput();
@@ -353,19 +378,19 @@ function renderForm(schools, inputs) {
     html += renderSortMenu(inputs.menus.sort);
     html += '</div>';
     html += '<div class="form-group">';
-    html += renderGradeMenu(schools, inputs.menus.grade);
+    html += renderGradeMenu(schoolData, inputs.menus);
     html += '</div>';
     html += '<div class="form-group">';
-    html += renderTypeMenu(schools, inputs.menus.type);
+    html += renderTypeMenu(schoolData, inputs.menus);
     html += '</div>';
     html += '<div class="form-group">';
-    html += renderLanguageMenu(schools, inputs.menus.language);
+    html += renderLanguageMenu(schoolData, inputs.menus);
     html += '</div>';
     html += '<div class="form-group">';
-    html += renderNeighborhoodMenu(schools, inputs.menus.neighborhood);
+    html += renderNeighborhoodMenu(schoolData, inputs.menus);
     html += '</div>';
     html += '<div class="form-group">';
-    html += renderStartTimeMenu(schools, inputs.menus.start);
+    html += renderStartTimeMenu(schoolData, inputs.menus);
     html += '</div>';
     html += '<div class="form-group">';
     html += '<button type="reset">Reset</button>';
@@ -555,31 +580,31 @@ function filterLanguage(school, language) {
     return false;
 }
 
-function filterSchool(school, menus) {
-    const filters = {
+function filterSchool(school, filters) {
+    const functions = {
         type: filterType,
         grade: filterGrade,
         neighborhood: filterNeighborhood,
         start: filterStartTime,
         language: filterLanguage,
     };
-    for (const filter in filters) {
-        if (!(filter in menus)) {
+    for (const filter in functions) {
+        if (!(filter in filters)) {
             // No saved form inputs for this user.
             continue;
         }
-        const filterFunction = filters[filter];
-        if (!filterFunction(school, menus[filter])) {
+        const func = functions[filter];
+        if (!func(school, filters[filter])) {
             return false;
         }
     }
     return true;
 }
 
-function filterSchools(schoolData, menus) {
+function filterSchools(schoolData, filters) {
     const schools = [];
     for (const school of schoolData) {
-        if (!menus || filterSchool(school, menus)) {
+        if (!filters || filterSchool(school, filters)) {
             schools.push(school);
         }
     }
@@ -785,7 +810,7 @@ function renderPage(schoolData, inputs, coords) {
     document.title = 'SFUSD Schools';
     const schools = filterSchools(schoolData, inputs.menus);
     sortSchools(schools, inputs.menus.sort);
-    document.getElementById('input').innerHTML = renderForm(schools, inputs);
+    document.getElementById('input').innerHTML = renderForm(schoolData, inputs);
     document.getElementById('schools').innerHTML = renderTable(schools, inputs.address);
     addEventListeners(schoolData, inputs, coords);
     document.getElementById('address').value = inputs.address;
