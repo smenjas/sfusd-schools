@@ -239,11 +239,14 @@ function getNeighborhoods(schools, selected) {
     return neighborhoods.sort();
 }
 
-function renderNeighborhoodMenu(schools, neighborhood) {
-    const neighborhoods = getNeighborhoods(schools, neighborhood);
+function renderNeighborhoodMenu(schoolData, menus) {
+    const filters = copyFilters(menus);
+    filters.neighborhood = '';
+    const schools = filterSchools(schoolData, filters);
+    const neighborhoods = getNeighborhoods(schools, menus.neighborhood);
     let html = '<select name="neighborhood" id="neighborhood">';
     html += '<option value="">Any Neighborhood</option>';
-    html += renderOptions(neighborhoods, neighborhood);
+    html += renderOptions(neighborhoods, menus.neighborhood);
     html += '</select>';
     return html;
 }
@@ -381,7 +384,7 @@ function renderForm(schoolData, schools, inputs) {
     html += renderLanguageMenu(schoolData, inputs.menus);
     html += '</div>';
     html += '<div class="form-group">';
-    html += renderNeighborhoodMenu(schools, inputs.menus.neighborhood);
+    html += renderNeighborhoodMenu(schoolData, inputs.menus);
     html += '</div>';
     html += '<div class="form-group">';
     html += renderStartTimeMenu(schools, inputs.menus.start);
