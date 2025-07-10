@@ -555,31 +555,31 @@ function filterLanguage(school, language) {
     return false;
 }
 
-function filterSchool(school, menus) {
-    const filters = {
+function filterSchool(school, filters) {
+    const functions = {
         type: filterType,
         grade: filterGrade,
         neighborhood: filterNeighborhood,
         start: filterStartTime,
         language: filterLanguage,
     };
-    for (const filter in filters) {
-        if (!(filter in menus)) {
+    for (const filter in functions) {
+        if (!(filter in filters)) {
             // No saved form inputs for this user.
             continue;
         }
-        const filterFunction = filters[filter];
-        if (!filterFunction(school, menus[filter])) {
+        const func = functions[filter];
+        if (!func(school, filters[filter])) {
             return false;
         }
     }
     return true;
 }
 
-function filterSchools(schoolData, menus) {
+function filterSchools(schoolData, filters) {
     const schools = [];
     for (const school of schoolData) {
-        if (!menus || filterSchool(school, menus)) {
+        if (!filters || filterSchool(school, filters)) {
             schools.push(school);
         }
     }
