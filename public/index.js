@@ -94,6 +94,16 @@ function renderOptions(options, selected) {
     return html;
 }
 
+function copyFilters(menus) {
+    return {
+        grade: menus.grade,
+        language: menus.language,
+        neighborhood: menus.neighborhood,
+        start: menus.start,
+        type: menus.type,
+    };
+}
+
 function formatOrdinal(num) {
     const str = num.toString();
     switch (str.slice(-2)) {
@@ -261,11 +271,14 @@ function getSchoolTypes(schools, selected) {
     return orderedTypes;
 }
 
-function renderTypeMenu(schools, type) {
-    const types = getSchoolTypes(schools, type);
+function renderTypeMenu(schoolData, menus) {
+    const filters = copyFilters(menus);
+    filters.type = '';
+    const schools = filterSchools(schoolData, filters);
+    const types = getSchoolTypes(schools, menus.type);
     let html = '<select name="type" id="type">';
     html += '<option value="">Any School Type</option>';
-    html += renderOptions(types, type);
+    html += renderOptions(types, menus.type);
     html += '</select>';
     return html;
 }
@@ -344,7 +357,7 @@ function renderAddressInput() {
     return html;
 }
 
-function renderForm(schools, inputs) {
+function renderForm(schoolData, schools, inputs) {
     let html = '<form id="schoolForm">';
     html += '<div class="form-group">';
     html += renderAddressInput();
@@ -356,7 +369,7 @@ function renderForm(schools, inputs) {
     html += renderGradeMenu(schools, inputs.menus.grade);
     html += '</div>';
     html += '<div class="form-group">';
-    html += renderTypeMenu(schools, inputs.menus.type);
+    html += renderTypeMenu(schoolData, inputs.menus);
     html += '</div>';
     html += '<div class="form-group">';
     html += renderLanguageMenu(schools, inputs.menus.language);
@@ -785,7 +798,7 @@ function renderPage(schoolData, inputs, coords) {
     document.title = 'SFUSD Schools';
     const schools = filterSchools(schoolData, inputs.menus);
     sortSchools(schools, inputs.menus.sort);
-    document.getElementById('input').innerHTML = renderForm(schools, inputs);
+    document.getElementById('input').innerHTML = renderForm(schoolData, schools, inputs);
     document.getElementById('schools').innerHTML = renderTable(schools, inputs.address);
     addEventListeners(schoolData, inputs, coords);
     document.getElementById('address').value = inputs.address;
