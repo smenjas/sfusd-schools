@@ -241,28 +241,24 @@ function getSchoolTypes(schools, selected) {
         'High',
     ];
     const types = [];
-    outer: for (const key in schools) {
-        const school = schools[key];
+    outer: for (const school of schools) {
         inner: for (const type of school.types) {
-            if (!types.includes(type)) {
-                types.push(type);
-                if (types.length >= allTypes.length) {
-                    break outer;
-                }
+            if (types.includes(type)) {
+                continue;
+            }
+            types.push(type);
+            if (types.length >= allTypes.length) {
+                break outer;
             }
         }
     }
-    const orderedTypes = [];
+    const orderedTypes = new Map();
     for (const type of allTypes) {
         if (selected === type || types.includes(type)) {
-            orderedTypes.push(type);
+            orderedTypes.set(type, `${type} School`);
         }
     }
-    const typesMap = new Map();
-    for (const type of orderedTypes) {
-        typesMap.set(type, `${type} School`);
-    }
-    return typesMap;
+    return orderedTypes;
 }
 
 function renderTypeMenu(schools, type) {
