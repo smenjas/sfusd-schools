@@ -270,16 +270,37 @@ function renderTypeMenu(schools, type) {
     return html;
 }
 
-function getStartTimes() {
-    return new Map([
+function getStartTimes(schools, selected) {
+    const startTimes = new Map([
         [7, 'Before 8:00 am'],
         [8, '8:00-8:59 am'],
         [9, 'After 9:00 am'],
     ]);
+    const hours = [];
+    for (const school of schools) {
+        if (!school.start) {
+            console.log(school.name, school.types[0], 'does not have a start time.');
+            continue;
+        }
+        const hour = parseInt(school.start.split(':')[0]);
+        if (hours.includes(hour)) {
+            continue;
+        }
+        hours.push(hour);
+        if (hours.length >= startTimes.size) {
+            break;
+        }
+    }
+    for (const hour of startTimes.keys()) {
+        if (selected !== hour && !hours.includes(hour)) {
+            startTimes.delete(hour);
+        }
+    }
+    return startTimes;
 }
 
-function renderStartTimeMenu(start) {
-    const starts = getStartTimes();
+function renderStartTimeMenu(schools, start) {
+    const starts = getStartTimes(schools, start);
     let html = '<select name="start" id="start">';
     html += '<option value="">Any Start Time</option>';
     html += renderOptions(starts, start);
@@ -344,7 +365,7 @@ function renderForm(schools, inputs) {
     html += renderNeighborhoodMenu(schools, inputs.menus.neighborhood);
     html += '</div>';
     html += '<div class="form-group">';
-    html += renderStartTimeMenu(inputs.menus.start);
+    html += renderStartTimeMenu(schools, inputs.menus.start);
     html += '</div>';
     html += '<div class="form-group">';
     html += '<button type="reset">Reset</button>';
