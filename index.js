@@ -212,11 +212,14 @@ function getLanguages(schools, selected) {
     return languages.sort();
 }
 
-function renderLanguageMenu(schools, language) {
-    const languages = getLanguages(schools, language);
+function renderLanguageMenu(schoolData, menus) {
+    const filters = copyFilters(menus);
+    filters.language = '';
+    const schools = filterSchools(schoolData, filters);
+    const languages = getLanguages(schools, menus.language);
     let html = '<select name="language" id="language">';
     html += '<option value="">Any Language</option>';
-    html += renderOptions(languages, language);
+    html += renderOptions(languages, menus.language);
     html += '</select>';
     return html;
 }
@@ -375,7 +378,7 @@ function renderForm(schoolData, schools, inputs) {
     html += renderTypeMenu(schoolData, inputs.menus);
     html += '</div>';
     html += '<div class="form-group">';
-    html += renderLanguageMenu(schools, inputs.menus.language);
+    html += renderLanguageMenu(schoolData, inputs.menus);
     html += '</div>';
     html += '<div class="form-group">';
     html += renderNeighborhoodMenu(schools, inputs.menus.neighborhood);
