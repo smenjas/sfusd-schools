@@ -182,11 +182,14 @@ function getSchoolGrades(schools, selected) {
     return new Map(options);
 }
 
-function renderGradeMenu(schools, grade) {
-    const gradeOptions = getSchoolGrades(schools, grade);
+function renderGradeMenu(schoolData, menus) {
+    const filters = copyFilters(menus);
+    filters.grade = '';
+    const schools = filterSchools(schoolData, filters);
+    const gradeOptions = getSchoolGrades(schools, menus.grade);
     let html = '<select name="grade" id="grade">';
     html += '<option value="">Any Grade</option>';
-    html += renderOptions(gradeOptions, grade);
+    html += renderOptions(gradeOptions, menus.grade);
     html += '</select>';
     return html;
 }
@@ -366,7 +369,7 @@ function renderForm(schoolData, schools, inputs) {
     html += renderSortMenu(inputs.menus.sort);
     html += '</div>';
     html += '<div class="form-group">';
-    html += renderGradeMenu(schools, inputs.menus.grade);
+    html += renderGradeMenu(schoolData, inputs.menus);
     html += '</div>';
     html += '<div class="form-group">';
     html += renderTypeMenu(schoolData, inputs.menus);
