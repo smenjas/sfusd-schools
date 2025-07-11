@@ -133,26 +133,7 @@ function formatOrdinal(num) {
 }
 
 function getSchoolGrades(schools, selected) {
-    const grades = new Map([
-        ['pk', false],
-        ['tk', false],
-        ['k', false],
-        [1, false],
-        [2, false],
-        [3, false],
-        [4, false],
-        [5, false],
-        [6, false],
-        [7, false],
-        [8, false],
-        [9, false],
-        [10, false],
-        [11, false],
-        [12, false],
-    ]);
-    let pk = false;
-    let tk = false;
-    let k = false;
+    const grades = new Map();
     let min = Infinity;
     let max = -Infinity;
     for (const key in schools) {
@@ -162,24 +143,22 @@ function getSchoolGrades(schools, selected) {
         if (school.k) grades.set('k', true);
         if (school.min !== null && school.max !== null) {
             for (let n = school.min; n <= school.max; n++) {
-                if (!grades.has(n)) {
-                    console.warn(school.name, school.types[0], 'has invalid school grade:', n);
-                    continue;
-                }
                 grades.set(n, true);
             }
         }
+        if (school.min < min) min = school.min;
+        if (school.max > max) max = school.max;
     }
-    const options = [];
-    if (selected === 'pk' || grades.get('pk')) options.push(['pk', 'Pre-K']);
-    if (selected === 'tk' || grades.get('tk')) options.push(['tk', 'TK']);
-    if (selected === 'k' || grades.get('k')) options.push(['k', 'K']);
-    for (let n = 1; n <= 12; n++) {
+    const options = new Map();
+    if (selected === 'pk' || grades.get('pk')) options.set('pk', 'Pre-K');
+    if (selected === 'tk' || grades.get('tk')) options.set('tk', 'TK');
+    if (selected === 'k' || grades.get('k')) options.set('k', 'K');
+    for (let n = min; n <= max; n++) {
         if (selected === n || grades.get(n)) {
-            options.push([n, formatOrdinal(n) + ' Grade']);
+            options.set(n, formatOrdinal(n) + ' Grade');
         }
     }
-    return new Map(options);
+    return options;
 }
 
 function renderGradeMenu(schoolData, menus) {
