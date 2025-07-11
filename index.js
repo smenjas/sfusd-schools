@@ -409,11 +409,18 @@ function renderHeader() {
 }
 
 function getMinGrade(school) {
-    return school.pk ? 'PK' : school.tk ? 'TK' : school.k ? 'K' : school.min;
+    return school.pk
+        ? 'PK' : school.tk
+        ? 'TK' : school.k
+        ? 'K' : school.min;
 }
 
 function getMaxGrade(school) {
-    return school.max ? school.max : school.k ? 'K' : school.tk ? 'TK' : school.pk ? 'PK' : '';
+    return school.max
+        ? school.max : school.k
+        ? 'K' : school.tk
+        ? 'TK' : school.pk
+        ? 'PK' : '';
 }
 
 // Render a school's grade range (e.g. "TK-5").
