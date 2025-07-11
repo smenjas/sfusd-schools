@@ -1137,7 +1137,7 @@ export default [
         lon: -122.4313306,
         usnews: null,
         greatschools: 2,
-        pk: false,
+        pk: true,
         tk: true,
         k: true,
         min: 1,
