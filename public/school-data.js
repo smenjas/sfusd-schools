@@ -45,7 +45,7 @@ export default [
     },
     {
         code: 513,
-        prefix: 'Edward R.',
+        prefix: 'E.R.',
         name: 'Taylor',
         suffix: '',
         campus: '',
@@ -702,8 +702,8 @@ export default [
     {
         code: 493,
         prefix: '',
-        name: 'SF Community',
-        suffix: 'Alternative',
+        name: 'San Francisco Community',
+        suffix: '',
         campus: '',
         types: ['Elementary', 'K-8', 'Middle'],
         charter: false,
@@ -742,7 +742,7 @@ export default [
     },
     {
         code: 838,
-        prefix: 'Thomas Starr',
+        prefix: 'Starr',
         name: 'King',
         suffix: '',
         campus: '',
@@ -2793,7 +2793,7 @@ export default [
     {
         code: null,
         prefix: '',
-        name: 'New School of SF',
+        name: 'New School of San Francisco',
         suffix: '',
         campus: '',
         types: ['Elementary', 'K-8', 'Middle'],
@@ -2915,7 +2915,7 @@ export default [
     },
     {
         code: 525,
-        prefix: 'William L.',
+        prefix: 'Dr. William L.',
         name: 'Cobb',
         suffix: '',
         campus: '',
@@ -2956,8 +2956,8 @@ export default [
     },
     {
         code: 814,
-        prefix: 'SF Public',
-        name: 'Montessori',
+        prefix: '',
+        name: 'San Francisco Public Montessori',
         suffix: '',
         campus: '',
         types: ['Elementary'],
@@ -4186,7 +4186,7 @@ export default [
     },
     {
         code: 404,
-        prefix: 'AP',
+        prefix: 'A.P.',
         name: 'Giannini',
         suffix: '',
         campus: '',
@@ -4474,7 +4474,7 @@ export default [
     {
         code: 621,
         prefix: '',
-        name: 'SF International',
+        name: 'San Francisco International',
         suffix: '',
         campus: '',
         types: ['High'],
@@ -4596,9 +4596,9 @@ export default [
     },
     {
         code: 832,
-        prefix: 'The',
-        name: 'Academy - SF @Mcateer',
-        suffix: '',
+        prefix: '',
+        name: 'The Academy',
+        suffix: '- San Francisco @ McAteer',
         campus: '',
         types: ['High'],
         charter: false,
@@ -4638,8 +4638,8 @@ export default [
     {
         code: 815,
         prefix: 'Ruth',
-        name: 'Asawa School of the Arts',
-        suffix: '',
+        name: 'Asawa',
+        suffix: 'School of the Arts',
         campus: '',
         types: ['High'],
         charter: false,
@@ -5090,7 +5090,7 @@ export default [
         code: 559,
         prefix: '',
         name: 'Galileo',
-        suffix: '',
+        suffix: 'Academy of Science & Technology',
         campus: '',
         types: ['High'],
         charter: false,
