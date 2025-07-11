@@ -633,7 +633,11 @@ function sortSchools(schools, sort) {
 }
 
 function getSchoolFullName(school) {
-    return `${getSchoolName(school)} ${school.types[0]}`;
+    let name = `${getSchoolName(school)} ${school.types[0]}`;
+    if (school.campus) {
+        name += ` - ${school.campus} Campus`;
+    }
+    return name;
 }
 
 function getSchoolName(school) {
