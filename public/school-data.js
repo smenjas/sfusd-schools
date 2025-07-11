@@ -2725,7 +2725,7 @@ export default [
     {
         code: 509,
         prefix: '',
-        name: 'DeAvila',
+        name: 'De Avila',
         suffix: '',
         types: ['Elementary'],
         charter: false,
