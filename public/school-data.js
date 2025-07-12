@@ -1405,7 +1405,7 @@ export default [
         types: ['Elementary'],
         charter: false,
         start: '8:40',
-        neighborhood: 'Crocker Amazon',
+        neighborhood: 'Excelsior',
         address: '859 Prague St',
         zip: '94112',
         lat: 37.7101617,
