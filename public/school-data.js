@@ -2676,7 +2676,7 @@ export default [
         types: ['Elementary'],
         charter: false,
         start: '7:50',
-        neighborhood: 'Parkside',
+        neighborhood: 'Outer Sunset',
         address: '2550 25th Ave',
         zip: '94116',
         lat: 37.7396634,
