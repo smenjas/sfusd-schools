@@ -419,7 +419,9 @@ function getMaxGrade(school) {
 }
 
 // Render a school's grade range (e.g. "TK-5").
-function renderGradeRange(min, max) {
+function renderGradeRange(school) {
+    const min = getMinGrade(school);
+    const max = getMaxGrade(school);
     if (min !== null && max !== null && min !== max) {
         return `${min}-${max}`;
     }
@@ -447,24 +449,20 @@ function renderRow(school, address) {
     const fullName = getSchoolFullName(school);
     const city = 'San Francisco, CA';
     const origin = `${address}, ${city}, USA`;
-    const search = `${fullName} School, ${school.address}, ${city} ${school.zip}`;
+    const search = `${fullName}, ${school.address}, ${city} ${school.zip}`;
     const distance = renderDistance(school.distance);
     const directionsLink = renderDirectionsLink(origin, search, distance);
     const mapLink = renderMapLink(search, school.address);
-    const min = getMinGrade(school);
-    const max = getMaxGrade(school);
     let html = '';
     html += '<tr>';
     html += `<td>${schoolLink}</td>`;
-    html += `<td>${renderGradeRange(min, max)}</td>`;
+    html += `<td>${renderGradeRange(school)}</td>`;
     html += `<td class="num">${school.start}</td>`;
     html += `<td class="num">${directionsLink}</td>`;
     html += `<td>${school.neighborhood}</td>`;
     html += `<td>${mapLink}</td>`;
     html += `<td class="num">${usnewsLink}</td>`;
     html += `<td class="num">${greatschoolsLink}</td>`;
-    //html += `<td class="num">${min}</td>`;
-    //html += `<td class="num">${school.max}</td>`;
     html += `<td class="num">${school.students ?? ''}</td>`;
     html += `<td class="num">${school.teachers ?? ''}</td>`;
     html += `<td class="num">${renderRatio(school.ratio)}</td>`;
@@ -633,15 +631,19 @@ function sortSchools(schools, sort) {
 }
 
 function getSchoolFullName(school) {
-    let name = `${getSchoolName(school)} ${school.types[0]}`;
+    let name = `${getSchoolName(school, false)} ${school.types[0]} School`;
     if (school.campus) {
-        name += ` - ${school.campus} Campus`;
+        name += ` - ${renderGradeRange(school)} ${school.campus} Campus`;
     }
     return name;
 }
 
-function getSchoolName(school) {
-    return `${school.prefix} ${school.name} ${school.suffix}`.trim();
+function getSchoolName(school, campus = true) {
+    let name = `${school.prefix} ${school.name} ${school.suffix}`.trim();
+    if (campus && school.campus) {
+        name += ` - ${school.campus}`;
+    }
+    return name;
 }
 
 // Update the distance between each school and the user's location.
@@ -649,7 +651,6 @@ function getSchoolName(school) {
 // Returns true if the page rendered, or false otherwise.
 function updateDistances(schoolData, inputs, coords) {
     for (const school of schoolData) {
-        const name = getSchoolFullName(school);
         const schoolCoords = [school.lat, school.lon];
         school.distance = calculateDistance(coords, schoolCoords);
     }
