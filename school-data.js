@@ -4589,7 +4589,7 @@ export default [
         languages: ['Filipino', 'Mandarin', 'Spanish'],
         feedsInto: [],
         urls: {
-            main: 'ihttps://www.sfusd.edu/school/balboa-high-school',
+            main: 'https://www.sfusd.edu/school/balboa-high-school',
             usnews: 'https://www.usnews.com/education/best-high-schools/california/districts/san-francisco-unified-school-district/balboa-high-school-3255',
             greatschools: 'https://www.greatschools.org/california/san-francisco/6340-Balboa-High-School/',
         },
