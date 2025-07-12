@@ -954,7 +954,7 @@ export default [
         types: ['Early Education'],
         charter: false,
         start: '7:50',
-        neighborhood: 'Ingleside',
+        neighborhood: 'Outer Mission',
         address: '300 Seneca Ave',
         zip: '94112',
         lat: 37.721295,
