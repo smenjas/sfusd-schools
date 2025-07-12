@@ -1651,7 +1651,7 @@ export default [
         types: ['Elementary'],
         charter: false,
         start: '7:50',
-        neighborhood: 'Miraloma',
+        neighborhood: 'West of Twin Peaks',
         address: '175 Omar Way',
         zip: '94127',
         lat: 37.7391659,
