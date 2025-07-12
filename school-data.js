@@ -1282,7 +1282,7 @@ export default [
         types: ['Elementary'],
         charter: false,
         start: '9:30',
-        neighborhood: 'Crocker Amazon',
+        neighborhood: 'Outer Mission',
         address: '755 Morse St',
         zip: '94112',
         lat: 37.710651,
