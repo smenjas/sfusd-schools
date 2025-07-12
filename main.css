@@ -158,6 +158,10 @@ tr:hover {
         background-color: #223;
     }
 
+    table {
+        scrollbar-color: #7f7f7f black;
+    }
+
     thead th {
         background-color: #001;
     }
