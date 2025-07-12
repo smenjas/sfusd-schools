@@ -81,6 +81,7 @@ table {
     border-collapse: collapse;
     max-width: fit-content;
     overflow-x: scroll;
+    scrollbar-color: #e5e5f5 white;
 }
 
 table caption {
