@@ -1692,7 +1692,7 @@ export default [
         types: ['Elementary'],
         charter: false,
         start: '8:40',
-        neighborhood: 'Lakeside',
+        neighborhood: 'West of Twin Peaks',
         address: '50 Darien Way',
         zip: '94127',
         lat: 37.731487,
