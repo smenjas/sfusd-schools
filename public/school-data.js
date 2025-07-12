@@ -1856,7 +1856,7 @@ export default [
         types: ['Elementary'],
         charter: false,
         start: '7:50',
-        neighborhood: 'West Portal',
+        neighborhood: 'West of Twin Peaks',
         address: '5 Lenox Way',
         zip: '94127',
         lat: 37.742882,
