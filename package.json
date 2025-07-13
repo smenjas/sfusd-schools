@@ -23,5 +23,8 @@
   "bugs": {
     "url": "https://github.com/smenjas/sfusd-schools/issues"
   },
-  "homepage": "https://github.com/smenjas/sfusd-schools#readme"
+  "homepage": "https://github.com/smenjas/sfusd-schools#readme",
+  "dependencies": {
+    "jsdom": "^26.1.0"
+  }
 }

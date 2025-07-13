@@ -409,11 +409,18 @@ function renderHeader() {
 }
 
 function getMinGrade(school) {
-    return school.pk ? 'PK' : school.tk ? 'TK' : school.k ? 'K' : school.min;
+    return school.pk
+        ? 'PK' : school.tk
+        ? 'TK' : school.k
+        ? 'K' : school.min;
 }
 
 function getMaxGrade(school) {
-    return school.max ? school.max : school.k ? 'K' : school.tk ? 'TK' : school.pk ? 'PK' : '';
+    return school.max
+        ? school.max : school.k
+        ? 'K' : school.tk
+        ? 'TK' : school.pk
+        ? 'PK' : '';
 }
 
 // Render a school's grade range (e.g. "TK-5").
@@ -454,10 +461,14 @@ function renderUSNewsRank(school) {
     return renderLink(school.urls.usnews, text, true);
 }
 
+function renderSchoolName(school) {
+    const name = getSchoolName(school).replace(/\bSan Francisco\b/g,
+        '<abbr title="San Francisco">SF</abbr>');
+    return renderLink(school.urls.main, name, true);
+}
+
 // Render one school's data as a table row.
 function renderRow(school, address) {
-    const name = getSchoolName(school);
-    const schoolLink = renderLink(school.urls.main, name, true);
     const fullName = getSchoolFullName(school);
     const city = 'San Francisco, CA';
     const origin = `${address}, ${city}, USA`;
@@ -467,7 +478,7 @@ function renderRow(school, address) {
     const mapLink = renderMapLink(search, school.address);
     let html = '';
     html += '<tr>';
-    html += `<td>${schoolLink}</td>`;
+    html += `<td>${renderSchoolName(school)}</td>`;
     html += `<td>${renderGradeRange(school)}</td>`;
     html += `<td class="num">${school.start}</td>`;
     html += `<td class="num">${directionsLink}</td>`;
