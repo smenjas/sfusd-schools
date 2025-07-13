@@ -388,21 +388,19 @@ function renderHeader() {
     html += '<th>Distance</th>';
     html += '<th>Neighborhood</th>';
     html += '<th>Address</th>';
-    html += '<th>US News</th>';
-    html += '<th>Great<wbr>Schools</th>';
-    //html += '<th>Min</th>';
-    //html += '<th>Max</th>';
+    html += '<th title="Ranking: lower numbers are better">US News</th>';
+    html += '<th title="Score: higher numbers are better">Great<wbr>Schools</th>';
     html += '<th>Students</th>';
     html += '<th>Teachers</th>';
-    html += '<th>Ratio</th>';
+    html += '<th title="Student:Teacher">Ratio</th>';
     html += '<th>Math</th>';
     html += '<th>Reading</th>';
     html += '<th>Science</th>';
     html += '<th>Graduated</th>';
     //html += '<th>Minority</th>';
     //html += '<th>Low Income</th>';
-    //html += '<th>M/F</th>';
-    html += '<th>Seats/App</th>';
+    //html += '<th title="Male/Female">M/F</th>';
+    html += '<th title="Chance of Acceptance">Seats/App</th>';
     html += '<th>Languages</th>';
     html += '<th>Feeds Into</th>';
     html += '</tr>';
@@ -440,12 +438,26 @@ function renderDistance(distance) {
     return distance.toFixed(1) + ' mi.';
 }
 
+function renderGreatSchoolsScore(school) {
+    if (school.greatschools === null) {
+        return '';
+    }
+    const text = `${school.greatschools}/10`;
+    return renderLink(school.urls.greatschools, text, true);
+}
+
+function renderUSNewsRank(school) {
+    if (school.usnews === null) {
+        return '';
+    }
+    const text = formatOrdinal(school.usnews);
+    return renderLink(school.urls.usnews, text, true);
+}
+
 // Render one school's data as a table row.
 function renderRow(school, address) {
     const name = getSchoolName(school);
     const schoolLink = renderLink(school.urls.main, name, true);
-    const greatschoolsLink = renderLink(school.urls.greatschools, school.greatschools, true);
-    const usnewsLink = renderLink(school.urls.usnews, school.usnews, true);
     const fullName = getSchoolFullName(school);
     const city = 'San Francisco, CA';
     const origin = `${address}, ${city}, USA`;
@@ -461,8 +473,8 @@ function renderRow(school, address) {
     html += `<td class="num">${directionsLink}</td>`;
     html += `<td>${school.neighborhood}</td>`;
     html += `<td>${mapLink}</td>`;
-    html += `<td class="num">${usnewsLink}</td>`;
-    html += `<td class="num">${greatschoolsLink}</td>`;
+    html += `<td class="num">${renderUSNewsRank(school)}</td>`;
+    html += `<td class="num">${renderGreatSchoolsScore(school)}</td>`;
     html += `<td class="num">${school.students ?? ''}</td>`;
     html += `<td class="num">${school.teachers ?? ''}</td>`;
     html += `<td class="num">${renderRatio(school.ratio)}</td>`;
