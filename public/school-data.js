@@ -4573,7 +4573,7 @@ export default [
         tk: false,
         k: false,
         min: 9,
-        max: 12,
+        max: 13,
         students: 1278,
         teachers: 59,
         ratio: 22,
