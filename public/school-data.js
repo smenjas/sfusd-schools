@@ -913,7 +913,7 @@ export default [
         types: ['Elementary', 'K-8', 'Middle'],
         charter: false,
         start: '9:30',
-        neighborhood: 'Soma',
+        neighborhood: 'SoMa',
         address: '375 7th St',
         zip: '94103',
         lat: 37.7762375,
