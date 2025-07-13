@@ -3534,7 +3534,7 @@ export default [
         name: 'Sutro',
         suffix: '',
         campus: '',
-        types: ['Elementary', 'K-8', 'Middle'],
+        types: ['Elementary'],
         charter: false,
         start: '9:30',
         neighborhood: 'Inner Richmond',
