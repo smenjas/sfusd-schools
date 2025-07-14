@@ -835,8 +835,8 @@ function updateDistances(schoolData, inputs, coords) {
     if (!coords) {
         return false;
     }
-    if (inputs.menus.sort === '' || inputs.menus.sort === 'Name') {
-        inputs.menus.sort = 'Distance';
+    if (inputs.menus.sort === '' || inputs.menus.sort === 'name') {
+        inputs.menus.sort = 'distance';
     }
     renderPage(schoolData, inputs, coords);
     document.getElementById('address').select();
@@ -986,8 +986,8 @@ function addEventListeners(schoolData, inputs, coords) {
     const reset = document.querySelector('[type=reset]');
     reset.addEventListener('click', event => {
         addressInput.value = '';
-        if (inputs.menus.sort === 'Distance') {
-            inputs.menus.sort = 'Name';
+        if (inputs.menus.sort === 'distance') {
+            inputs.menus.sort = 'name';
         }
         addressInput.dispatchEvent(new Event('input'));
         addressInput.value = '';
