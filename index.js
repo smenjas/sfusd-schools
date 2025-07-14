@@ -319,7 +319,8 @@ function getSortables() {
         'Neighborhood',
         'US News Ranking',
         'GreatSchools Score',
-        'Ratio',
+        'School Size',
+        'Student Teacher Ratio',
         'Math',
         'Reading',
         'Science',
@@ -657,8 +658,21 @@ function sortSchools(schools, sort) {
                 return b.reading - a.reading;
             }
             break;
-        case 'Ratio':
-            sortFunction = (a, b) => a.ratio - b.ratio;
+        case 'School Size':
+            sortFunction = (a, b) => {
+                if (a.students !== b.students) {
+                    return a.students - b.students;
+                }
+                return a.ratio - b.ratio;
+            }
+            break;
+        case 'Student Teacher Ratio':
+            sortFunction = (a, b) => {
+                if (a.ratio !== b.ratio) {
+                    return a.ratio - b.ratio;
+                }
+                return a.students - b.students;
+            }
             break;
         case 'Math':
             sortFunction = (a, b) => {
