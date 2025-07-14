@@ -104,6 +104,7 @@ function copyFilters(menus) {
         language: menus.language,
         neighborhood: menus.neighborhood,
         start: menus.start,
+        target: menus.target,
         type: menus.type,
     };
 }
@@ -313,6 +314,38 @@ function renderStartTimeMenu(schoolData, menus) {
     return html;
 }
 
+function getTargets(schools, selected) {
+    const targets = [];
+    for (const school of schools) {
+        for (const target of school.feedsInto) {
+            if (!targets.includes(target)) {
+                targets.push(target);
+            }
+        }
+    }
+    if (selected && !targets.includes(selected)) {
+        targets.push(selected);
+    }
+    targets.sort();
+    const targetsMap = new Map();
+    for (const target of targets) {
+        targetsMap.set(target, `Feeds Into ${target}`);
+    }
+    return targetsMap;
+}
+
+function renderTargetsMenu(schoolData, menus) {
+    const filters = copyFilters(menus);
+    filters.target = '';
+    const schools = filterSchools(schoolData, filters);
+    const targets = getTargets(schools, menus.target);
+    let html = '<select name="target" id="target">';
+    html += '<option value="">Feeds Into Any School</option>';
+    html += renderOptions(targets, menus.target);
+    html += '</select>';
+    return html;
+}
+
 function getSortables(shown) {
     const fields = new Map();
     fields.set('name', 'Name');
@@ -386,6 +419,9 @@ function renderForm(shown, schoolData, inputs) {
     html += '</div>';
     html += '<div class="form-group">';
     html += renderStartTimeMenu(schoolData, inputs.menus);
+    html += '</div>';
+    html += '<div class="form-group">';
+    html += renderTargetsMenu(schoolData, inputs.menus);
     html += '</div>';
     html += '<div class="form-group">';
     html += '<button type="reset">Reset</button>';
@@ -636,6 +672,16 @@ function filterLanguage(school, language) {
     return false;
 }
 
+function filterTarget(school, target) {
+    if (target === '' || target === undefined) {
+        return true;
+    }
+    if (school.feedsInto.includes(target)) {
+        return true;
+    }
+    return false;
+}
+
 function filterSchool(school, filters) {
     const functions = {
         type: filterType,
@@ -643,6 +689,7 @@ function filterSchool(school, filters) {
         neighborhood: filterNeighborhood,
         start: filterStartTime,
         language: filterLanguage,
+        target: filterTarget,
     };
     for (const filter in functions) {
         if (!(filter in filters)) {
@@ -1020,6 +1067,7 @@ const inputs = inputsJSON ? JSON.parse(inputsJSON) : {
         neighborhood: '',
         start: '',
         language: '',
+        target: '',
     },
 };
 
