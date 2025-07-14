@@ -317,25 +317,24 @@ function renderStartTimeMenu(schoolData, menus) {
 }
 
 function getSortables() {
-    const fields = [
-        'Name',
-        'Distance',
-        'Neighborhood',
-        'US News Ranking',
-        'GreatSchools Score',
-        'School Size',
-        'Student Teacher Ratio',
-        'Reading',
-        'Math',
-        'Science',
-        'Graduated',
-        'Seats/App',
-    ];
-    const fieldMap = new Map();
-    for (const field of fields) {
-        fieldMap.set(field, `Sort by ${field}`);
+    const fields = new Map([
+        ['name', 'Name'],
+        ['distance', 'Distance'],
+        ['neighborhood', 'Neighborhood'],
+        ['usnews', 'US News Ranking'],
+        ['greatschools', 'GreatSchools Score'],
+        ['students', 'School Size'],
+        ['ratio', 'Student Teacher Ratio'],
+        ['reading', 'Reading'],
+        ['math', 'Math'],
+        ['science', 'Science'],
+        ['graduated', 'Graduated'],
+        ['seatsPerApp', 'Seats/App'],
+    ]);
+    for (const [field, desc] of fields) {
+        fields.set(field, `Sort by ${desc}`);
     }
-    return fieldMap;
+    return fields;
 }
 
 function renderSortMenu(sort) {
@@ -619,16 +618,16 @@ function filterSchools(schoolData, filters) {
 function sortSchools(schools, sort) {
     let sortFunction = () => {};
     switch (sort) {
-        case 'Name':
+        case 'name':
             sortFunction = (a, b) => a.name.localeCompare(b.name);
             break;
-        case 'Distance':
+        case 'distance':
             sortFunction = (a, b) => a.distance - b.distance;
             break;
-        case 'Neighborhood':
+        case 'neighborhood':
             sortFunction = (a, b) => a.neighborhood.localeCompare(b.neighborhood);
             break;
-        case 'US News Ranking':
+        case 'usnews':
             sortFunction = (a, b) => {
                 if (a.usnews !== null && b.usnews === null) {
                     return -1;
@@ -645,7 +644,7 @@ function sortSchools(schools, sort) {
                 return b.reading - a.reading;
             }
             break;
-        case 'GreatSchools Score':
+        case 'greatschools':
             sortFunction = (a, b) => {
                 if (a.greatschools !== null && b.greatschools === null) {
                     return -1;
@@ -662,7 +661,7 @@ function sortSchools(schools, sort) {
                 return b.reading - a.reading;
             }
             break;
-        case 'School Size':
+        case 'students':
             sortFunction = (a, b) => {
                 if (a.students !== b.students) {
                     return a.students - b.students;
@@ -670,7 +669,7 @@ function sortSchools(schools, sort) {
                 return a.ratio - b.ratio;
             }
             break;
-        case 'Student Teacher Ratio':
+        case 'ratio':
             sortFunction = (a, b) => {
                 if (a.ratio !== b.ratio) {
                     return a.ratio - b.ratio;
@@ -678,7 +677,7 @@ function sortSchools(schools, sort) {
                 return a.students - b.students;
             }
             break;
-        case 'Reading':
+        case 'reading':
             sortFunction = (a, b) => {
                 if (a.reading !== b.reading) {
                     return b.reading - a.reading;
@@ -692,7 +691,7 @@ function sortSchools(schools, sort) {
                 return b.graduated - a.graduated;
             }
             break;
-        case 'Math':
+        case 'math':
             sortFunction = (a, b) => {
                 if (a.math !== b.math) {
                     return b.math - a.math;
@@ -706,7 +705,7 @@ function sortSchools(schools, sort) {
                 return b.graduated - a.graduated;
             }
             break;
-        case 'Science':
+        case 'science':
             sortFunction = (a, b) => {
                 if (a.science !== b.science) {
                     return b.science - a.science;
@@ -720,7 +719,7 @@ function sortSchools(schools, sort) {
                 return b.graduated - a.graduated;
             }
             break;
-        case 'Graduated':
+        case 'graduated':
             sortFunction = (a, b) => {
                 if (a.graduated !== b.graduated) {
                     return b.graduated - a.graduated;
@@ -734,7 +733,7 @@ function sortSchools(schools, sort) {
                 return b.science - a.science;
             }
             break;
-        case 'Seats/App':
+        case 'seatsPerApp':
             sortFunction = (a, b) => {
                 if (a.seatsPerApp !== null && b.seatsPerApp === null) {
                     return -1;
