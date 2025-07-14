@@ -654,13 +654,11 @@ function renderTable(shown, schools, address) {
 }
 
 function filterType(school, type) {
-    return type === ''
-        || type === undefined
-        || school.types.includes(type);
+    return !type || school.types.includes(type);
 }
 
 function filterGrade(school, grade) {
-    if (grade === '' || grade === undefined) return true;
+    if (!grade) return true;
     if (grade === 'pk') return school.pk;
     if (grade === 'tk') return school.tk;
     if (grade === 'k') return school.k;
@@ -675,13 +673,11 @@ function filterGrade(school, grade) {
 }
 
 function filterNeighborhood(school, neighborhood) {
-    return neighborhood === ''
-        || neighborhood === undefined
-        || neighborhood === school.neighborhood;
+    return !neighborhood || neighborhood === school.neighborhood;
 }
 
 function filterStartTime(school, start) {
-    if (start === '' || start === undefined || start === null) {
+    if (!start) {
         return true;
     }
     const hour = school.start.split(':')[0];
@@ -693,7 +689,7 @@ function filterStartTime(school, start) {
 
 function filterLanguage(school, language) {
     // Has a language been chosen?
-    if (language === '' || language === undefined) {
+    if (!language) {
         return true;
     }
     // Do this school's languages match the chosen language exactly?
@@ -712,7 +708,7 @@ function filterLanguage(school, language) {
 }
 
 function filterTarget(school, target) {
-    if (target === '' || target === undefined) {
+    if (!target) {
         return true;
     }
     if (school.feedsInto.includes(target)) {
@@ -722,7 +718,7 @@ function filterTarget(school, target) {
 }
 
 function filterWithin(school, within) {
-    if (within === '' || within === undefined) {
+    if (!within) {
         return true;
     }
     if (school.distance <= within) {
