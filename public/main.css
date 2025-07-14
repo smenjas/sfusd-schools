@@ -17,13 +17,12 @@ a:visited {
 
 main, form, table {
     background-color: #f5f5ff;
-    max-width: 51rem;
     margin: 0 auto 0.5rem;
-    padding: 0;
 }
 
 main, form {
     border-radius: 1rem;
+    max-width: 51rem;
     padding: 1rem;
 }
 
@@ -81,6 +80,7 @@ table {
     display: block;
     border-collapse: collapse;
     max-width: fit-content;
+    padding: 0;
     overflow-x: scroll;
     scrollbar-color: #e5e5f5 white;
 }
@@ -122,11 +122,12 @@ tr:hover {
 }
 
 #not-found main {
-    max-width: 26rem;
+    max-width: max-content;
 }
 
 #not-found h1 {
     text-align: center;
+    margin: 0;
 }
 
 #not-found img {
