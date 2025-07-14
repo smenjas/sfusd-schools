@@ -321,8 +321,8 @@ function getSortables() {
         'GreatSchools Score',
         'School Size',
         'Student Teacher Ratio',
-        'Math',
         'Reading',
+        'Math',
         'Science',
         'Graduated',
         'Seats/App',
@@ -394,8 +394,8 @@ function renderHeader() {
     html += '<th>Students</th>';
     html += '<th>Teachers</th>';
     html += '<th title="Student:Teacher">Ratio</th>';
-    html += '<th>Math</th>';
     html += '<th>Reading</th>';
+    html += '<th>Math</th>';
     html += '<th>Science</th>';
     html += '<th>Graduated</th>';
     //html += '<th>Minority</th>';
@@ -490,8 +490,8 @@ function renderRow(school, address) {
     html += `<td class="num">${school.students ?? ''}</td>`;
     html += `<td class="num">${school.teachers ?? ''}</td>`;
     html += `<td class="num">${renderRatio(school.ratio)}</td>`;
-    html += `<td class="num">${renderPercent(school.math)}</td>`;
     html += `<td class="num">${renderPercent(school.reading)}</td>`;
+    html += `<td class="num">${renderPercent(school.math)}</td>`;
     html += `<td class="num">${renderPercent(school.science)}</td>`;
     html += `<td class="num">${renderPercent(school.graduated)}</td>`;
     //html += `<td class="num">${renderPercent(school.minority)}</td>`;
@@ -674,20 +674,6 @@ function sortSchools(schools, sort) {
                 return a.students - b.students;
             }
             break;
-        case 'Math':
-            sortFunction = (a, b) => {
-                if (a.math !== b.math) {
-                    return b.math - a.math;
-                }
-                if (a.reading !== b.reading) {
-                    return b.reading - a.reading;
-                }
-                if (b.science !== a.science) {
-                    return b.science - a.science;
-                }
-                return b.graduated - a.graduated;
-            }
-            break;
         case 'Reading':
             sortFunction = (a, b) => {
                 if (a.reading !== b.reading) {
@@ -695,6 +681,20 @@ function sortSchools(schools, sort) {
                 }
                 if (a.math !== b.math) {
                     return b.math - a.math;
+                }
+                if (b.science !== a.science) {
+                    return b.science - a.science;
+                }
+                return b.graduated - a.graduated;
+            }
+            break;
+        case 'Math':
+            sortFunction = (a, b) => {
+                if (a.math !== b.math) {
+                    return b.math - a.math;
+                }
+                if (a.reading !== b.reading) {
+                    return b.reading - a.reading;
                 }
                 if (b.science !== a.science) {
                     return b.science - a.science;
