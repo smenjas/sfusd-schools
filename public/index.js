@@ -104,6 +104,7 @@ function copyFilters(menus) {
         language: menus.language,
         neighborhood: menus.neighborhood,
         start: menus.start,
+        target: menus.target,
         type: menus.type,
     };
 }
@@ -187,7 +188,7 @@ function getLanguages(schools, selected) {
             }
         }
     }
-    if (selected !== '' && !languages.includes(selected)) {
+    if (selected && !languages.includes(selected)) {
         languages.push(selected);
     }
     return languages.sort();
@@ -213,7 +214,7 @@ function getNeighborhoods(schools, selected) {
             neighborhoods.push(hood);
         }
     }
-    if (selected !== '' && !neighborhoods.includes(selected)) {
+    if (selected && !neighborhoods.includes(selected)) {
         neighborhoods.push(selected);
     }
     return neighborhoods.sort();
@@ -313,6 +314,74 @@ function renderStartTimeMenu(schoolData, menus) {
     return html;
 }
 
+function getTargets(schools, selected) {
+    const targets = [];
+    for (const school of schools) {
+        for (const target of school.feedsInto) {
+            if (!targets.includes(target)) {
+                targets.push(target);
+            }
+        }
+    }
+    if (selected && !targets.includes(selected)) {
+        targets.push(selected);
+    }
+    targets.sort();
+    const targetsMap = new Map();
+    for (const target of targets) {
+        targetsMap.set(target, `Feeds Into ${target}`);
+    }
+    return targetsMap;
+}
+
+function renderTargetsMenu(schoolData, menus) {
+    const filters = copyFilters(menus);
+    filters.target = '';
+    const schools = filterSchools(schoolData, filters);
+    const targets = getTargets(schools, menus.target);
+    let html = '<select name="target" id="target">';
+    html += '<option value="">Feeds Into Any School</option>';
+    html += renderOptions(targets, menus.target);
+    html += '</select>';
+    return html;
+}
+
+function getDistances(schools, selected) {
+    const distances = [];
+    for (const school of schools) {
+        if (isNaN(school.distance)) {
+            continue;
+        }
+        const distance = Math.ceil(school.distance);
+        if (distance > 0 && !distances.includes(distance)) {
+            distances.push(distance);
+        }
+    }
+    if (selected && !distances.includes(selected)) {
+        distances.push(selected);
+    }
+    distances.sort((a, b) => a - b);
+    distances.pop();
+    const distancesMap = new Map();
+    for (const distance of distances) {
+        const unit = (distance === 1) ? 'mile' : 'miles';
+        distancesMap.set(distance, `Within ${distance} ${unit}`);
+    }
+    return distancesMap;
+}
+
+function renderDistancesMenu(schoolData, menus) {
+    const filters = copyFilters(menus);
+    filters.within = '';
+    const schools = filterSchools(schoolData, filters);
+    const distances = getDistances(schools, menus.target);
+    let html = '<select name="within" id="within">';
+    html += '<option value="">Within Any Distance</option>';
+    html += renderOptions(distances, menus.within);
+    html += '</select>';
+    return html;
+}
+
 function getSortables(shown) {
     const fields = new Map();
     fields.set('name', 'Name');
@@ -386,6 +455,12 @@ function renderForm(shown, schoolData, inputs) {
     html += '</div>';
     html += '<div class="form-group">';
     html += renderStartTimeMenu(schoolData, inputs.menus);
+    html += '</div>';
+    html += '<div class="form-group">';
+    html += renderTargetsMenu(schoolData, inputs.menus);
+    html += '</div>';
+    html += '<div class="form-group">';
+    html += renderDistancesMenu(schoolData, inputs.menus);
     html += '</div>';
     html += '<div class="form-group">';
     html += '<button type="reset">Reset</button>';
@@ -579,13 +654,11 @@ function renderTable(shown, schools, address) {
 }
 
 function filterType(school, type) {
-    return type === ''
-        || type === undefined
-        || school.types.includes(type);
+    return !type || school.types.includes(type);
 }
 
 function filterGrade(school, grade) {
-    if (grade === '' || grade === undefined) return true;
+    if (!grade) return true;
     if (grade === 'pk') return school.pk;
     if (grade === 'tk') return school.tk;
     if (grade === 'k') return school.k;
@@ -600,13 +673,11 @@ function filterGrade(school, grade) {
 }
 
 function filterNeighborhood(school, neighborhood) {
-    return neighborhood === ''
-        || neighborhood === undefined
-        || neighborhood === school.neighborhood;
+    return !neighborhood || neighborhood === school.neighborhood;
 }
 
 function filterStartTime(school, start) {
-    if (start === '' || start === undefined || start === null) {
+    if (!start) {
         return true;
     }
     const hour = school.start.split(':')[0];
@@ -618,7 +689,7 @@ function filterStartTime(school, start) {
 
 function filterLanguage(school, language) {
     // Has a language been chosen?
-    if (language === '' || language === undefined) {
+    if (!language) {
         return true;
     }
     // Do this school's languages match the chosen language exactly?
@@ -636,6 +707,26 @@ function filterLanguage(school, language) {
     return false;
 }
 
+function filterTarget(school, target) {
+    if (!target) {
+        return true;
+    }
+    if (school.feedsInto.includes(target)) {
+        return true;
+    }
+    return false;
+}
+
+function filterWithin(school, within) {
+    if (!within) {
+        return true;
+    }
+    if (school.distance <= within) {
+        return true;
+    }
+    return false;
+}
+
 function filterSchool(school, filters) {
     const functions = {
         type: filterType,
@@ -643,6 +734,8 @@ function filterSchool(school, filters) {
         neighborhood: filterNeighborhood,
         start: filterStartTime,
         language: filterLanguage,
+        target: filterTarget,
+        within: filterWithin,
     };
     for (const filter in functions) {
         if (!(filter in filters)) {
@@ -833,6 +926,7 @@ function updateDistances(schoolData, inputs, coords) {
         school.distance = calculateDistance(coords, schoolCoords);
     }
     if (!coords) {
+        inputs.menus.within = '';
         return false;
     }
     if (inputs.menus.sort === '' || inputs.menus.sort === 'name') {
@@ -1020,6 +1114,8 @@ const inputs = inputsJSON ? JSON.parse(inputsJSON) : {
         neighborhood: '',
         start: '',
         language: '',
+        target: '',
+        within: '',
     },
 };
 
