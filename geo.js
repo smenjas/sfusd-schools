@@ -40,7 +40,7 @@ export function getDirectionsURL(fro, to) {
     if (fro === '' || to === '') {
         return '';
     }
-    const search = `${fro}/${to}`;
+    const search = `${encodeURIComponent(fro)}/${encodeURIComponent(to)}`;
     return 'https://www.google.com/maps/dir/' + search.replaceAll(' ', '+');
 }
 
@@ -54,6 +54,7 @@ export function getMapURL(search) {
     if (search === '') {
         return '';
     }
+    search = encodeURIComponent(search);
     return 'https://www.google.com/maps/search/' + search.replaceAll(' ', '+');
 }
 
