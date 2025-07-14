@@ -26,6 +26,11 @@ main, form {
     padding: 1rem;
 }
 
+header {
+    display: grid;
+    grid-template-columns: 7fr 1fr;
+}
+
 h1 {
     padding: 0;
     margin: 1px 0 1.0rem;
@@ -33,9 +38,8 @@ h1 {
     text-box-edge: cap alphabetic;
 }
 
-h1 img {
-    float: right;
-    margin: 3px 0 0;
+header img {
+    justify-self: end;
 }
 
 p {
