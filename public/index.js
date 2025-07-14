@@ -5,6 +5,10 @@ import { calculateDistance,
          getDirectionsURL,
          getMapURL } from './geo.js';
 
+function escapeFormInput(value) {
+    return encodeURIComponent(value).replaceAll('%20', ' ');
+}
+
 function renderLink(url, text, newTab = false) {
     if (text === null || text === '') {
         return '';
@@ -920,7 +924,7 @@ function renderPage(schoolData, inputs, coords) {
     document.getElementById('input').innerHTML = renderForm(schoolData, inputs);
     document.getElementById('schools').innerHTML = renderTable(schools, inputs.address);
     addEventListeners(schoolData, inputs, coords);
-    document.getElementById('address').value = inputs.address;
+    document.getElementById('address').value = escapeFormInput(inputs.address);
 }
 
 const inputsJSON = localStorage.getItem('inputs');
