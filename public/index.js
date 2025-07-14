@@ -346,6 +346,42 @@ function renderTargetsMenu(schoolData, menus) {
     return html;
 }
 
+function getDistances(schools, selected) {
+    const distances = [];
+    for (const school of schools) {
+        if (isNaN(school.distance)) {
+            continue;
+        }
+        const distance = Math.ceil(school.distance);
+        if (distance > 0 && !distances.includes(distance)) {
+            distances.push(distance);
+        }
+    }
+    if (selected && !distances.includes(selected)) {
+        distances.push(selected);
+    }
+    distances.sort((a, b) => a - b);
+    distances.pop();
+    const distancesMap = new Map();
+    for (const distance of distances) {
+        const unit = (distance === 1) ? 'mile' : 'miles';
+        distancesMap.set(distance, `Within ${distance} ${unit}`);
+    }
+    return distancesMap;
+}
+
+function renderDistancesMenu(schoolData, menus) {
+    const filters = copyFilters(menus);
+    filters.within = '';
+    const schools = filterSchools(schoolData, filters);
+    const distances = getDistances(schools, menus.target);
+    let html = '<select name="within" id="within">';
+    html += '<option value="">Within Any Distance</option>';
+    html += renderOptions(distances, menus.within);
+    html += '</select>';
+    return html;
+}
+
 function getSortables(shown) {
     const fields = new Map();
     fields.set('name', 'Name');
@@ -422,6 +458,9 @@ function renderForm(shown, schoolData, inputs) {
     html += '</div>';
     html += '<div class="form-group">';
     html += renderTargetsMenu(schoolData, inputs.menus);
+    html += '</div>';
+    html += '<div class="form-group">';
+    html += renderDistancesMenu(schoolData, inputs.menus);
     html += '</div>';
     html += '<div class="form-group">';
     html += '<button type="reset">Reset</button>';
@@ -682,6 +721,16 @@ function filterTarget(school, target) {
     return false;
 }
 
+function filterWithin(school, within) {
+    if (within === '' || within === undefined) {
+        return true;
+    }
+    if (school.distance <= within) {
+        return true;
+    }
+    return false;
+}
+
 function filterSchool(school, filters) {
     const functions = {
         type: filterType,
@@ -690,6 +739,7 @@ function filterSchool(school, filters) {
         start: filterStartTime,
         language: filterLanguage,
         target: filterTarget,
+        within: filterWithin,
     };
     for (const filter in functions) {
         if (!(filter in filters)) {
@@ -880,6 +930,7 @@ function updateDistances(schoolData, inputs, coords) {
         school.distance = calculateDistance(coords, schoolCoords);
     }
     if (!coords) {
+        inputs.menus.within = '';
         return false;
     }
     if (inputs.menus.sort === '' || inputs.menus.sort === 'name') {
@@ -1068,6 +1119,7 @@ const inputs = inputsJSON ? JSON.parse(inputsJSON) : {
         start: '',
         language: '',
         target: '',
+        within: '',
     },
 };
 
