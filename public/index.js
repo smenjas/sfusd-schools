@@ -187,7 +187,7 @@ function getLanguages(schools, selected) {
             }
         }
     }
-    if (selected !== '' && !languages.includes(selected)) {
+    if (selected && !languages.includes(selected)) {
         languages.push(selected);
     }
     return languages.sort();
@@ -213,7 +213,7 @@ function getNeighborhoods(schools, selected) {
             neighborhoods.push(hood);
         }
     }
-    if (selected !== '' && !neighborhoods.includes(selected)) {
+    if (selected && !neighborhoods.includes(selected)) {
         neighborhoods.push(selected);
     }
     return neighborhoods.sort();
