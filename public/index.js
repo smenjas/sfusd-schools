@@ -140,8 +140,7 @@ function getSchoolGrades(schools, selected) {
     const grades = new Map();
     let min = Infinity;
     let max = -Infinity;
-    for (const key in schools) {
-        const school = schools[key];
+    for (const school of schools) {
         if (school.pk) grades.set('pk', true);
         if (school.tk) grades.set('tk', true);
         if (school.k) grades.set('k', true);
@@ -179,8 +178,7 @@ function renderGradeMenu(schoolData, menus) {
 
 function getLanguages(schools, selected) {
     const languages = [];
-    for (const key in schools) {
-        const school = schools[key];
+    for (const school of schools) {
         const langs = school.languages;
         for (const lang of langs) {
             const language = lang.split(' ', 1)[0];
@@ -209,8 +207,7 @@ function renderLanguageMenu(schoolData, menus) {
 
 function getNeighborhoods(schools, selected) {
     const neighborhoods = [];
-    for (const key in schools) {
-        const school = schools[key];
+    for (const school of schools) {
         const hood = school.neighborhood;
         if (!neighborhoods.includes(hood)) {
             neighborhoods.push(hood);
@@ -573,8 +570,8 @@ function renderTable(shown, schools, address) {
     }
     html += renderHeader(shown);
     html += '<tbody>';
-    for (const key in schools) {
-        html += renderRow(shown, schools[key], address);
+    for (const school of schools) {
+        html += renderRow(shown, school, address);
     }
     html += '</tbody>';
     html += '</table>';
