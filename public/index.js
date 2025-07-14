@@ -624,28 +624,114 @@ function sortSchools(schools, sort) {
             sortFunction = (a, b) => a.neighborhood.localeCompare(b.neighborhood);
             break;
         case 'US News Ranking':
-            sortFunction = (a, b) => a.usnews - b.usnews;
+            sortFunction = (a, b) => {
+                if (a.usnews !== null && b.usnews === null) {
+                    return -1;
+                }
+                if (a.usnews === null && b.usnews !== null) {
+                    return 1;
+                }
+                if (a.usnews !== b.usnews) {
+                    return a.usnews - b.usnews;
+                }
+                if (a.greatschools !== b.greatschools) {
+                    return b.greatschools - a.greatschools;
+                }
+                return b.reading - a.reading;
+            }
             break;
         case 'GreatSchools Score':
-            sortFunction = (a, b) => b.greatschools - a.greatschools;
+            sortFunction = (a, b) => {
+                if (a.greatschools !== null && b.greatschools === null) {
+                    return -1;
+                }
+                if (a.greatschools === null && b.greatschools !== null) {
+                    return 1;
+                }
+                if (a.greatschools !== b.greatschools) {
+                    return b.greatschools - a.greatschools;
+                }
+                if (a.usnews !== b.usnews) {
+                    return a.usnews - b.usnews;
+                }
+                return b.reading - a.reading;
+            }
             break;
         case 'Ratio':
             sortFunction = (a, b) => a.ratio - b.ratio;
             break;
         case 'Math':
-            sortFunction = (a, b) => b.math - a.math;
+            sortFunction = (a, b) => {
+                if (a.math !== b.math) {
+                    return b.math - a.math;
+                }
+                if (a.reading !== b.reading) {
+                    return b.reading - a.reading;
+                }
+                if (b.science !== a.science) {
+                    return b.science - a.science;
+                }
+                return b.graduated - a.graduated;
+            }
             break;
         case 'Reading':
-            sortFunction = (a, b) => b.reading - a.reading;
+            sortFunction = (a, b) => {
+                if (a.reading !== b.reading) {
+                    return b.reading - a.reading;
+                }
+                if (a.math !== b.math) {
+                    return b.math - a.math;
+                }
+                if (b.science !== a.science) {
+                    return b.science - a.science;
+                }
+                return b.graduated - a.graduated;
+            }
             break;
         case 'Science':
-            sortFunction = (a, b) => b.science - a.science;
+            sortFunction = (a, b) => {
+                if (a.science !== b.science) {
+                    return b.science - a.science;
+                }
+                if (a.math !== b.math) {
+                    return b.math - a.math;
+                }
+                if (a.reading !== b.reading) {
+                    return b.reading - a.reading;
+                }
+                return b.graduated - a.graduated;
+            }
             break;
         case 'Graduated':
-            sortFunction = (a, b) => b.graduated - a.graduated;
+            sortFunction = (a, b) => {
+                if (a.graduated !== b.graduated) {
+                    return b.graduated - a.graduated;
+                }
+                if (a.reading !== b.reading) {
+                    return b.reading - a.reading;
+                }
+                if (a.math !== b.math) {
+                    return b.math - a.math;
+                }
+                return b.science - a.science;
+            }
             break;
         case 'Seats/App':
-            sortFunction = (a, b) => a.seatsPerApp - b.seatsPerApp;
+            sortFunction = (a, b) => {
+                if (a.seatsPerApp !== null && b.seatsPerApp === null) {
+                    return -1;
+                }
+                if (a.seatsPerApp === null && b.seatsPerApp !== null) {
+                    return 1;
+                }
+                if (a.seatsPerApp !== b.seatsPerApp) {
+                    return a.seatsPerApp - b.seatsPerApp;
+                }
+                if (a.reading !== b.reading) {
+                    return b.reading - a.reading;
+                }
+                return b.math - a.math;
+            }
             break;
         default:
             return;
