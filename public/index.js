@@ -312,29 +312,44 @@ function renderStartTimeMenu(schoolData, menus) {
     return html;
 }
 
-function getSortables() {
-    const fields = new Map([
-        ['name', 'Name'],
-        ['distance', 'Distance'],
-        ['neighborhood', 'Neighborhood'],
-        ['usnews', 'US News Ranking'],
-        ['greatschools', 'GreatSchools Score'],
-        ['students', 'School Size'],
-        ['ratio', 'Student Teacher Ratio'],
-        ['reading', 'Reading'],
-        ['math', 'Math'],
-        ['science', 'Science'],
-        ['graduated', 'Graduated'],
-        ['seatsPerApp', 'Seats/App'],
-    ]);
+function getSortables(shown) {
+    const fields = new Map();
+    fields.set('name', 'Name');
+    if (shown.distance) {
+        fields.set('distance', 'Distance');
+    }
+    fields.set('neighborhood', 'Neighborhood');
+    if (shown.usnews) {
+        fields.set('usnews', 'US News Ranking');
+    }
+    if (shown.greatschools) {
+        fields.set('greatschools', 'GreatSchools Score');
+    }
+    fields.set('students', 'School Size');
+    if (shown.ratio) {
+        fields.set('ratio', 'Student Teacher Ratio');
+    }
+    if (shown.reading) {
+        fields.set('reading', 'Reading');
+    }
+    if (shown.math) {
+        fields.set('math', 'Math');
+    }
+    if (shown.science) {
+        fields.set('science', 'Science');
+    }
+    if (shown.graduated) {
+        fields.set('graduated', 'Graduated');
+    }
+    fields.set('seatsPerApp', 'Seats/App');
     for (const [field, desc] of fields) {
         fields.set(field, `Sort by ${desc}`);
     }
     return fields;
 }
 
-function renderSortMenu(sort) {
-    const sorts = getSortables();
+function renderSortMenu(shown, sort) {
+    const sorts = getSortables(shown);
     let html = '<select name="sort" id="sort">';
     html += renderOptions(sorts, sort);
     html += '</select>';
@@ -348,13 +363,13 @@ function renderAddressInput() {
     return html;
 }
 
-function renderForm(schoolData, inputs) {
+function renderForm(shown, schoolData, inputs) {
     let html = '<form id="schoolForm">';
     html += '<div class="form-group">';
     html += renderAddressInput();
     html += '</div>';
     html += '<div class="form-group">';
-    html += renderSortMenu(inputs.menus.sort);
+    html += renderSortMenu(shown, inputs.menus.sort);
     html += '</div>';
     html += '<div class="form-group">';
     html += renderGradeMenu(schoolData, inputs.menus);
@@ -378,31 +393,51 @@ function renderForm(schoolData, inputs) {
     return html;
 }
 
-function renderHeader() {
+function renderHeader(shown) {
     let html = '';
     html += '<thead>';
     html += '<tr>';
     html += '<th>Name</th>';
     html += '<th>Grades</th>';
     html += '<th>Start Time</th>';
-    html += '<th>Distance</th>';
+    if (shown.distance) {
+        html += '<th>Distance</th>';
+    }
     html += '<th>Neighborhood</th>';
     html += '<th>Address</th>';
-    html += '<th title="Ranking: lower numbers are better">US News</th>';
-    html += '<th title="Score: higher numbers are better">Great<wbr>Schools</th>';
+    if (shown.usnews) {
+        html += '<th title="Ranking: lower numbers are better">US News</th>';
+    }
+    if (shown.greatschools) {
+        html += '<th title="Score: higher numbers are better">Great<wbr>Schools</th>';
+    }
     html += '<th>Students</th>';
-    html += '<th>Teachers</th>';
-    html += '<th title="Student:Teacher">Ratio</th>';
-    html += '<th>Reading</th>';
-    html += '<th>Math</th>';
-    html += '<th>Science</th>';
-    html += '<th>Graduated</th>';
+    if (shown.teachers) {
+        html += '<th>Teachers</th>';
+    }
+    if (shown.ratio) {
+        html += '<th title="Student:Teacher">Ratio</th>';
+    }
+    if (shown.reading) {
+        html += '<th>Reading</th>';
+    }
+    if (shown.math) {
+        html += '<th>Math</th>';
+    }
+    if (shown.science) {
+        html += '<th>Science</th>';
+    }
+    if (shown.graduated) {
+        html += '<th>Graduated</th>';
+    }
     //html += '<th>Minority</th>';
     //html += '<th>Low Income</th>';
     //html += '<th title="Male/Female">M/F</th>';
     html += '<th title="Chance of Acceptance">Seats/App</th>';
     html += '<th>Languages</th>';
-    html += '<th>Feeds Into</th>';
+    if (shown.feedsInto) {
+        html += '<th>Feeds Into</th>';
+    }
     html += '</tr>';
     html += '</thead>';
     return html;
@@ -468,7 +503,7 @@ function renderSchoolName(school) {
 }
 
 // Render one school's data as a table row.
-function renderRow(school, address) {
+function renderRow(shown, school, address) {
     const fullName = getSchoolFullName(school);
     const city = 'San Francisco, CA';
     const origin = `${address}, ${city}, USA`;
@@ -481,30 +516,50 @@ function renderRow(school, address) {
     html += `<td>${renderSchoolName(school)}</td>`;
     html += `<td>${renderGradeRange(school)}</td>`;
     html += `<td class="num">${school.start}</td>`;
-    html += `<td class="num">${directionsLink}</td>`;
+    if (shown.distance) {
+        html += `<td class="num">${directionsLink}</td>`;
+    }
     html += `<td>${school.neighborhood}</td>`;
     html += `<td>${mapLink}</td>`;
-    html += `<td class="num">${renderUSNewsRank(school)}</td>`;
-    html += `<td class="num">${renderGreatSchoolsScore(school)}</td>`;
+    if (shown.usnews) {
+        html += `<td class="num">${renderUSNewsRank(school)}</td>`;
+    }
+    if (shown.greatschools) {
+        html += `<td class="num">${renderGreatSchoolsScore(school)}</td>`;
+    }
     html += `<td class="num">${school.students ?? ''}</td>`;
-    html += `<td class="num">${school.teachers ?? ''}</td>`;
-    html += `<td class="num">${renderRatio(school.ratio)}</td>`;
-    html += `<td class="num">${renderPercent(school.reading)}</td>`;
-    html += `<td class="num">${renderPercent(school.math)}</td>`;
-    html += `<td class="num">${renderPercent(school.science)}</td>`;
-    html += `<td class="num">${renderPercent(school.graduated)}</td>`;
+    if (shown.teachers) {
+        html += `<td class="num">${school.teachers ?? ''}</td>`;
+    }
+    if (shown.ratio) {
+        html += `<td class="num">${renderRatio(school.ratio)}</td>`;
+    }
+    if (shown.reading) {
+        html += `<td class="num">${renderPercent(school.reading)}</td>`;
+    }
+    if (shown.math) {
+        html += `<td class="num">${renderPercent(school.math)}</td>`;
+    }
+    if (shown.science) {
+        html += `<td class="num">${renderPercent(school.science)}</td>`;
+    }
+    if (shown.graduated) {
+        html += `<td class="num">${renderPercent(school.graduated)}</td>`;
+    }
     //html += `<td class="num">${renderPercent(school.minority)}</td>`;
     //html += `<td class="num">${renderPercent(school.lowIncome)}</td>`;
     //html += `<td class="num">${renderGender(school.male, school.female)}</td>`;
     html += `<td class="num">${renderPercent(school.seatsPerApp)}</td>`;
     html += `<td>${renderList(school.languages)}</td>`;
-    html += `<td>${renderList(school.feedsInto)}</td>`;
+    if (shown.feedsInto) {
+        html += `<td>${renderList(school.feedsInto)}</td>`;
+    }
     html += '</tr>';
     return html;
 }
 
 // Render school data as an HTML table.
-function renderTable(schools, address) {
+function renderTable(shown, schools, address) {
     const numSchools = Object.keys(schools).length;
     let html = '<table>';
     html += `<caption>${numSchools} Schools</caption>`;
@@ -512,10 +567,10 @@ function renderTable(schools, address) {
         html += '</table>';
         return html;
     }
-    html += renderHeader();
+    html += renderHeader(shown);
     html += '<tbody>';
     for (const key in schools) {
-        html += renderRow(schools[key], address);
+        html += renderRow(shown, schools[key], address);
     }
     html += '</tbody>';
     html += '</table>';
@@ -857,6 +912,37 @@ function findAddress(address) {
     return expandCoords(addressData[nopunct][num]);
 }
 
+function findShownColumns(schools) {
+    const shown = {
+        distance: false,
+        usnews: false,
+        greatschools: false,
+        teachers: false,
+        ratio: false,
+        reading: false,
+        math: false,
+        science: false,
+        graduated: false,
+        feedsInto: false,
+    };
+    for (const field in shown) {
+        for (const school of schools) {
+            if (Array.isArray(school[field])) {
+                if (school[field].length > 0) {
+                    shown[field] = true;
+                    break;
+                }
+                continue;
+            }
+            if (school[field] !== null) {
+                shown[field] = true;
+                break;
+            }
+        }
+    }
+    return shown;
+}
+
 function addEventListeners(schoolData, inputs, coords) {
     // Remove existing event listeners.
     const oldAddress = document.querySelector('input[name=address]');
@@ -916,8 +1002,9 @@ function renderPage(schoolData, inputs, coords) {
     document.title = 'SFUSD Schools';
     const schools = filterSchools(schoolData, inputs.menus);
     sortSchools(schools, inputs.menus.sort);
-    document.getElementById('input').innerHTML = renderForm(schoolData, inputs);
-    document.getElementById('schools').innerHTML = renderTable(schools, inputs.address);
+    const shown = findShownColumns(schools);
+    document.getElementById('input').innerHTML = renderForm(shown, schoolData, inputs);
+    document.getElementById('schools').innerHTML = renderTable(shown, schools, inputs.address);
     addEventListeners(schoolData, inputs, coords);
     document.getElementById('address').value = inputs.address;
 }
