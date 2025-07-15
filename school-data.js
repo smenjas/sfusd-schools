@@ -4391,7 +4391,7 @@ export default [
     },
     {
         code: 764,
-        prefix: 'Phillip and Sala',
+        prefix: 'Phillip & Sala',
         name: 'Burton',
         suffix: '',
         campus: '',
