@@ -127,6 +127,12 @@ input::selection {
     color: black;
 }
 
+select:disabled {
+    opacity: 1;
+    color: #778;
+    border-color: #bbb;
+}
+
 [type=reset] {
     justify-self: end;
 }
@@ -232,6 +238,12 @@ tr:hover {
     input::selection {
         background-color: royalblue;
         color: white;
+    }
+
+    select:disabled {
+        opacity: 1;
+        color: #99a;
+        border-color: #778;
     }
 
     button:hover,
