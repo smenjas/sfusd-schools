@@ -199,7 +199,8 @@ function renderLanguageMenu(schoolData, menus) {
     filters.language = '';
     const schools = filterSchools(schoolData, filters);
     const languages = getLanguages(schools, menus.language);
-    let html = '<select name="language" id="language">';
+    const disabled = languages.length ? '' : ' disabled';
+    let html = `<select name="language" id="language"${disabled}>`;
     html += '<option value="">Any Language</option>';
     html += renderOptions(languages, menus.language);
     html += '</select>';
@@ -339,7 +340,8 @@ function renderTargetsMenu(schoolData, menus) {
     filters.target = '';
     const schools = filterSchools(schoolData, filters);
     const targets = getTargets(schools, menus.target);
-    let html = '<select name="target" id="target">';
+    const disabled = targets.size ? '' : ' disabled';
+    let html = `<select name="target" id="target"${disabled}>`;
     html += '<option value="">Feeds Into Any School</option>';
     html += renderOptions(targets, menus.target);
     html += '</select>';
@@ -375,7 +377,9 @@ function renderDistancesMenu(schoolData, menus) {
     filters.within = '';
     const schools = filterSchools(schoolData, filters);
     const distances = getDistances(schools, menus.target);
-    let html = '<select name="within" id="within">';
+    const disabled = distances.size ? '' :
+        ' disabled title="Enter your address to filter by distance."';
+    let html = `<select name="within" id="within"${disabled}>`;
     html += '<option value="">Within Any Distance</option>';
     html += renderOptions(distances, menus.within);
     html += '</select>';
@@ -448,13 +452,13 @@ function renderForm(shown, schoolData, inputs) {
     html += renderTypeMenu(schoolData, inputs.menus);
     html += '</div>';
     html += '<div class="form-group">';
-    html += renderLanguageMenu(schoolData, inputs.menus);
+    html += renderStartTimeMenu(schoolData, inputs.menus);
     html += '</div>';
     html += '<div class="form-group">';
     html += renderNeighborhoodMenu(schoolData, inputs.menus);
     html += '</div>';
     html += '<div class="form-group">';
-    html += renderStartTimeMenu(schoolData, inputs.menus);
+    html += renderLanguageMenu(schoolData, inputs.menus);
     html += '</div>';
     html += '<div class="form-group">';
     html += renderTargetsMenu(schoolData, inputs.menus);
