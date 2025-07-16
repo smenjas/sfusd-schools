@@ -372,16 +372,18 @@ function getDistances(schools, selected) {
     return distancesMap;
 }
 
-function renderDistancesMenu(schoolData, menus) {
-    const filters = copyFilters(menus);
+function renderDistancesMenu(schoolData, inputs) {
+    const filters = copyFilters(inputs.menus);
     filters.within = '';
     const schools = filterSchools(schoolData, filters);
-    const distances = getDistances(schools, menus.within);
-    const disabled = distances.size ? '' :
-        ' disabled title="Enter your address to filter by distance."';
+    const distances = getDistances(schools, inputs.menus.within);
+    let disabled = distances.size ? '' : ' disabled ';
+    if (inputs.address === '') {
+        disabled += ' title="Enter your address to filter by distance."';
+    }
     let html = `<select name="within" id="within"${disabled}>`;
     html += '<option value="">Within Any Distance</option>';
-    html += renderOptions(distances, menus.within);
+    html += renderOptions(distances, inputs.menus.within);
     html += '</select>';
     return html;
 }
@@ -464,7 +466,7 @@ function renderForm(shown, schoolData, inputs) {
     html += renderTargetsMenu(schoolData, inputs.menus);
     html += '</div>';
     html += '<div class="form-group">';
-    html += renderDistancesMenu(schoolData, inputs.menus);
+    html += renderDistancesMenu(schoolData, inputs);
     html += '</div>';
     html += '<div class="form-group">';
     html += '<button type="reset">Reset</button>';
