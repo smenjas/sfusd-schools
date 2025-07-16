@@ -359,7 +359,7 @@ function getDistances(schools, selected) {
             distances.push(distance);
         }
     }
-    if (selected && !distances.includes(selected)) {
+    if (selected && !distances.includes(parseInt(selected))) {
         distances.push(selected);
     }
     distances.sort((a, b) => a - b);
@@ -376,7 +376,7 @@ function renderDistancesMenu(schoolData, menus) {
     const filters = copyFilters(menus);
     filters.within = '';
     const schools = filterSchools(schoolData, filters);
-    const distances = getDistances(schools, menus.target);
+    const distances = getDistances(schools, menus.within);
     const disabled = distances.size ? '' :
         ' disabled title="Enter your address to filter by distance."';
     let html = `<select name="within" id="within"${disabled}>`;
