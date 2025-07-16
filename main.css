@@ -80,7 +80,7 @@ main, form {
 
 header {
     display: grid;
-    grid-template-columns: 7fr 1fr;
+    grid-template-columns: 8fr 1fr;
 }
 
 h1 {
