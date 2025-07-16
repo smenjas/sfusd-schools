@@ -241,7 +241,6 @@ tr:hover {
     }
 
     select:disabled {
-        opacity: 1;
         color: #99a;
         border-color: #778;
     }
