@@ -1114,7 +1114,7 @@ const inputsJSON = localStorage.getItem('inputs');
 const inputs = inputsJSON ? JSON.parse(inputsJSON) : {
     address: '',
     menus: {
-        sort: 'Name',
+        sort: 'name',
         type: '',
         grade: '',
         neighborhood: '',
