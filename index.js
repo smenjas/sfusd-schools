@@ -1100,7 +1100,6 @@ function addEventListeners(schoolData, inputs, coords) {
 
 // Render a web page.
 function renderPage(schoolData, inputs, coords) {
-    document.title = 'SFUSD Schools';
     const schools = filterSchools(schoolData, inputs.menus);
     sortSchools(schools, inputs.menus.sort);
     const shown = findShownColumns(schools);
