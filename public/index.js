@@ -388,40 +388,35 @@ function renderDistancesMenu(schoolData, inputs) {
     return html;
 }
 
-function getSortables(shown) {
+function filterSortables(sorts, shown) {
     const fields = new Map();
-    fields.set('name', 'Name');
-    if (shown.distance) {
-        fields.set('distance', 'Distance');
+    for (const [key, value] of sorts) {
+        if (!(key in shown) || shown[key]) {
+            fields.set(key, value);
+        }
     }
-    fields.set('neighborhood', 'Neighborhood');
-    if (shown.usnews) {
-        fields.set('usnews', 'US News Ranking');
-    }
-    if (shown.greatschools) {
-        fields.set('greatschools', 'GreatSchools Score');
-    }
-    fields.set('students', 'School Size');
-    if (shown.ratio) {
-        fields.set('ratio', 'Student Teacher Ratio');
-    }
-    if (shown.reading) {
-        fields.set('reading', 'Reading');
-    }
-    if (shown.math) {
-        fields.set('math', 'Math');
-    }
-    if (shown.science) {
-        fields.set('science', 'Science');
-    }
-    if (shown.graduated) {
-        fields.set('graduated', 'Graduated');
-    }
-    fields.set('seatsPerApp', 'Seats/App');
+    return fields;
+}
+
+function getSortables(shown) {
+    const fields = new Map([
+        ['name', 'Name'],
+        ['distance', 'Distance'],
+        ['neighborhood', 'Neighborhood'],
+        ['usnews', 'US News Ranking'],
+        ['greatschools', 'GreatSchools Score'],
+        ['students', 'School Size'],
+        ['ratio', 'Student Teacher Ratio'],
+        ['reading', 'Reading'],
+        ['math', 'Math'],
+        ['science', 'Science'],
+        ['graduated', 'Graduated'],
+        ['seatsPerApp', 'Seats/App'],
+    ]);
     for (const [field, desc] of fields) {
         fields.set(field, `Sort by ${desc}`);
     }
-    return fields;
+    return filterSortables(fields, shown);
 }
 
 function renderSortMenu(shown, sort) {
