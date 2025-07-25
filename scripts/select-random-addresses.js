@@ -118,42 +118,33 @@ function removeRandomAddresses(addressData, want, maxPerStreet) {
     // How many addresses do we have?
     let have = countAddresses(addressData);
     if (have <= want) {
+        if (have < want) {
+            console.log('// Not enough addresses:', {have, want});
+        }
         return addressData;
     }
 
     let streets = Object.keys(addressData);
 
-    outer: while (true) {
+    while (have > want) {
         // Randomly choose a street.
         const st = randElement(streets);
 
-        // Randomly choose how many street numbers to remove.
-        let nums = Object.keys(addressData[st]);
+        // Randomly choose how many street numbers to keep.
+        const nums = Object.keys(addressData[st]);
         const canRemove = have - want;
-        const remove = randInt(1, Math.min(nums.length, canRemove));
-        if (nums.length === remove) {
+        const min = (canRemove < nums.length) ? nums.length - canRemove : 0;
+        const keep = randInt(min, nums.length - 1);
+        have -= nums.length - keep;
+
+        if (keep === 0) {
             // Remove the whole street if we're removing all of its numbers.
             delete addressData[st];
             streets = Object.keys(addressData);
-            have -= nums.length;
-            if (have <= want) {
-                break;
-            }
             continue;
         }
 
-        let n = 0;
-        while (n < remove) {
-            // Randomly choose a street number.
-            const num = randElement(nums);
-            delete addressData[st][num];
-            have--;
-            n++;
-            nums = Object.keys(addressData[st]);
-            if (have <= want) {
-                break outer;
-            }
-        }
+        keepRandomProps(addressData[st], keep);
     }
 
     return addressData;
