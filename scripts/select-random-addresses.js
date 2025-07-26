@@ -1,4 +1,5 @@
 import addressData from '../public/address-data.js';
+import { randInt, randElement } from './rand.js';
 import { argv } from 'node:process';
 import { basename } from 'node:path';
 
@@ -16,29 +17,12 @@ if (isNaN(want) || isNaN(maxPerStreet)) {
         '[numAddresses]', '[maxPerStreet]');
 }
 
-function countAddresses(addresses) {
-    let have = 0;
-    for (const street in addresses) {
-        have += Object.keys(addresses[street]).length;
+function countNestedKeys(object) {
+    let count = 0;
+    for (const key in object) {
+        count += Object.keys(object[key]).length;
     }
-    return have;
-}
-
-// Randomly choose a whole number, inclusively.
-function randInt(min, max) {
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-// Randomly choose an array index.
-function randIndex(array) {
-    return randInt(0, array.length - 1);
-}
-
-// Randomly choose an array element.
-function randElement(array) {
-    return array[randIndex(array)];
+    return count;
 }
 
 function addRandomAddresses(addressData, want, maxPerStreet) {
@@ -116,7 +100,7 @@ function removeRandomAddresses(addressData, want, maxPerStreet) {
     limitNumbersPerStreet(addressData, maxPerStreet);
 
     // How many addresses do we have?
-    let have = countAddresses(addressData);
+    let have = countNestedKeys(addressData);
     if (have <= want) {
         if (have < want) {
             console.log('// Not enough addresses:', {have, want});

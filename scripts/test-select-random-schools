@@ -1,0 +1,13 @@
+#!/bin/zsh
+
+# I normally write bash scripts for compatibility, but I prefer the output of
+# zsh's builtin time command.
+
+if [ $# -lt 1 ]; then
+    echo "usage: $0 <numSchools>" >&2
+    exit 1
+fi
+
+time node select-random-schools.js $1 $2 > school-data.js
+grep '^\/\/' school-data.js
+node count-schools.js
