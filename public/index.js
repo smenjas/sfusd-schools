@@ -322,7 +322,7 @@ function getTargets(schools, selected) {
     return targetsMap;
 }
 
-function renderTargetsMenu(schoolData, menus) {
+function renderTargetMenu(schoolData, menus) {
     const schools = filterSchools(schoolData, menus, 'target');
     const targets = getTargets(schools, menus.target);
     return renderMenu(targets, menus.target, 'target', 'Feeds Into Any School');
@@ -352,7 +352,7 @@ function getDistances(schools, selected) {
     return distancesMap;
 }
 
-function renderDistancesMenu(schoolData, menus) {
+function renderDistanceMenu(schoolData, menus) {
     const schools = filterSchools(schoolData, menus, 'within');
     const distances = getDistances(schools, menus.within);
     return renderMenu(distances, menus.within, 'within', 'Within Any Distance');
@@ -425,10 +425,10 @@ function renderForm(shown, schoolData, inputs) {
     html += renderLanguageMenu(schoolData, inputs.menus);
     html += '</div>';
     html += '<div class="form-group">';
-    html += renderTargetsMenu(schoolData, inputs.menus);
+    html += renderTargetMenu(schoolData, inputs.menus);
     html += '</div>';
     html += '<div class="form-group">';
-    html += renderDistancesMenu(schoolData, inputs.menus);
+    html += renderDistanceMenu(schoolData, inputs.menus);
     html += '</div>';
     html += '<div class="form-group">';
     html += '<button type="reset">Reset</button>';
