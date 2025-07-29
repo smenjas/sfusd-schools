@@ -123,6 +123,7 @@ function copyFilters(menus) {
         start: menus.start,
         target: menus.target,
         type: menus.type,
+        within: menus.within,
     };
 }
 
@@ -183,9 +184,7 @@ function getSchoolGrades(schools, selected) {
 }
 
 function renderGradeMenu(schoolData, menus) {
-    const filters = copyFilters(menus);
-    filters.grade = '';
-    const schools = filterSchools(schoolData, filters);
+    const schools = filterSchools(schoolData, menus, 'grade');
     const gradeOptions = getSchoolGrades(schools, menus.grade);
     return renderMenu(gradeOptions, menus.grade, 'grade', 'Any Grade');
 }
@@ -208,9 +207,7 @@ function getLanguages(schools, selected) {
 }
 
 function renderLanguageMenu(schoolData, menus) {
-    const filters = copyFilters(menus);
-    filters.language = '';
-    const schools = filterSchools(schoolData, filters);
+    const schools = filterSchools(schoolData, menus, 'language');
     const languages = getLanguages(schools, menus.language);
     return renderMenu(languages, menus.language, 'language', 'Any Language');
 }
@@ -230,9 +227,7 @@ function getNeighborhoods(schools, selected) {
 }
 
 function renderNeighborhoodMenu(schoolData, menus) {
-    const filters = copyFilters(menus);
-    filters.neighborhood = '';
-    const schools = filterSchools(schoolData, filters);
+    const schools = filterSchools(schoolData, menus, 'neighborhood');
     const neighborhoods = getNeighborhoods(schools, menus.neighborhood);
     return renderMenu(neighborhoods, menus.neighborhood, 'neighborhood', 'Any Neighborhood');
 }
@@ -267,9 +262,7 @@ function getSchoolTypes(schools, selected) {
 }
 
 function renderTypeMenu(schoolData, menus) {
-    const filters = copyFilters(menus);
-    filters.type = '';
-    const schools = filterSchools(schoolData, filters);
+    const schools = filterSchools(schoolData, menus, 'type');
     const types = getSchoolTypes(schools, menus.type);
     return renderMenu(types, menus.type, 'type', 'Any Type');
 }
@@ -304,9 +297,7 @@ function getStartTimes(schools, selected) {
 }
 
 function renderStartTimeMenu(schoolData, menus) {
-    const filters = copyFilters(menus);
-    filters.start = '';
-    const schools = filterSchools(schoolData, filters);
+    const schools = filterSchools(schoolData, menus, 'start');
     const starts = getStartTimes(schools, menus.start);
     return renderMenu(starts, menus.start, 'start', 'Any Start Time');
 }
@@ -332,9 +323,7 @@ function getTargets(schools, selected) {
 }
 
 function renderTargetsMenu(schoolData, menus) {
-    const filters = copyFilters(menus);
-    filters.target = '';
-    const schools = filterSchools(schoolData, filters);
+    const schools = filterSchools(schoolData, menus, 'target');
     const targets = getTargets(schools, menus.target);
     return renderMenu(targets, menus.target, 'target', 'Feeds Into Any School');
 }
@@ -364,9 +353,7 @@ function getDistances(schools, selected) {
 }
 
 function renderDistancesMenu(schoolData, menus) {
-    const filters = copyFilters(menus);
-    filters.within = '';
-    const schools = filterSchools(schoolData, filters);
+    const schools = filterSchools(schoolData, menus, 'within');
     const distances = getDistances(schools, menus.within);
     return renderMenu(distances, menus.within, 'within', 'Within Any Distance');
 }
@@ -731,7 +718,11 @@ function filterSchool(school, filters) {
     return true;
 }
 
-function filterSchools(schoolData, filters) {
+function filterSchools(schoolData, menus, menu = null) {
+    const filters = copyFilters(menus);
+    if (menu !== null) {
+        filters[menu] = '';
+    }
     const schools = [];
     for (const school of schoolData) {
         if (!filters || filterSchool(school, filters)) {
