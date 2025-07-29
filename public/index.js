@@ -87,14 +87,31 @@ function arrayToMap(collection) {
 }
 
 // Render options for a select menu.
-// Accepts an array, object, map, or set, and the value selected.
+//
+// Accepts a map object, and the value selected.
 function renderOptions(options, selected) {
-    const map = arrayToMap(options);
     let html = '';
-    for (const [key, value] of map.entries()) {
+    for (const [key, value] of options.entries()) {
         const s = (key.toString() === selected) ? ' selected' : '';
         html += `<option value="${key}"${s}>${value}</option>`;
     }
+    return html;
+}
+
+// Render a select menu.
+//
+// Accepts a map object of options, which option is selected, and optionally a
+// default name and value.
+function renderMenu(options, selected, name, defaultName = null, defaultValue = '') {
+    const disabled = options.size ? '' : ' disabled';
+    let html = `<select name="${name}" id="${name}"${disabled}>`;
+    if (defaultName !== null) {
+        const defOpt = new Map();
+        defOpt.set(defaultValue, defaultName);
+        html += renderOptions(defOpt, selected);
+    }
+    html += renderOptions(options, selected);
+    html += '</select>';
     return html;
 }
 
@@ -170,11 +187,7 @@ function renderGradeMenu(schoolData, menus) {
     filters.grade = '';
     const schools = filterSchools(schoolData, filters);
     const gradeOptions = getSchoolGrades(schools, menus.grade);
-    let html = '<select name="grade" id="grade">';
-    html += '<option value="">Any Grade</option>';
-    html += renderOptions(gradeOptions, menus.grade);
-    html += '</select>';
-    return html;
+    return renderMenu(gradeOptions, menus.grade, 'grade', 'Any Grade');
 }
 
 function getLanguages(schools, selected) {
@@ -191,7 +204,7 @@ function getLanguages(schools, selected) {
     if (selected && !languages.includes(selected)) {
         languages.push(selected);
     }
-    return languages.sort();
+    return arrayToMap(languages.sort());
 }
 
 function renderLanguageMenu(schoolData, menus) {
@@ -199,12 +212,7 @@ function renderLanguageMenu(schoolData, menus) {
     filters.language = '';
     const schools = filterSchools(schoolData, filters);
     const languages = getLanguages(schools, menus.language);
-    const disabled = languages.length ? '' : ' disabled';
-    let html = `<select name="language" id="language"${disabled}>`;
-    html += '<option value="">Any Language</option>';
-    html += renderOptions(languages, menus.language);
-    html += '</select>';
-    return html;
+    return renderMenu(languages, menus.language, 'language', 'Any Language');
 }
 
 function getNeighborhoods(schools, selected) {
@@ -218,7 +226,7 @@ function getNeighborhoods(schools, selected) {
     if (selected && !neighborhoods.includes(selected)) {
         neighborhoods.push(selected);
     }
-    return neighborhoods.sort();
+    return arrayToMap(neighborhoods.sort());
 }
 
 function renderNeighborhoodMenu(schoolData, menus) {
@@ -226,11 +234,7 @@ function renderNeighborhoodMenu(schoolData, menus) {
     filters.neighborhood = '';
     const schools = filterSchools(schoolData, filters);
     const neighborhoods = getNeighborhoods(schools, menus.neighborhood);
-    let html = '<select name="neighborhood" id="neighborhood">';
-    html += '<option value="">Any Neighborhood</option>';
-    html += renderOptions(neighborhoods, menus.neighborhood);
-    html += '</select>';
-    return html;
+    return renderMenu(neighborhoods, menus.neighborhood, 'neighborhood', 'Any Neighborhood');
 }
 
 function getSchoolTypes(schools, selected) {
@@ -267,11 +271,7 @@ function renderTypeMenu(schoolData, menus) {
     filters.type = '';
     const schools = filterSchools(schoolData, filters);
     const types = getSchoolTypes(schools, menus.type);
-    let html = '<select name="type" id="type">';
-    html += '<option value="">Any School Type</option>';
-    html += renderOptions(types, menus.type);
-    html += '</select>';
-    return html;
+    return renderMenu(types, menus.type, 'type', 'Any Type');
 }
 
 function getStartTimes(schools, selected) {
@@ -308,11 +308,7 @@ function renderStartTimeMenu(schoolData, menus) {
     filters.start = '';
     const schools = filterSchools(schoolData, filters);
     const starts = getStartTimes(schools, menus.start);
-    let html = '<select name="start" id="start">';
-    html += '<option value="">Any Start Time</option>';
-    html += renderOptions(starts, menus.start);
-    html += '</select>';
-    return html;
+    return renderMenu(starts, menus.start, 'start', 'Any Start Time');
 }
 
 function getTargets(schools, selected) {
@@ -340,12 +336,7 @@ function renderTargetsMenu(schoolData, menus) {
     filters.target = '';
     const schools = filterSchools(schoolData, filters);
     const targets = getTargets(schools, menus.target);
-    const disabled = targets.size ? '' : ' disabled';
-    let html = `<select name="target" id="target"${disabled}>`;
-    html += '<option value="">Feeds Into Any School</option>';
-    html += renderOptions(targets, menus.target);
-    html += '</select>';
-    return html;
+    return renderMenu(targets, menus.target, 'target', 'Feeds Into Any School');
 }
 
 function getDistances(schools, selected) {
@@ -372,20 +363,12 @@ function getDistances(schools, selected) {
     return distancesMap;
 }
 
-function renderDistancesMenu(schoolData, inputs) {
-    const filters = copyFilters(inputs.menus);
+function renderDistancesMenu(schoolData, menus) {
+    const filters = copyFilters(menus);
     filters.within = '';
     const schools = filterSchools(schoolData, filters);
-    const distances = getDistances(schools, inputs.menus.within);
-    let disabled = distances.size ? '' : ' disabled ';
-    if (inputs.address === '') {
-        disabled += ' title="Enter your address to filter by distance."';
-    }
-    let html = `<select name="within" id="within"${disabled}>`;
-    html += '<option value="">Within Any Distance</option>';
-    html += renderOptions(distances, inputs.menus.within);
-    html += '</select>';
-    return html;
+    const distances = getDistances(schools, menus.within);
+    return renderMenu(distances, menus.within, 'within', 'Within Any Distance');
 }
 
 function filterSortables(sorts, shown) {
@@ -421,10 +404,7 @@ function getSortables(shown) {
 
 function renderSortMenu(shown, sort) {
     const sorts = getSortables(shown);
-    let html = '<select name="sort" id="sort">';
-    html += renderOptions(sorts, sort);
-    html += '</select>';
-    return html;
+    return renderMenu(sorts, sort, 'sort');
 }
 
 function renderAddressInput() {
@@ -461,7 +441,7 @@ function renderForm(shown, schoolData, inputs) {
     html += renderTargetsMenu(schoolData, inputs.menus);
     html += '</div>';
     html += '<div class="form-group">';
-    html += renderDistancesMenu(schoolData, inputs);
+    html += renderDistancesMenu(schoolData, inputs.menus);
     html += '</div>';
     html += '<div class="form-group">';
     html += '<button type="reset">Reset</button>';
@@ -944,7 +924,7 @@ function suggestAddresses(addresses) {
     if (!datalist) {
         return;
     }
-    datalist.innerHTML = renderOptions(addresses);
+    datalist.innerHTML = renderOptions(arrayToMap(addresses));
 }
 
 // Find addresses matching what the user has typed so far.
@@ -1099,6 +1079,13 @@ function renderPage(schoolData, inputs, coords) {
     sortSchools(schools, inputs.menus.sort);
     const shown = findShownColumns(schools);
     document.getElementById('input').innerHTML = renderForm(shown, schoolData, inputs);
+    const distanceMenu = document.getElementById('within');
+    if (!coords) {
+        distanceMenu.setAttribute('title', 'Enter your address to filter by distance.');
+    }
+    else {
+        distanceMenu.removeAttribute('title');
+    }
     document.getElementById('schools').innerHTML = renderTable(shown, schools, inputs.address);
     addEventListeners(schoolData, inputs, coords);
     document.getElementById('address').value = escapeFormInput(inputs.address);
