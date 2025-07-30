@@ -1,5 +1,44 @@
 /**
- * @module schoolData
+ * Data about primary and secondary public schools in San Francisco,
+ * California.
+ *
+ * @module ./school-data
+ * @type {Array.<Object>}
+ * @property {?number} code - The SFUSD school code
+ * @property {string} prefix - The prefix part of the school's name
+ * @property {string} name - The most commonly used part of the school's name
+ * @property {string} suffix - The suffix part of the school's name
+ * @property {string} campus - The name of the school's campus
+ * @property {Array.<string>} types - The type(s) of school, e.g. Elementary
+ * @property {boolean} charter - Whether this is a charter school
+ * @property {string} start - The school's start time (always a.m.)
+ * @property {string} neighborhood - The school's neighborhood
+ * @property {string} address - The school's street address
+ * @property {string} zip - The school's zip code
+ * @property {number} lat - The school's latitude, in decimal degrees
+ * @property {number} lon - The school's longitude, in decimal degrees
+ * @property {?number} usnews - The school's US News rank
+ * @property {?number} greatschools - The school's GreatSchools score, out of 10
+ * @property {boolean} pk - Whether the school has pre-kindergarten
+ * @property {boolean} tk - Whether the school has transitional kindergarten
+ * @property {boolean} k - Whether the school has kindergarten
+ * @property {?number} min - The school's minimum numbered grade level
+ * @property {?number} max - The school's maximum numbered grade level
+ * @property {?number} students - The number of students enrolled in the school
+ * @property {?number} teachers - The number of full-time teachers at the school
+ * @property {?number} ratio - The number of students per teacher
+ * @property {?number} math - The percentage of students proficient in math
+ * @property {?number} reading - The percentage of students proficient in reading
+ * @property {?number} science - The percentage of students proficient in science
+ * @property {?number} graduated - The percentage of students that graduated
+ * @property {?number} minority - The percentage of minority students
+ * @property {?number} lowIncome - The percentage of low income students
+ * @property {?number} female - The percentage of female students
+ * @property {?number} male - The percentage of male students
+ * @property {?number} seatsPerApp - The number of seats per application
+ * @property {Array.<string>} languages - Which languages the school offers
+ * @property {Array.<string>} feedsInto - Which school(s) the school feeds into
+ * @property {Object.<string, ?string>} urls - URLs with more info on the school
  */
 export default [
     {
