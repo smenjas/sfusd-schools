@@ -5,6 +5,12 @@ import path from 'path';
 import { JSDOM } from 'jsdom';
 import schoolData from '../public/school-data.js';
 
+/**
+ * Parse an HTML file into a Document Object Model (DOM).
+ *
+ * @param {string} filePath - A filesystem path to an HTML file
+ * @returns {Object} A DOM object
+ */
 function parseHtmlFile(filePath) {
     try {
         const html = fs.readFileSync(filePath, 'utf8');
@@ -18,6 +24,12 @@ function parseHtmlFile(filePath) {
     }
 }
 
+/**
+ * Parse a row of school info into an object.
+ *
+ * @param {string} row - A DOM element for a table row
+ * @returns {Object.<string, string>} An object
+ */
 function parseSchoolRow(row) {
     const data = [];
     const cells = row.querySelectorAll('td');
@@ -47,6 +59,12 @@ function parseSchoolRow(row) {
     };
 }
 
+/**
+ * Concatenate a school's name.
+ *
+ * @param {Object} school - Data about a school
+ * @returns {string} A school's name
+ */
 function concatName(school) {
     const parts = [];
     const props = ['prefix', 'name', 'suffix', 'campus'];
@@ -56,18 +74,42 @@ function concatName(school) {
     return parts.join(' ');
 }
 
+/**
+ * Remove accents from characters in a string.
+ *
+ * @param {string} str - A string with accents, possibly
+ * @returns {string} A string without accents
+ */
 function removeAccents(str) {
   return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
+/**
+ * Remove punctuation from a string.
+ *
+ * @param {string} str - A string with punctuation, possibly
+ * @returns {string} A string without punctuation
+ */
 function removePunctuation(str) {
     return str.replace(/[^A-Za-z0-9\s]/g, '');
 }
 
+/**
+ * Compress whitespace in a string.
+ *
+ * @param {string} str - A string with redundant whitespace, possibly
+ * @returns {string} A string without redundant whitespace
+ */
 function compressWhitespace(str) {
     return str.trim().replace(/\s+/g, ' ');
 }
 
+/**
+ * Find possible matches for a school.
+ *
+ * @param {Object} b - Data about a school
+ * @returns {Array.<Object>} Schools that might match
+ */
 function findPossibleSchools(b) {
     const name = removeAccents(b.name);
     let maybes = [];
@@ -91,6 +133,12 @@ function findPossibleSchools(b) {
     return maybes;
 }
 
+/**
+ * Find which school matches most closely to a given school.
+ *
+ * @param {Object} b - Data about a school
+ * @returns {Object} Data about the closest matching school
+ */
 function findSchool(b) {
     const maybes = findPossibleSchools(b);
     switch (maybes.length) {
@@ -127,6 +175,12 @@ function findSchool(b) {
     console.log(b, subsets);
 }
 
+/**
+ * Replace street suffixes with standard abbreviations.
+ *
+ * @param {string} address - A street address, capitalized
+ * @returns {string} A standardized street address
+ */
 function replaceStreetSuffixes(address) {
     const suffixes = {
       AVE: 'AVENUE',
@@ -144,6 +198,12 @@ function replaceStreetSuffixes(address) {
     return address;
 }
 
+/**
+ * Normalize a street address, for comparison.
+ *
+ * @param {string} address - A street address
+ * @returns {string} A standardized street address
+ */
 function normalizeAddress(address) {
     address = removeAccents(address);
     address = removePunctuation(address);
@@ -153,16 +213,36 @@ function normalizeAddress(address) {
     return address;
 }
 
+/**
+ * Check whether two street addresses match.
+ *
+ * @param {string} a - A street address
+ * @param {string} b - A street address
+ * @returns {string} Whether b includes a, after normalizing them
+ */
 function checkSchoolAddress(a, b) {
     a = normalizeAddress(a);
     b = normalizeAddress(b);
     return b.includes(a);
 }
 
+/**
+ * Compare two arrays.
+ *
+ * @param {Array} a - An array
+ * @param {Array} b - An array
+ * @returns {string} Whether both arrays contain the same data, in any order
+ */
 function compareArrays(a, b) {
     return a.every(e => b.includes(e)) && b.every(e => a.includes(e));
 }
 
+/**
+ * Get school types from a string describing the school.
+ *
+ * @param {Object} school - Data about a school
+ * @returns {Array.<string>} School types, e.g. Elementary
+ */
 function getSchoolTypes(school) {
     const types = school.type.split('(')[0].split(',');
     for (const index in types) {
@@ -171,6 +251,13 @@ function getSchoolTypes(school) {
     return types;
 }
 
+/**
+ * Check whether two schools' types match.
+ *
+ * @param {Object} a - Data about a school
+ * @param {Object} b - Data about a school
+ * @returns {boolean} Whether the schools' types match
+ */
 function checkSchoolTypes(a, b) {
     const types = getSchoolTypes(b);
     if (!compareArrays(a.types, types)) {
@@ -182,6 +269,12 @@ function checkSchoolTypes(a, b) {
     return true;
 }
 
+/**
+ * Get school grade levels from a string describing the school.
+ *
+ * @param {Object} school - Data about a school
+ * @returns {Object.<string, boolean>} School grade levels
+ */
 function getSchoolGrades(school) {
     const parts = school.type.split('(')[1].replace(')', '').split(/,\s{0,}/);
     let min = null;
@@ -202,6 +295,13 @@ function getSchoolGrades(school) {
     };
 }
 
+/**
+ * Check whether two schools' grade levels match.
+ *
+ * @param {Object} a - Data about a school
+ * @param {Object} b - Data about a school
+ * @returns {boolean} Whether both schools' grade levels match
+ */
 function checkSchoolGrades(a, b) {
     let allMatch = true;
     const grades = getSchoolGrades(b);
@@ -229,12 +329,25 @@ function checkSchoolGrades(a, b) {
     return allMatch;
 }
 
+/**
+ * Get a school's start time
+ *
+ * @param {string} hours - When the school is open to students
+ * @returns {string} The school's start time
+ */
 function getStartTime(hours) {
     const parts = hours.split(',')[0].split(':');
     parts.shift();
     return parts.join(':').trim().split('-')[0].split(' ')[0];
 }
 
+/**
+ * Check whether two schools' start times match.
+ *
+ * @param {Object} a - Data about a school
+ * @param {Object} b - Data about a school
+ * @returns {boolean} Whether both schools' start times match
+ */
 function checkStartTime(a, b) {
     const start = getStartTime(b.hours);
     if (start !== a.start) {
@@ -246,6 +359,12 @@ function checkStartTime(a, b) {
     return true;
 }
 
+/**
+ * Check whether a school's data looks correct.
+ *
+ * @param {Object} b - Data about a school
+ * @returns {boolean} Whether school's data looks correct
+ */
 function checkSchool(b) {
     let problems = 0;
     const a = findSchool(b);

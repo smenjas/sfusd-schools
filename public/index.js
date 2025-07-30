@@ -1,3 +1,7 @@
+/**
+ * @file The main logic for the web application.
+ */
+
 import schoolData from './school-data.js';
 import addressData from './address-data.js';
 import { calculateDistance,
@@ -5,10 +9,24 @@ import { calculateDistance,
          getDirectionsURL,
          getMapURL } from './geo.js';
 
+/**
+ * Escape form input (except spaces) for safe output to HTML.
+ *
+ * @param {string} value - Unescaped user input
+ * @returns {string} The input string with unsafe characters escaped
+ */
 function escapeFormInput(value) {
     return encodeURIComponent(value).replaceAll('%20', ' ');
 }
 
+/**
+ * Render a hyperlink, perhaps opening in a new browser tab.
+ *
+ * @param {?string} url - An absolute or relative URL
+ * @param {?string} text - The link text or content, as HTML
+ * @param {boolean} [newTab=false] - Whether to open the link in a new tab
+ * @returns {string} A hyperlink, or the 2nd arg if the 1st arg is empty
+ */
 function renderLink(url, text, newTab = false) {
     if (text === null || text === '') {
         return '';
@@ -24,6 +42,14 @@ function renderLink(url, text, newTab = false) {
     return link;
 }
 
+/**
+ * Generate a Google Maps hyperlink for directions, to open in a new tab.
+ *
+ * @param {string} fro - The search terms for the origin
+ * @param {string} to - The search terms for the destination
+ * @param {string} text - The link text or content, as HTML
+ * @returns {string} A hyperlink, or the 3rd arg if the 1st or 2nd arg is empty
+ */
 function renderDirectionsLink(fro, to, text) {
     const url = getDirectionsURL(fro, to);
     if (url === '') {
@@ -32,6 +58,13 @@ function renderDirectionsLink(fro, to, text) {
     return renderLink(url, text, true);
 }
 
+/**
+ * Generate a Google Maps hyperlink, to open in a new tab.
+ *
+ * @param {string} search - The search terms for a place
+ * @param {string} text - The link text or content, as HTML
+ * @returns {string} A hyperlink, or the 2nd arg if the 1st arg is empty
+ */
 function renderMapLink(search, text) {
     if (search === '') {
         return '';
@@ -40,6 +73,12 @@ function renderMapLink(search, text) {
     return renderLink(url, text, true);
 }
 
+/**
+ * Generate HTML for an unordered list.
+ *
+ * @param {Array} array - The list items
+ * @returns {string} An unordered list, as HTML
+ */
 function renderList(array) {
     if (array.length === 0) {
         return '';
@@ -52,10 +91,23 @@ function renderList(array) {
     return html;
 }
 
+/**
+ * Append a percent sign to the input.
+ *
+ * @param {?number} percent - A percentage
+ * @returns {string} The formatted percentage, or the empty string
+ */
 function renderPercent(percent) {
     return (percent === null) ? '' : percent + '%';
 }
 
+/**
+ * Format male/female percentages as a ratio.
+ *
+ * @param {?number} male - The percent of a population that's male
+ * @param {?number} female - The percent of a population that's female
+ * @returns An unordered list, as HTML
+ */
 function renderGender(male, female) {
     if (male === null && female === null) {
         return '';
@@ -69,26 +121,42 @@ function renderGender(male, female) {
     return `${male}:${female}`;
 }
 
+/**
+ * Format a ratio of numbers.
+ *
+ * @param {?number} antecedent - A number, e.g. students per class
+ * @param {?number} consequent - A number, e.g. teachers in a classroom
+ * @returns {string} A ratio, or the empty string
+ */
 function renderRatio(antecedent, consequent = 1) {
     return (antecedent === null || consequent === null) ? ''
         : `${antecedent}:${consequent}`;
 }
 
-// Convert an array to a map.
-function arrayToMap(collection) {
-    if (!Array.isArray(collection)) {
-        return collection;
+/**
+ * Convert an array to a map.
+ *
+ * @param {Array} array - An array
+ * @returns A map object
+ */
+function arrayToMap(array) {
+    if (!Array.isArray(array)) {
+        return array;
     }
     const map = new Map();
-    for (const value of collection) {
+    for (const value of array) {
         map.set(value, value);
     }
     return map;
 }
 
-// Render options for a select menu.
-//
-// Accepts a map object, and the value selected.
+/**
+ * Render options for a select menu.
+ *
+ * @param {Map} options - Menu option values and names
+ * @param {(string|number)} selected - The value selected.
+ * @returns {string} HTML options for a select menu or datalist
+ */
 function renderOptions(options, selected) {
     let html = '';
     for (const [key, value] of options.entries()) {
@@ -98,10 +166,15 @@ function renderOptions(options, selected) {
     return html;
 }
 
-// Render a select menu.
-//
-// Accepts a map object of options, which option is selected, and optionally a
-// default name and value.
+/**
+ * Render a select menu.
+ *
+ * @param {Map} options - Menu option values and names
+ * @param {(string|number)} selected - The value selected.
+ * @param {string} [defaultName=null] - The name of the default option
+ * @param {string} [defaultValue=''] - The value of the default option
+ * @returns {string} An HTML select menu
+ */
 function renderMenu(options, selected, name, defaultName = null, defaultValue = '') {
     const disabled = options.size ? '' : ' disabled';
     let html = `<select name="${name}" id="${name}"${disabled}>`;
@@ -115,6 +188,12 @@ function renderMenu(options, selected, name, defaultName = null, defaultValue = 
     return html;
 }
 
+/**
+ * Copy filter inputs into a new object.
+ *
+ * @param {Object.<string, string>} menus - Select menu inputs
+ * @returns {Object.<string, string>} An object containing only filter menu inputs
+ */
 function copyFilters(menus) {
     return {
         grade: menus.grade,
@@ -127,6 +206,12 @@ function copyFilters(menus) {
     };
 }
 
+/**
+ * Format ordinal numbers, e.g. "1st".
+ *
+ * @param {number} - A number
+ * @returns {string} - A number with an ordinal suffix
+ */
 function formatOrdinal(num) {
     const str = num.toString();
     switch (str.slice(-2)) {
@@ -155,6 +240,12 @@ function formatOrdinal(num) {
     }
 }
 
+/**
+ * Get all the grade levels in the given schools.
+ *
+ * @param {Array.<Object>} schools - Data about some schools
+ * @returns {Map} Menu option values and names for grade levels
+ */
 function getSchoolGrades(schools, selected) {
     const grades = new Map();
     let min = Infinity;
@@ -183,12 +274,25 @@ function getSchoolGrades(schools, selected) {
     return options;
 }
 
+/**
+ * Render a select menu for school grade levels.
+ *
+ * @param {Array.<Object>} schoolData - Data about all schools
+ * @param {Object.<string, string>} menus - Select menu input values
+ * @returns {string} An HTML select menu
+ */
 function renderGradeMenu(schoolData, menus) {
     const schools = filterSchools(schoolData, menus, 'grade');
     const gradeOptions = getSchoolGrades(schools, menus.grade);
     return renderMenu(gradeOptions, menus.grade, 'grade', 'Any Grade');
 }
 
+/**
+ * Get all the language programs in the given schools.
+ *
+ * @param {Array.<Object>} schools - Data about some schools
+ * @returns {Map} Menu option values and names for language programs
+ */
 function getLanguages(schools, selected) {
     const languages = [];
     for (const school of schools) {
@@ -206,12 +310,25 @@ function getLanguages(schools, selected) {
     return arrayToMap(languages.sort());
 }
 
+/**
+ * Render a select menu for school language programs.
+ *
+ * @param {Array.<Object>} schoolData - Data about all schools
+ * @param {Object.<string, string>} menus - Select menu input values
+ * @returns {string} An HTML select menu
+ */
 function renderLanguageMenu(schoolData, menus) {
     const schools = filterSchools(schoolData, menus, 'language');
     const languages = getLanguages(schools, menus.language);
     return renderMenu(languages, menus.language, 'language', 'Any Language');
 }
 
+/**
+ * Get all the neighborhoods the given schools are in.
+ *
+ * @param {Array.<Object>} schools - Data about some schools
+ * @returns {Map} Menu option values and names for neighborhoods
+ */
 function getNeighborhoods(schools, selected) {
     const neighborhoods = [];
     for (const school of schools) {
@@ -226,12 +343,25 @@ function getNeighborhoods(schools, selected) {
     return arrayToMap(neighborhoods.sort());
 }
 
+/**
+ * Render a select menu for neighborhoods.
+ *
+ * @param {Array.<Object>} schoolData - Data about all schools
+ * @param {Object.<string, string>} menus - Select menu input values
+ * @returns {string} An HTML select menu
+ */
 function renderNeighborhoodMenu(schoolData, menus) {
     const schools = filterSchools(schoolData, menus, 'neighborhood');
     const neighborhoods = getNeighborhoods(schools, menus.neighborhood);
     return renderMenu(neighborhoods, menus.neighborhood, 'neighborhood', 'Any Neighborhood');
 }
 
+/**
+ * Get all the school types to choose from, e.g. Elementary.
+ *
+ * @param {Array.<Object>} schools - Data about some schools
+ * @returns {Map} Menu option values and names for school types
+ */
 function getSchoolTypes(schools, selected) {
     const allTypes = [
         'Early Education',
@@ -261,12 +391,25 @@ function getSchoolTypes(schools, selected) {
     return orderedTypes;
 }
 
+/**
+ * Render a select menu for school types, e.g. Elementary.
+ *
+ * @param {Array.<Object>} schoolData - Data about all schools
+ * @param {Object.<string, string>} menus - Select menu input values
+ * @returns {string} An HTML select menu
+ */
 function renderTypeMenu(schoolData, menus) {
     const schools = filterSchools(schoolData, menus, 'type');
     const types = getSchoolTypes(schools, menus.type);
     return renderMenu(types, menus.type, 'type', 'Any Type');
 }
 
+/**
+ * Get school start times to choose from.
+ *
+ * @param {Array.<Object>} schools - Data about some schools
+ * @returns {Map} Menu option values and names for start times
+ */
 function getStartTimes(schools, selected) {
     const startTimes = new Map([
         [7, 'Before 8:00 am'],
@@ -296,12 +439,25 @@ function getStartTimes(schools, selected) {
     return startTimes;
 }
 
+/**
+ * Render a select menu for school start times.
+ *
+ * @param {Array.<Object>} schoolData - Data about all schools
+ * @param {Object.<string, string>} menus - Select menu input values
+ * @returns {string} An HTML select menu
+ */
 function renderStartTimeMenu(schoolData, menus) {
     const schools = filterSchools(schoolData, menus, 'start');
     const starts = getStartTimes(schools, menus.start);
     return renderMenu(starts, menus.start, 'start', 'Any Start Time');
 }
 
+/**
+ * Get which schools each school feeds into.
+ *
+ * @param {Array.<Object>} schools - Data about some schools
+ * @returns {Map} Menu option values and names for target schools
+ */
 function getTargets(schools, selected) {
     const targets = [];
     for (const school of schools) {
@@ -322,12 +478,25 @@ function getTargets(schools, selected) {
     return targetsMap;
 }
 
+/**
+ * Render a select menu for which school each school feeds into.
+ *
+ * @param {Array.<Object>} schoolData - Data about all schools
+ * @param {Object.<string, string>} menus - Select menu input values
+ * @returns {string} An HTML select menu
+ */
 function renderTargetMenu(schoolData, menus) {
     const schools = filterSchools(schoolData, menus, 'target');
     const targets = getTargets(schools, menus.target);
     return renderMenu(targets, menus.target, 'target', 'Feeds Into Any School');
 }
 
+/**
+ * Get maximum school commute distances.
+ *
+ * @param {Array.<Object>} schools - Data about some schools
+ * @returns {Map} Menu option values and names for commute distances
+ */
 function getDistances(schools, selected) {
     const distances = [];
     for (const school of schools) {
@@ -352,12 +521,26 @@ function getDistances(schools, selected) {
     return distancesMap;
 }
 
+/**
+ * Render a select menu for maximum school commute distances.
+ *
+ * @param {Array.<Object>} schoolData - Data about all schools
+ * @param {Object.<string, string>} menus - Select menu input values
+ * @returns {string} An HTML select menu
+ */
 function renderDistanceMenu(schoolData, menus) {
     const schools = filterSchools(schoolData, menus, 'within');
     const distances = getDistances(schools, menus.within);
     return renderMenu(distances, menus.within, 'within', 'Within Any Distance');
 }
 
+/**
+ * Filter which fields to sort by.
+ *
+ * @param {Map} sorts - Fields to sort by
+ * @param {Object.<string, boolean>} shown - Which fields are shown
+ * @returns {Map} Fields to sort by, restricted to those shown
+ */
 function filterSortables(sorts, shown) {
     const fields = new Map();
     for (const [key, value] of sorts) {
@@ -368,6 +551,12 @@ function filterSortables(sorts, shown) {
     return fields;
 }
 
+/**
+ * Get the fields to sort schools by.
+ *
+ * @param {Object.<string, boolean>} shown - Which fields are shown
+ * @returns {Map} Fields to sort by, restricted to those shown
+ */
 function getSortables(shown) {
     const fields = new Map([
         ['name', 'Name'],
@@ -389,11 +578,23 @@ function getSortables(shown) {
     return filterSortables(fields, shown);
 }
 
+/**
+ * Render a select menu for which criteria to sort schools by.
+ *
+ * @param {Object.<string, boolean>} shown - Which fields are shown
+ * @param {string} sort - Which field to sort by
+ * @returns {string} An HTML select menu
+ */
 function renderSortMenu(shown, sort) {
     const sorts = getSortables(shown);
     return renderMenu(sorts, sort, 'sort');
 }
 
+/**
+ * Render a street address form input, with autocomplete.
+ *
+ * @returns {string} A text input for a street address
+ */
 function renderAddressInput() {
     let html = '<input name="address" id="address" list="addresses"';
     html += ' placeholder="Your Address" autocomplete="street-address">';
@@ -401,6 +602,14 @@ function renderAddressInput() {
     return html;
 }
 
+/**
+ * Render an HTML form, for filtering and sorting school data.
+ *
+ * @param {Object.<string, boolean>} shown - Which fields are shown
+ * @param {Array.<Object>} schoolData - Data about all schools
+ * @param {Object} inputs - Form input values
+ * @returns {string} An HTML form
+ */
 function renderForm(shown, schoolData, inputs) {
     let html = '<form id="schoolForm">';
     html += '<div class="form-group">';
@@ -437,6 +646,12 @@ function renderForm(shown, schoolData, inputs) {
     return html;
 }
 
+/**
+ * Render the header for an HTML table showing school data.
+ *
+ * @param {Object.<string, boolean>} shown - Which fields are shown
+ * @returns {string} An HTML table header
+ */
 function renderHeader(shown) {
     let html = '';
     html += '<thead>';
@@ -487,6 +702,12 @@ function renderHeader(shown) {
     return html;
 }
 
+/**
+ * Get a school's minimum grade level.
+ *
+ * @param {Object} school - Data about a school
+ * @returns {(string|number|null)} The school's minimum grade level
+ */
 function getMinGrade(school) {
     return school.pk ? 'PK' :
         school.tk ? 'TK' :
@@ -494,6 +715,12 @@ function getMinGrade(school) {
         school.min;
 }
 
+/**
+ * Get a school's maximum grade level.
+ *
+ * @param {Object} school - Data about a school
+ * @returns {(string|number|null)} The school's maximum grade level
+ */
 function getMaxGrade(school) {
     return school.max ? school.max :
         school.k ? 'K' :
@@ -502,7 +729,12 @@ function getMaxGrade(school) {
         null;
 }
 
-// Render a school's grade range (e.g. "TK-5").
+/**
+ * Render a school's grade range, e.g. TK-5.
+ *
+ * @param {Object} school - Data about a school
+ * @returns {(string|number)} A grade range
+ */
 function renderGradeRange(school) {
     const min = getMinGrade(school);
     const max = getMaxGrade(school);
@@ -518,6 +750,12 @@ function renderGradeRange(school) {
     return '';
 }
 
+/**
+ * Format a distance in miles.
+ *
+ * @param {?number} distance - Distance in miles
+ * @returns {string} A distance in miles, or the empty string
+ */
 function renderDistance(distance) {
     if (distance === null || distance === undefined) {
         return '';
@@ -525,6 +763,12 @@ function renderDistance(distance) {
     return distance.toFixed(1) + ' mi.';
 }
 
+/**
+ * Format a school's GreatSchools score, e.g. "5/10".
+ *
+ * @param {Object} school - Data about a school
+ * @returns {string} A GreatSchools score as a hyperlink, or the empty string
+ */
 function renderGreatSchoolsScore(school) {
     if (school.greatschools === null) {
         return '';
@@ -533,6 +777,12 @@ function renderGreatSchoolsScore(school) {
     return renderLink(school.urls.greatschools, text, true);
 }
 
+/**
+ * Format a school's US News rank, e.g. "5th".
+ *
+ * @param {Object} school - Data about a school
+ * @returns {string} A US News rank as a hyperlink, or the empty string
+ */
 function renderUSNewsRank(school) {
     if (school.usnews === null) {
         return '';
@@ -541,13 +791,26 @@ function renderUSNewsRank(school) {
     return renderLink(school.urls.usnews, text, true);
 }
 
+/**
+ * Format a school's name.
+ *
+ * @param {Object} school - Data about a school
+ * @returns {string} A school's name as a hyperlink, or the empty string
+ */
 function renderSchoolName(school) {
     const name = getSchoolName(school).replace(/\bSan Francisco\b/g,
         '<abbr title="San Francisco">SF</abbr>');
     return renderLink(school.urls.main, name, true);
 }
 
-// Render one school's data as a table row.
+/**
+ * Render one school's data as a table row.
+ *
+ * @param {Object.<string, boolean>} shown - Which fields are shown
+ * @param {Array.<Object>} schools - Data about some schools
+ * @param {string} address - A street address
+ * @returns {string} An HTML table row
+ */
 function renderRow(shown, school, address) {
     const fullName = getSchoolFullName(school);
     const city = 'San Francisco, CA';
@@ -603,7 +866,14 @@ function renderRow(shown, school, address) {
     return html;
 }
 
-// Render school data as an HTML table.
+/**
+ * Render school data as an HTML table.
+ *
+ * @param {Object.<string, boolean>} shown - Which fields are shown
+ * @param {Array.<Object>} schools - Data about some schools
+ * @param {string} address - A street address
+ * @returns {string} An HTML table
+ */
 function renderTable(shown, schools, address) {
     const numSchools = Object.keys(schools).length;
     let html = '<table>';
@@ -622,10 +892,24 @@ function renderTable(shown, schools, address) {
     return html;
 }
 
+/**
+ * Determine whether to show this school, based on its type, e.g. Elementary.
+ *
+ * @param {Object} school - Data about a school
+ * @param {string} type - School type, e.g. Elementary
+ * @returns {boolean} Whether to show this school
+ */
 function filterType(school, type) {
     return !type || school.types.includes(type);
 }
 
+/**
+ * Determine whether to show this school, based on its grade levels, e.g. TK.
+ *
+ * @param {Object} school - Data about a school
+ * @param {string} grade - School grade level, e.g. TK
+ * @returns {boolean} Whether to show this school
+ */
 function filterGrade(school, grade) {
     if (!grade) return true;
     if (grade === 'pk') return school.pk;
@@ -641,10 +925,24 @@ function filterGrade(school, grade) {
     return gradeNum >= school.min && gradeNum <= school.max;
 }
 
+/**
+ * Determine whether to show this school, based on its neighborhood.
+ *
+ * @param {Object} school - Data about a school
+ * @param {string} neighborhood - School neighborhood, e.g. Bayview
+ * @returns {boolean} Whether to show this school
+ */
 function filterNeighborhood(school, neighborhood) {
     return !neighborhood || neighborhood === school.neighborhood;
 }
 
+/**
+ * Determine whether to show this school, based on its start time.
+ *
+ * @param {Object} school - Data about a school
+ * @param {string} start - School start time hour, e.g. 8
+ * @returns {boolean} Whether to show this school
+ */
 function filterStartTime(school, start) {
     if (!start) {
         return true;
@@ -656,12 +954,19 @@ function filterStartTime(school, start) {
     return false;
 }
 
+/**
+ * Determine whether to show this school, based on language programs.
+ *
+ * @param {Object} school - Data about a school
+ * @param {string} language - Language program, e.g. Spanish
+ * @returns {boolean} Whether to show this school
+ */
 function filterLanguage(school, language) {
     // Has a language been chosen?
     if (!language) {
         return true;
     }
-    // Do this school's languages match the chosen language exactly?
+    // Do any of this school's languages match the chosen language exactly?
     if (school.languages.includes(language)) {
         return true;
     }
@@ -676,6 +981,13 @@ function filterLanguage(school, language) {
     return false;
 }
 
+/**
+ * Determine whether to show this school, based on which schools it feeds into.
+ *
+ * @param {Object} school - Data about a school
+ * @param {string} target - Target school, e.g. Everett
+ * @returns {boolean} Whether to show this school
+ */
 function filterTarget(school, target) {
     if (!target) {
         return true;
@@ -686,6 +998,13 @@ function filterTarget(school, target) {
     return false;
 }
 
+/**
+ * Determine whether to show this school, based on commute distance.
+ *
+ * @param {Object} school - Data about a school
+ * @param {string} within - Maximum commute distance in miles
+ * @returns {boolean} Whether to show this school
+ */
 function filterWithin(school, within) {
     if (!within) {
         return true;
@@ -696,6 +1015,13 @@ function filterWithin(school, within) {
     return false;
 }
 
+/**
+ * Determine whether to show this school, based on multiple criteria.
+ *
+ * @param {Object} school - Data about a school
+ * @param {Object.<string, string>} filters - Filter menu input values
+ * @returns {boolean} Whether to show this school
+ */
 function filterSchool(school, filters) {
     const functions = {
         type: filterType,
@@ -719,6 +1045,13 @@ function filterSchool(school, filters) {
     return true;
 }
 
+/**
+ * Determine whether to show each school, based on multiple criteria.
+ *
+ * @param {Array.<Object>} schoolData - Data about all schools
+ * @param {Object.<string, string>} menus - Select menu input values
+ * @param {Array.<Object>} Data about some schools
+ */
 function filterSchools(schoolData, menus, menu = null) {
     const filters = copyFilters(menus);
     if (menu !== null) {
@@ -733,8 +1066,14 @@ function filterSchools(schoolData, menus, menu = null) {
     return schools;
 }
 
+/**
+ * Sort schools, based on multiple criteria, in place.
+ *
+ * @param {Array.<Object>} schools - Data about some schools
+ * @param {string} sort - Which field to sort by
+ */
 function sortSchools(schools, sort) {
-    let sortFunction = () => {};
+    let sortFunction;
     switch (sort) {
         case 'name':
             sortFunction = (a, b) => a.name.localeCompare(b.name);
@@ -874,6 +1213,12 @@ function sortSchools(schools, sort) {
     schools.sort(sortFunction);
 }
 
+/**
+ * Get a school's name and type, e.g. Lowell High School.
+ *
+ * @param {Object} school - Data about a school
+ * @returns {string} The school's name and type
+ */
 function getSchoolFullName(school) {
     let name = `${getSchoolName(school, false)} ${school.types[0]} School`;
     if (school.campus) {
@@ -882,6 +1227,12 @@ function getSchoolFullName(school) {
     return name;
 }
 
+/**
+ * Get a school's name, e.g. Lowell.
+ *
+ * @param {Object} school - Data about a school
+ * @returns {string} The school's name
+ */
 function getSchoolName(school, campus = true) {
     let name = `${school.prefix} ${school.name} ${school.suffix}`.trim();
     if (campus && school.campus) {
@@ -890,9 +1241,14 @@ function getSchoolName(school, campus = true) {
     return name;
 }
 
-// Update the distance between each school and the user's location.
-//
-// Returns true if the page rendered, or false otherwise.
+/**
+ * Update the distance between each school and the user's location.
+ *
+ * @param {Array.<Object>} schoolData - Data about all schools
+ * @param {Object.<string, string>} inputs - Form input values
+ * @param {Array.<number>} coords - Degrees latitude and longitude
+ * @returns {boolean} Whether the page rendered
+ */
 function updateDistances(schoolData, inputs, coords) {
     for (const school of schoolData) {
         const schoolCoords = [school.lat, school.lon];
@@ -910,7 +1266,11 @@ function updateDistances(schoolData, inputs, coords) {
     return true;
 }
 
-// Suggest addresses matching what the user has typed so far.
+/**
+ * Suggest addresses matching what the user has typed so far.
+ *
+ * @param {Array.<string>} addresses - Suggested street addresses
+ */
 function suggestAddresses(addresses) {
     const datalist = document.getElementById('addresses');
     if (!datalist) {
@@ -919,12 +1279,14 @@ function suggestAddresses(addresses) {
     datalist.innerHTML = renderOptions(arrayToMap(addresses));
 }
 
-// Find addresses matching what the user has typed so far.
-//
-// Accepts a street number, a street name (maybe with punctuation, like an
-// apostrophe), and a street name without punctuation.
-//
-// Returns an array of suggested street addresses.
+/**
+ * Find addresses matching what the user has typed so far.
+ *
+ * @param {string} num - A street number, e.g. 221
+ * @param {string} punct - A street name, maybe with punctuation
+ * @param {string} nopunct - A street name without punctuation
+ * @returns {Array.<string>} Suggested street addresses
+ */
 function findAddressSuggestions(num, punct, nopunct) {
     const addresses = [];
     for (const st in addressData) {
@@ -949,11 +1311,12 @@ function findAddressSuggestions(num, punct, nopunct) {
     return addresses.sort();
 }
 
-// Search for an address in San Francisco, California.
-//
-// Accepts a string from a text input.
-//
-// Returns an array of degrees latitude and longitude, if found.
+/**
+ * Search for a street address in San Francisco, California.
+ *
+ * @param {string} address - A street address, from form input
+ * @returns {Array.<number>} Degrees latitude and longitude
+ */
 function findAddress(address) {
     const parts = address.split(' ');
     if (parts.length < 2) {
@@ -980,6 +1343,12 @@ function findAddress(address) {
     return expandCoords(addressData[nopunct][num]);
 }
 
+/**
+ * Find which columns ought to be shown, based on school data.
+ *
+ * @param {Array.<Object>} schools - Data about some schools
+ * @returns {Object.<string, boolean>} Which fields to show
+ */
 function findShownColumns(schools) {
     const shown = {
         distance: false,
@@ -1011,6 +1380,13 @@ function findShownColumns(schools) {
     return shown;
 }
 
+/**
+ * Add event listeners to process form inputs, and update the page.
+ *
+ * @param {Array.<Object>} schoolData - Data about all schools
+ * @param {Object.<string, string>} inputs - Form input values
+ * @param {Array.<number>} coords - Degrees latitude and longitude
+ */
 function addEventListeners(schoolData, inputs, coords) {
     // Remove existing event listeners.
     const oldAddress = document.querySelector('input[name=address]');
@@ -1065,7 +1441,13 @@ function addEventListeners(schoolData, inputs, coords) {
     });
 }
 
-// Render a web page.
+/**
+ * Render a web page, showing a form and school data as a table.
+ *
+ * @param {Array.<Object>} schoolData - Data about all schools
+ * @param {Object.<string, string>} inputs - Form input values
+ * @param {Array.<number>} coords - Degrees latitude and longitude
+ */
 function renderPage(schoolData, inputs, coords) {
     const schools = filterSchools(schoolData, inputs.menus);
     sortSchools(schools, inputs.menus.sort);
@@ -1083,6 +1465,7 @@ function renderPage(schoolData, inputs, coords) {
     document.getElementById('address').value = escapeFormInput(inputs.address);
 }
 
+// Retrieve saved form input, or populate default values.
 const inputsJSON = localStorage.getItem('inputs');
 const inputs = inputsJSON ? JSON.parse(inputsJSON) : {
     address: '',
@@ -1098,6 +1481,7 @@ const inputs = inputsJSON ? JSON.parse(inputsJSON) : {
     },
 };
 
+// Calculate commute distances, and render the page.
 const coords = findAddress(inputs.address);
 updateDistances(schoolData, inputs, coords)
     || renderPage(schoolData, inputs, coords);

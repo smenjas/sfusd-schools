@@ -5,6 +5,12 @@ import { calculateDistance,
          getMapURL,
          lonToMilesFactor } from '../public/geo.js';
 
+/**
+ * Generate a Google Maps URL.
+ *
+ * @param {Array<number>} coords - Decimal portion of ° latitude, longitude
+ * @returns {string} A URL
+ */
 function getCoordsURL(coords) {
     if (!coords) {
         return '';
