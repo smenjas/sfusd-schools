@@ -395,9 +395,9 @@ function renderSortMenu(shown, sort) {
 }
 
 function renderAddressInput() {
-    let html = '<input name="address" id="address" list="addresses" placeholder="Your Address">';
+    let html = '<input name="address" id="address" list="addresses"';
+    html += ' placeholder="Your Address" autocomplete="street-address">';
     html += '<datalist id="addresses"></datalist>';
-    html += '<span id="coords-link"></span>';
     return html;
 }
 
