@@ -27,3 +27,7 @@ Start the node server with:
 ```sh
 npm run dev
 ```
+Generate documentation with:
+```sh
+npm run doc
+```

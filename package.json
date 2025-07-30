@@ -6,6 +6,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "npx nodemon src/index.js",
+    "doc": "rm -rf documentation; npx jsdoc -c jsdoc.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
