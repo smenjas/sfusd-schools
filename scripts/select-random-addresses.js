@@ -15,6 +15,7 @@ if (argv.length > 3) maxPerStreet = parseInt(argv[3]);
 if (isNaN(want) || isNaN(maxPerStreet)) {
     console.log('usage:', basename(argv[0]), basename(argv[1]),
         '[numAddresses]', '[maxPerStreet]');
+    process.exit(1);
 }
 
 function countNestedKeys(object) {

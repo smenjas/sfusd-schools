@@ -12,6 +12,7 @@ if (argv.length > 2) want = parseInt(argv[2]);
 // Provide command line usage instructions.
 if (isNaN(want)) {
     console.log('usage:', basename(argv[0]), '[numSchools]');
+    process.exit(1);
 }
 
 function selectRandomSchools(schoolData, want) {
