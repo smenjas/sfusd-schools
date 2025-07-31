@@ -2,10 +2,10 @@
  * @file Select a random subset of schools.
  */
 
-import schoolData from '../public/school-data.js';
-import { randIndex } from './rand.js';
 import { argv } from 'node:process';
 import { basename } from 'node:path';
+import { randomIndex } from './random.js';
+import schoolData from '../public/school-data.js';
 
 // Default settings
 let want = 10; // How many schools to output?
@@ -32,7 +32,7 @@ function selectRandomSchools(schoolData, want) {
     let have = 0;
 
     while (have < want) {
-        const index = randIndex(schoolData);
+        const index = randomIndex(schoolData);
         if (indexes.has(index)) {
             continue;
         }

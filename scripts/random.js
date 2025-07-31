@@ -1,6 +1,6 @@
 /**
  * Randomization functions
- * @module scripts/rand
+ * @module scripts/random
  */
 
 /**
@@ -10,7 +10,7 @@
  * @param {number} max - The maximum number to choose
  * @returns {number} A random number within the range, inclusive
  */
-export function randInt(min, max) {
+export function randomInt(min, max) {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -22,8 +22,8 @@ export function randInt(min, max) {
  * @param {Array} array - An array
  * @returns {number} A random array index
  */
-export function randIndex(array) {
-    return randInt(0, array.length - 1);
+export function randomIndex(array) {
+    return randomInt(0, array.length - 1);
 }
 
 /**
@@ -32,6 +32,6 @@ export function randIndex(array) {
  * @param {Array} array - An array
  * @returns {*} A random array element
  */
-export function randElement(array) {
-    return array[randIndex(array)];
+export function randomElement(array) {
+    return array[randomIndex(array)];
 }

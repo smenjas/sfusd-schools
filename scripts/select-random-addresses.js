@@ -2,10 +2,10 @@
  * @file Select a random subset of street addresses.
  */
 
-import addressData from '../public/address-data.js';
-import { randInt, randElement } from './rand.js';
 import { argv } from 'node:process';
 import { basename } from 'node:path';
+import { randomInt, randomElement } from './random.js';
+import addressData from '../public/address-data.js';
 
 // Default settings
 let want = 100; // How many addresses to output?
@@ -52,7 +52,7 @@ function addRandomAddresses(addressData, want, maxPerStreet) {
 
     outer: while (have < want) {
         // Randomly choose a street.
-        const st = randElement(streets);
+        const st = randomElement(streets);
 
         // Randomly choose how many street numbers to add.
         const nums = Object.keys(addressData[st]);
@@ -63,7 +63,7 @@ function addRandomAddresses(addressData, want, maxPerStreet) {
         }
         const canAdd = want - have;
         const max = Math.min(unadded, maxPerStreet, canAdd);
-        let add = randInt(1, max);
+        let add = randomInt(1, max);
 
         if (unadded === add) {
             // Add the whole street if we're adding all of its numbers.
@@ -78,7 +78,7 @@ function addRandomAddresses(addressData, want, maxPerStreet) {
 
         while (add > 0) {
             // Randomly choose a street number.
-            const num = randElement(nums);
+            const num = randomElement(nums);
             if (num in addresses[st]) {
                 continue;
             }
@@ -149,13 +149,13 @@ function removeRandomAddresses(addressData, want, maxPerStreet) {
 
     while (have > want) {
         // Randomly choose a street.
-        const st = randElement(streets);
+        const st = randomElement(streets);
 
         // Randomly choose how many street numbers to keep.
         const nums = Object.keys(addressData[st]);
         const canRemove = have - want;
         const min = (canRemove < nums.length) ? nums.length - canRemove : 0;
-        const keep = randInt(min, nums.length - 1);
+        const keep = randomInt(min, nums.length - 1);
         have -= nums.length - keep;
 
         if (keep === 0) {
