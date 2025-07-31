@@ -52,6 +52,10 @@ function selectRandomSchools(schoolData, want) {
  * @returns {boolean} Whether the schools have all grade levels
  */
 function checkSchools(schools) {
+    if (schools.length < 2) {
+        // No one school has all grade levels.
+        return true;
+    }
     const grades = {
         'pk': false,
         'tk': false,
@@ -80,14 +84,11 @@ let schools;
 if (want >= schoolData.length) {
     schools = schoolData;
 }
-else if (want > 1) {
+else {
     do {
         schools = selectRandomSchools(schoolData, want);
     }
     while (!checkSchools(schools));
-}
-else {
-    schools = selectRandomSchools(schoolData, want);
 }
 
 console.log('export default [');
