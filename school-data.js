@@ -3603,7 +3603,7 @@ export default [
         male: null,
         seatsPerApp: 13,
         languages: [],
-        feedsInto: [],
+        feedsInto: ['Presidio'],
         urls: {
             main: 'https://www.sfusd.edu/school/argonne-early-education-school',
             usnews: null,
