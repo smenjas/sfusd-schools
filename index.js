@@ -515,6 +515,7 @@ function renderGradeRange(school) {
     if (max !== null) {
         return max;
     }
+    return '';
 }
 
 function renderDistance(distance) {
