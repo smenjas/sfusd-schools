@@ -1234,8 +1234,8 @@ export default [
     },
     {
         code: 603,
-        prefix: 'Cesar',
-        name: 'Chavez',
+        prefix: 'César',
+        name: 'Chávez',
         suffix: '',
         campus: '',
         types: ['Elementary'],
