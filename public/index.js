@@ -499,7 +499,7 @@ function getMaxGrade(school) {
         school.k ? 'K' :
         school.tk ? 'TK' :
         school.pk ? 'PK' :
-        '';
+        null;
 }
 
 // Render a school's grade range (e.g. "TK-5").
