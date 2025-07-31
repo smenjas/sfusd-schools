@@ -1,4 +1,6 @@
-// Parse the HTML from: https://www.sfusd.edu/schools/directory/table
+/**
+ * @file Parse the HTML from: https://www.sfusd.edu/schools/directory/table
+ */
 
 import fs from 'fs';
 import path from 'path';

@@ -1,5 +1,5 @@
 /**
- * @file The main logic for the web application.
+ * @file Display, filter, and sort school data.
  */
 
 import schoolData from './school-data.js';
@@ -106,7 +106,7 @@ function renderPercent(percent) {
  *
  * @param {?number} male - The percent of a population that's male
  * @param {?number} female - The percent of a population that's female
- * @returns An unordered list, as HTML
+ * @returns A ratio, or the empty string
  */
 function renderGender(male, female) {
     if (male === null && female === null) {
@@ -154,7 +154,7 @@ function arrayToMap(array) {
  * Render options for a select menu.
  *
  * @param {Map} options - Menu option values and names
- * @param {(string|number)} selected - The value selected.
+ * @param {string} selected - The value selected.
  * @returns {string} HTML options for a select menu or datalist
  */
 function renderOptions(options, selected) {
@@ -170,7 +170,7 @@ function renderOptions(options, selected) {
  * Render a select menu.
  *
  * @param {Map} options - Menu option values and names
- * @param {(string|number)} selected - The value selected.
+ * @param {string} selected - The value selected.
  * @param {string} [defaultName=null] - The name of the default option
  * @param {string} [defaultValue=''] - The value of the default option
  * @returns {string} An HTML select menu
@@ -706,7 +706,7 @@ function renderHeader(shown) {
  * Get a school's minimum grade level.
  *
  * @param {Object} school - Data about a school
- * @returns {(string|number|null)} The school's minimum grade level
+ * @returns {(string|?number)} The school's minimum grade level
  */
 function getMinGrade(school) {
     return school.pk ? 'PK' :
@@ -719,7 +719,7 @@ function getMinGrade(school) {
  * Get a school's maximum grade level.
  *
  * @param {Object} school - Data about a school
- * @returns {(string|number|null)} The school's maximum grade level
+ * @returns {(string|?number)} The school's maximum grade level
  */
 function getMaxGrade(school) {
     return school.max ? school.max :
@@ -1050,6 +1050,7 @@ function filterSchool(school, filters) {
  *
  * @param {Array.<Object>} schoolData - Data about all schools
  * @param {Object.<string, string>} menus - Select menu input values
+ * @param {?string} [menu=null] - Menu to exclude from filtering
  * @param {Array.<Object>} Data about some schools
  */
 function filterSchools(schoolData, menus, menu = null) {

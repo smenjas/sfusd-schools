@@ -1,3 +1,7 @@
+/**
+ * @file Analyze geographic data.
+ */
+
 import schoolData from '../public/school-data.js';
 import addressData from '../public/address-data.js';
 import { calculateDistance,
@@ -8,7 +12,7 @@ import { calculateDistance,
 /**
  * Generate a Google Maps URL.
  *
- * @param {Array<number>} coords - Decimal portion of ° latitude, longitude
+ * @param {Array.<number>} coords - Decimal portion of ° latitude, longitude
  * @returns {string} A URL
  */
 function getCoordsURL(coords) {

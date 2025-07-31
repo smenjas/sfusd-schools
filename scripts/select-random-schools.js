@@ -1,3 +1,7 @@
+/**
+ * @file Select a random subset of schools.
+ */
+
 import schoolData from '../public/school-data.js';
 import { randIndex } from './rand.js';
 import { argv } from 'node:process';

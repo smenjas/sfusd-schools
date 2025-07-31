@@ -1,3 +1,7 @@
+/**
+ * @file Select a random subset of street addresses.
+ */
+
 import addressData from '../public/address-data.js';
 import { randInt, randElement } from './rand.js';
 import { argv } from 'node:process';
@@ -21,13 +25,13 @@ if (isNaN(want) || isNaN(maxPerStreet)) {
 /**
  * Count how many nested keys there are in an object of objects.
  *
- * @param {Object} object - An object
+ * @param {Object} obj - An object
  * @returns {number} How many nested keys there are
  */
-function countNestedKeys(object) {
+function countNestedKeys(obj) {
     let count = 0;
-    for (const key in object) {
-        count += Object.keys(object[key]).length;
+    for (const key in obj) {
+        count += Object.keys(obj[key]).length;
     }
     return count;
 }
@@ -90,18 +94,18 @@ function addRandomAddresses(addressData, want, maxPerStreet) {
 /**
  * Delete random properties from an object, keeping a given number.
  *
- * @param {Object.<string, *>} object - An object
+ * @param {Object} obj - An object
  * @param {number} keep - How many properties to keep
  */
-function keepRandomProps(object, keep) {
+function keepRandomProps(obj, keep) {
     if (keep < 0) {
         keep = 0;
     }
-    let keys = Object.keys(object);
+    let keys = Object.keys(obj);
     while (keys.length > keep) {
-        const key = randElement(keys);
-        delete object[key];
-        keys = Object.keys(object);
+        const key = randomElement(keys);
+        delete obj[key];
+        keys = Object.keys(obj);
     }
 }
 

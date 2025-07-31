@@ -1,6 +1,6 @@
 /**
  * Randomization functions
- * @module ./rand
+ * @module scripts/rand
  */
 
 /**
@@ -8,7 +8,7 @@
  *
  * @param {number} min - The minimum number to choose
  * @param {number} max - The maximum number to choose
- * @returns {*} A random number within the range, inclusive
+ * @returns {number} A random number within the range, inclusive
  */
 export function randInt(min, max) {
     min = Math.ceil(min);

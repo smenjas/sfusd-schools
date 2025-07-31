@@ -2,8 +2,11 @@
  * Data about primary and secondary public schools in San Francisco,
  * California.
  *
- * @module ./school-data
- * @type {Array.<Object>}
+ * @module public/school-data
+ */
+
+/**
+ * @typedef {Object} School
  * @property {?number} code - The SFUSD school code
  * @property {string} prefix - The prefix part of the school's name
  * @property {string} name - The most commonly used part of the school's name
@@ -39,6 +42,10 @@
  * @property {Array.<string>} languages - Which languages the school offers
  * @property {Array.<string>} feedsInto - Which school(s) the school feeds into
  * @property {Object.<string, ?string>} urls - URLs with more info on the school
+ */
+
+/**
+ * @type {Array.<School>}
  */
 export default [
     {

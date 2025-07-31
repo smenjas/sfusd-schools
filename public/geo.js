@@ -1,13 +1,13 @@
 /**
  * Geographic utility functions
- * @module ./geo
+ * @module public/geo
  */
 
 /**
  * Calculate the distance between two sets of geographic coordinates.
  *
- * @param {Array<number>} a - Degrees latitude, longitude
- * @param {Array<number>} b - Degrees latitude, longitude
+ * @param {Array.<number>} a - Degrees latitude, longitude
+ * @param {Array.<number>} b - Degrees latitude, longitude
  * @returns {number} Distance in miles
  */
 export function calculateDistance(a, b) {
@@ -26,8 +26,8 @@ export function calculateDistance(a, b) {
  * Expand the decimal portion of geographic coordinates to include the whole
  * numbers for San Francisco, California: 37°N, 122°W.
  *
- * @param {Array<number>} coords - Decimal portion of ° latitude, longitude
- * @returns {Array<number>} Degrees latitude and longitude
+ * @param {Array.<number>} coords - Decimal portion of ° latitude, longitude
+ * @returns {Array.<number>} Degrees latitude and longitude
  */
 export function expandCoords(coords) {
     const [lat, lon] = coords;
