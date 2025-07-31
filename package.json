@@ -6,6 +6,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "npx nodemon src/index.js",
+    "doc": "rm -rf documentation; npx jsdoc -c jsdoc.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -26,5 +27,8 @@
   "homepage": "https://github.com/smenjas/sfusd-schools#readme",
   "dependencies": {
     "jsdom": "^26.1.0"
+  },
+  "devDependencies": {
+    "jsdoc": "^4.0.4"
   }
 }

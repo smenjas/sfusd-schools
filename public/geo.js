@@ -1,8 +1,13 @@
 /**
+ * Geographic utility functions
+ * @module ./geo
+ */
+
+/**
  * Calculate the distance between two sets of geographic coordinates.
  *
  * @param {Array<number>} a - Degrees latitude, longitude
- * @param {Array<number>} a - Degrees latitude, longitude
+ * @param {Array<number>} b - Degrees latitude, longitude
  * @returns {number} Distance in miles
  */
 export function calculateDistance(a, b) {
@@ -61,7 +66,7 @@ export function getMapURL(search) {
 /**
  * Convert degrees of latitude to miles.
  *
- * This is consistent everywhere on Earth's surface.
+ * This is roughly consistent everywhere on Earth's surface.
  *
  * @param {number} latDiff - The difference between two latitudes
  * @returns {number} Distance in miles
@@ -87,23 +92,26 @@ export function lonToMiles(lonDiff, lat) {
  * Calculate how many miles there are per degree of longitude, given a certain
  * latitude. This varies by distance from the equator, as shown below.
  *
- * 0°  69.0 Jakarta, Indonesia
- * 10° 68.0 San Jose, Costa Rica
- * 20° 64.8 Manila, Philippines
- * 30° 59.8 Cairo, Egypt
- * 40° 52.9 New York City, USA
- * 50° 44.4 Brussels, Belgium
- * 60° 34.5 St. Petersburg, Russia
- * 70° 23.6 Tromsø, Norway
- * 80° 12.0 Eureka, Canada
- * 90°  0.0 North Pole
+ * - 0°  69.0 Jakarta, Indonesia
+ * - 10° 68.0 San Jose, Costa Rica
+ * - 20° 64.8 Manila, Philippines
+ * - 30° 59.8 Cairo, Egypt
+ * - 40° 52.9 New York City, USA
+ * - 50° 44.4 Brussels, Belgium
+ * - 60° 34.5 St. Petersburg, Russia
+ * - 70° 23.6 Tromsø, Norway
+ * - 80° 12.0 Eureka, Canada
+ * - 90°  0.0 North Pole
  *
  * In San Francisco, California this is:
  * 54.6 miles at 37.7080° (the southernmost address next to Daly City), and
  * 54.5 miles at 37.8318° (the northernmost address on Treasure Island), a
  * 0.2% difference.
+ *
+ * @param {number} lat - Degrees latitude
+ * @returns {number} Distance in miles
  */
-export function lonToMilesFactor(degrees) {
-    const radians = degrees * (Math.PI / 180);
+export function lonToMilesFactor(lat) {
+    const radians = lat * (Math.PI / 180);
     return 69 * Math.cos(radians);
 }
