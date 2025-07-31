@@ -3,7 +3,6 @@
  */
 
 import fs from 'fs';
-import path from 'path';
 import { JSDOM } from 'jsdom';
 import schoolData from '../public/school-data.js';
 
@@ -147,8 +146,8 @@ function findSchool(b) {
         case 0: return null;
         case 1: return maybes[0];
     }
-    const grades = getSchoolGrades(b);
-    const types = getSchoolTypes(b);
+    const grades = parseSchoolGrades(b);
+    const types = parseSchoolTypes(b);
     for (const a of maybes) {
         if (a.campus && b.name.includes(a.campus)) {
             //console.log([a.name, a.types[0], a.campus].join(' ').trim(), 'matches', b.name);
@@ -245,7 +244,7 @@ function compareArrays(a, b) {
  * @param {Object} school - Data about a school
  * @returns {Array.<string>} School types, e.g. Elementary
  */
-function getSchoolTypes(school) {
+function parseSchoolTypes(school) {
     const types = school.type.split('(')[0].split(',');
     for (const index in types) {
         types[index] = types[index].trim().replace(' School', '');
@@ -261,8 +260,16 @@ function getSchoolTypes(school) {
  * @returns {boolean} Whether the schools' types match
  */
 function checkSchoolTypes(a, b) {
-    const types = getSchoolTypes(b);
+    const types = parseSchoolTypes(b);
     if (!compareArrays(a.types, types)) {
+        const copy = Array.from(a.types);
+        copy.push('Early Education');
+        if (compareArrays(copy, types)) {
+            // The SFUSD directory calls any school with PreK or TK Early Ed.
+            //const grades = parseSchoolGrades(b);
+            //console.log(b.name, 'Early:', grades.pk ? 'PreK' : grades.tk ? 'TK' : grades.k ? 'K' : '?');
+            return true;
+        }
         console.log('School type mismatch:');
         console.log('\t', b.name, types);
         console.log('\t', a.name, a.types);
@@ -277,7 +284,7 @@ function checkSchoolTypes(a, b) {
  * @param {Object} school - Data about a school
  * @returns {Object.<string, boolean>} School grade levels
  */
-function getSchoolGrades(school) {
+function parseSchoolGrades(school) {
     const parts = school.type.split('(')[1].replace(')', '').split(/,\s{0,}/);
     let min = null;
     let max = null;
@@ -306,7 +313,7 @@ function getSchoolGrades(school) {
  */
 function checkSchoolGrades(a, b) {
     let allMatch = true;
-    const grades = getSchoolGrades(b);
+    const grades = parseSchoolGrades(b);
     const name = [a.name, a.types[0], a.campus].join(' ').trim();
     if (a.pk !== grades.pk) {
         console.log(name, 'mismatch: PreK');
@@ -337,7 +344,7 @@ function checkSchoolGrades(a, b) {
  * @param {string} hours - When the school is open to students
  * @returns {string} The school's start time
  */
-function getStartTime(hours) {
+function parseStartTime(hours) {
     const parts = hours.split(',')[0].split(':');
     parts.shift();
     return parts.join(':').trim().split('-')[0].split(' ')[0];
@@ -351,7 +358,7 @@ function getStartTime(hours) {
  * @returns {boolean} Whether both schools' start times match
  */
 function checkStartTime(a, b) {
-    const start = getStartTime(b.hours);
+    const start = parseStartTime(b.hours);
     if (start !== a.start) {
         console.log('Start time mismatch:');
         console.log('\t', start, b.name);
@@ -376,8 +383,11 @@ function checkSchool(b) {
         }
         return false;
     }
-    //console.log(concatName(a), a.types[0], 'matches:');
-    //console.log(b.name, '|', b.type);
+    /*
+    console.log(concatName(a), a.types[0], 'matches:');
+    console.log(b.name, '|', b.type);
+    console.log();
+    */
     if (!checkSchoolAddress(a.address, b.address)) {
         console.log('Address mismatch:');
         console.log('\t', b.name);
@@ -389,7 +399,6 @@ function checkSchool(b) {
     //problems += !checkStartTime(a, b); // Verified 2025-07-11: Our start times are for TK+, Lowell has an optional 0th period
     //problems += !checkSchoolTypes(a, b); // Verified 2025-07-12: SFUSD says anything with PreK/TK counts as Early Ed.
     //problems += !checkSchoolGrades(a, b); // Verified 2025-07-12: PreK, TK, K, min, and max
-    //console.log();
     return !!problems;
 }
 
