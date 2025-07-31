@@ -364,7 +364,7 @@ export default [
         male: 46,
         seatsPerApp: 14,
         languages: ['Spanish Biliteracy'],
-        feedsInto: [],
+        feedsInto: ['Hoover'],
         urls: {
             main: 'https://www.sfusd.edu/school/junipero-serra-elementary-school',
             usnews: 'https://www.usnews.com/education/k12/california/serra-junipero-elementary-247620',
