@@ -5136,7 +5136,7 @@ export default [
         code: 559,
         prefix: '',
         name: 'Galileo',
-        suffix: 'Academy of Science & Technology',
+        suffix: '',
         campus: '',
         types: ['High'],
         charter: false,
