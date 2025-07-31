@@ -75,7 +75,7 @@ function findPossibleSchools(b) {
         if (a.charter) {
             continue;
         }
-        const re = new RegExp(`\\b${RegExp.escape(a.name)}\\b`);
+        const re = new RegExp(`\\b${RegExp.escape(removeAccents(a.name))}\\b`);
         if (!name.match(re)) {
             continue;
         }
