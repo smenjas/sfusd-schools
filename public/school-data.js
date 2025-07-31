@@ -1116,7 +1116,7 @@ export default [
     },
     {
         code: 723,
-        prefix: 'George',
+        prefix: 'George R.',
         name: 'Moscone',
         suffix: '',
         campus: '',
