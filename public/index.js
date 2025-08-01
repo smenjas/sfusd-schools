@@ -243,7 +243,7 @@ function formatOrdinal(num) {
 /**
  * Get all the grade levels in the given schools.
  *
- * @param {Array.<Object>} schools - Data about some schools
+ * @param {Array.<School>} schools - Data about some schools
  * @returns {Map} Menu option values and names for grade levels
  */
 function getSchoolGrades(schools, selected) {
@@ -277,7 +277,7 @@ function getSchoolGrades(schools, selected) {
 /**
  * Render a select menu for school grade levels.
  *
- * @param {Array.<Object>} schoolData - Data about all schools
+ * @param {Array.<School>} schoolData - Data about all schools
  * @param {Object.<string, string>} menus - Select menu input values
  * @returns {string} An HTML select menu
  */
@@ -290,7 +290,7 @@ function renderGradeMenu(schoolData, menus) {
 /**
  * Get all the language programs in the given schools.
  *
- * @param {Array.<Object>} schools - Data about some schools
+ * @param {Array.<School>} schools - Data about some schools
  * @returns {Map} Menu option values and names for language programs
  */
 function getLanguages(schools, selected) {
@@ -313,7 +313,7 @@ function getLanguages(schools, selected) {
 /**
  * Render a select menu for school language programs.
  *
- * @param {Array.<Object>} schoolData - Data about all schools
+ * @param {Array.<School>} schoolData - Data about all schools
  * @param {Object.<string, string>} menus - Select menu input values
  * @returns {string} An HTML select menu
  */
@@ -326,7 +326,7 @@ function renderLanguageMenu(schoolData, menus) {
 /**
  * Get all the neighborhoods the given schools are in.
  *
- * @param {Array.<Object>} schools - Data about some schools
+ * @param {Array.<School>} schools - Data about some schools
  * @returns {Map} Menu option values and names for neighborhoods
  */
 function getNeighborhoods(schools, selected) {
@@ -346,7 +346,7 @@ function getNeighborhoods(schools, selected) {
 /**
  * Render a select menu for neighborhoods.
  *
- * @param {Array.<Object>} schoolData - Data about all schools
+ * @param {Array.<School>} schoolData - Data about all schools
  * @param {Object.<string, string>} menus - Select menu input values
  * @returns {string} An HTML select menu
  */
@@ -359,7 +359,7 @@ function renderNeighborhoodMenu(schoolData, menus) {
 /**
  * Get all the school types to choose from, e.g. Elementary.
  *
- * @param {Array.<Object>} schools - Data about some schools
+ * @param {Array.<School>} schools - Data about some schools
  * @returns {Map} Menu option values and names for school types
  */
 function getSchoolTypes(schools, selected) {
@@ -394,7 +394,7 @@ function getSchoolTypes(schools, selected) {
 /**
  * Render a select menu for school types, e.g. Elementary.
  *
- * @param {Array.<Object>} schoolData - Data about all schools
+ * @param {Array.<School>} schoolData - Data about all schools
  * @param {Object.<string, string>} menus - Select menu input values
  * @returns {string} An HTML select menu
  */
@@ -407,7 +407,7 @@ function renderTypeMenu(schoolData, menus) {
 /**
  * Get school start times to choose from.
  *
- * @param {Array.<Object>} schools - Data about some schools
+ * @param {Array.<School>} schools - Data about some schools
  * @returns {Map} Menu option values and names for start times
  */
 function getStartTimes(schools, selected) {
@@ -442,7 +442,7 @@ function getStartTimes(schools, selected) {
 /**
  * Render a select menu for school start times.
  *
- * @param {Array.<Object>} schoolData - Data about all schools
+ * @param {Array.<School>} schoolData - Data about all schools
  * @param {Object.<string, string>} menus - Select menu input values
  * @returns {string} An HTML select menu
  */
@@ -455,7 +455,7 @@ function renderStartTimeMenu(schoolData, menus) {
 /**
  * Get which schools each school feeds into.
  *
- * @param {Array.<Object>} schools - Data about some schools
+ * @param {Array.<School>} schools - Data about some schools
  * @returns {Map} Menu option values and names for target schools
  */
 function getTargets(schools, selected) {
@@ -481,7 +481,7 @@ function getTargets(schools, selected) {
 /**
  * Render a select menu for which school each school feeds into.
  *
- * @param {Array.<Object>} schoolData - Data about all schools
+ * @param {Array.<School>} schoolData - Data about all schools
  * @param {Object.<string, string>} menus - Select menu input values
  * @returns {string} An HTML select menu
  */
@@ -494,7 +494,7 @@ function renderTargetMenu(schoolData, menus) {
 /**
  * Get maximum school commute distances.
  *
- * @param {Array.<Object>} schools - Data about some schools
+ * @param {Array.<School>} schools - Data about some schools
  * @returns {Map} Menu option values and names for commute distances
  */
 function getDistances(schools, selected) {
@@ -524,7 +524,7 @@ function getDistances(schools, selected) {
 /**
  * Render a select menu for maximum school commute distances.
  *
- * @param {Array.<Object>} schoolData - Data about all schools
+ * @param {Array.<School>} schoolData - Data about all schools
  * @param {Object.<string, string>} menus - Select menu input values
  * @returns {string} An HTML select menu
  */
@@ -606,7 +606,7 @@ function renderAddressInput() {
  * Render an HTML form, for filtering and sorting school data.
  *
  * @param {Object.<string, boolean>} shown - Which fields are shown
- * @param {Array.<Object>} schoolData - Data about all schools
+ * @param {Array.<School>} schoolData - Data about all schools
  * @param {Object} inputs - Form input values
  * @returns {string} An HTML form
  */
@@ -705,7 +705,7 @@ function renderHeader(shown) {
 /**
  * Get a school's minimum grade level.
  *
- * @param {Object} school - Data about a school
+ * @param {School} school - Data about a school
  * @returns {(string|?number)} The school's minimum grade level
  */
 function getMinGrade(school) {
@@ -718,7 +718,7 @@ function getMinGrade(school) {
 /**
  * Get a school's maximum grade level.
  *
- * @param {Object} school - Data about a school
+ * @param {School} school - Data about a school
  * @returns {(string|?number)} The school's maximum grade level
  */
 function getMaxGrade(school) {
@@ -732,7 +732,7 @@ function getMaxGrade(school) {
 /**
  * Render a school's grade range, e.g. TK-5.
  *
- * @param {Object} school - Data about a school
+ * @param {School} school - Data about a school
  * @returns {(string|number)} A grade range
  */
 function renderGradeRange(school) {
@@ -766,7 +766,7 @@ function renderDistance(distance) {
 /**
  * Format a school's GreatSchools score, e.g. "5/10".
  *
- * @param {Object} school - Data about a school
+ * @param {School} school - Data about a school
  * @returns {string} A GreatSchools score as a hyperlink, or the empty string
  */
 function renderGreatSchoolsScore(school) {
@@ -780,7 +780,7 @@ function renderGreatSchoolsScore(school) {
 /**
  * Format a school's US News rank, e.g. "5th".
  *
- * @param {Object} school - Data about a school
+ * @param {School} school - Data about a school
  * @returns {string} A US News rank as a hyperlink, or the empty string
  */
 function renderUSNewsRank(school) {
@@ -794,7 +794,7 @@ function renderUSNewsRank(school) {
 /**
  * Format a school's name.
  *
- * @param {Object} school - Data about a school
+ * @param {School} school - Data about a school
  * @returns {string} A school's name as a hyperlink, or the empty string
  */
 function renderSchoolName(school) {
@@ -807,7 +807,7 @@ function renderSchoolName(school) {
  * Render one school's data as a table row.
  *
  * @param {Object.<string, boolean>} shown - Which fields are shown
- * @param {Array.<Object>} schools - Data about some schools
+ * @param {Array.<School>} schools - Data about some schools
  * @param {string} address - A street address
  * @returns {string} An HTML table row
  */
@@ -870,7 +870,7 @@ function renderRow(shown, school, address) {
  * Render school data as an HTML table.
  *
  * @param {Object.<string, boolean>} shown - Which fields are shown
- * @param {Array.<Object>} schools - Data about some schools
+ * @param {Array.<School>} schools - Data about some schools
  * @param {string} address - A street address
  * @returns {string} An HTML table
  */
@@ -895,7 +895,7 @@ function renderTable(shown, schools, address) {
 /**
  * Determine whether to show this school, based on its type, e.g. Elementary.
  *
- * @param {Object} school - Data about a school
+ * @param {School} school - Data about a school
  * @param {string} type - School type, e.g. Elementary
  * @returns {boolean} Whether to show this school
  */
@@ -906,7 +906,7 @@ function filterType(school, type) {
 /**
  * Determine whether to show this school, based on its grade levels, e.g. TK.
  *
- * @param {Object} school - Data about a school
+ * @param {School} school - Data about a school
  * @param {string} grade - School grade level, e.g. TK
  * @returns {boolean} Whether to show this school
  */
@@ -928,7 +928,7 @@ function filterGrade(school, grade) {
 /**
  * Determine whether to show this school, based on its neighborhood.
  *
- * @param {Object} school - Data about a school
+ * @param {School} school - Data about a school
  * @param {string} neighborhood - School neighborhood, e.g. Bayview
  * @returns {boolean} Whether to show this school
  */
@@ -939,7 +939,7 @@ function filterNeighborhood(school, neighborhood) {
 /**
  * Determine whether to show this school, based on its start time.
  *
- * @param {Object} school - Data about a school
+ * @param {School} school - Data about a school
  * @param {string} start - School start time hour, e.g. 8
  * @returns {boolean} Whether to show this school
  */
@@ -957,7 +957,7 @@ function filterStartTime(school, start) {
 /**
  * Determine whether to show this school, based on language programs.
  *
- * @param {Object} school - Data about a school
+ * @param {School} school - Data about a school
  * @param {string} language - Language program, e.g. Spanish
  * @returns {boolean} Whether to show this school
  */
@@ -984,7 +984,7 @@ function filterLanguage(school, language) {
 /**
  * Determine whether to show this school, based on which schools it feeds into.
  *
- * @param {Object} school - Data about a school
+ * @param {School} school - Data about a school
  * @param {string} target - Target school, e.g. Everett
  * @returns {boolean} Whether to show this school
  */
@@ -1001,7 +1001,7 @@ function filterTarget(school, target) {
 /**
  * Determine whether to show this school, based on commute distance.
  *
- * @param {Object} school - Data about a school
+ * @param {School} school - Data about a school
  * @param {string} within - Maximum commute distance in miles
  * @returns {boolean} Whether to show this school
  */
@@ -1018,7 +1018,7 @@ function filterWithin(school, within) {
 /**
  * Determine whether to show this school, based on multiple criteria.
  *
- * @param {Object} school - Data about a school
+ * @param {School} school - Data about a school
  * @param {Object.<string, string>} filters - Filter menu input values
  * @returns {boolean} Whether to show this school
  */
@@ -1048,7 +1048,7 @@ function filterSchool(school, filters) {
 /**
  * Determine whether to show each school, based on multiple criteria.
  *
- * @param {Array.<Object>} schoolData - Data about all schools
+ * @param {Array.<School>} schoolData - Data about all schools
  * @param {Object.<string, string>} menus - Select menu input values
  * @param {?string} [menu=null] - Menu to exclude from filtering
  * @param {Array.<Object>} Data about some schools
@@ -1070,7 +1070,7 @@ function filterSchools(schoolData, menus, menu = null) {
 /**
  * Sort schools, based on multiple criteria, in place.
  *
- * @param {Array.<Object>} schools - Data about some schools
+ * @param {Array.<School>} schools - Data about some schools
  * @param {string} sort - Which field to sort by
  */
 function sortSchools(schools, sort) {
@@ -1217,7 +1217,7 @@ function sortSchools(schools, sort) {
 /**
  * Get a school's name and type, e.g. Lowell High School.
  *
- * @param {Object} school - Data about a school
+ * @param {School} school - Data about a school
  * @returns {string} The school's name and type
  */
 function getSchoolFullName(school) {
@@ -1231,7 +1231,7 @@ function getSchoolFullName(school) {
 /**
  * Get a school's name, e.g. Lowell.
  *
- * @param {Object} school - Data about a school
+ * @param {School} school - Data about a school
  * @returns {string} The school's name
  */
 function getSchoolName(school, campus = true) {
@@ -1245,8 +1245,8 @@ function getSchoolName(school, campus = true) {
 /**
  * Update the distance between each school and the user's location.
  *
- * @param {Object.<string, Object>} addressData - SF street addresses
- * @param {Array.<Object>} schoolData - Data about all schools
+ * @param {StreetAddresses} addressData - All SF street addresses
+ * @param {Array.<School>} schoolData - Data about all schools
  * @param {Object.<string, string>} inputs - Form input values
  * @param {Array.<number>} coords - Degrees latitude and longitude
  * @returns {boolean} Whether the page rendered
@@ -1284,7 +1284,7 @@ function suggestAddresses(addresses) {
 /**
  * Find addresses matching what the user has typed so far.
  *
- * @param {Object.<string, Object>} addressData - SF street addresses
+ * @param {StreetAddresses} addressData - All SF street addresses
  * @param {string} num - A street number, e.g. 221
  * @param {string} punct - A street name, maybe with punctuation
  * @param {string} nopunct - A street name without punctuation
@@ -1317,7 +1317,7 @@ function findAddressSuggestions(addressData, num, punct, nopunct) {
 /**
  * Search for a street address in San Francisco, California.
  *
- * @param {Object.<string, Object>} addressData - SF street addresses
+ * @param {StreetAddresses} addressData - All SF street addresses
  * @param {string} address - A street address, from form input
  * @returns {Array.<number>} Degrees latitude and longitude
  */
@@ -1350,7 +1350,7 @@ function findAddress(addressData, address) {
 /**
  * Find which columns ought to be shown, based on school data.
  *
- * @param {Array.<Object>} schools - Data about some schools
+ * @param {Array.<School>} schools - Data about some schools
  * @returns {Object.<string, boolean>} Which fields to show
  */
 function findShownColumns(schools) {
@@ -1387,8 +1387,8 @@ function findShownColumns(schools) {
 /**
  * Add event listeners to process form inputs, and update the page.
  *
- * @param {Object.<string, Object>} addressData - SF street addresses
- * @param {Array.<Object>} schoolData - Data about all schools
+ * @param {StreetAddresses} addressData - All SF street addresses
+ * @param {Array.<School>} schoolData - Data about all schools
  * @param {Object.<string, string>} inputs - Form input values
  * @param {Array.<number>} coords - Degrees latitude and longitude
  */
@@ -1449,8 +1449,8 @@ function addEventListeners(addressData, schoolData, inputs, coords) {
 /**
  * Render a web page, showing a form and school data as a table.
  *
- * @param {Object.<string, Object>} addressData - SF street addresses
- * @param {Array.<Object>} schoolData - Data about all schools
+ * @param {StreetAddresses} addressData - All SF street addresses
+ * @param {Array.<School>} schoolData - Data about all schools
  * @param {Object.<string, string>} inputs - Form input values
  * @param {Array.<number>} coords - Degrees latitude and longitude
  */

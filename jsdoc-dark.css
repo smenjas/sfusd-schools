@@ -1,14 +1,21 @@
 /*
  * Paste this at the end of: documentation/styles/jsdoc-default.css
  */
+h4 {
+    border-top: 1px solid #7f7f7f;
+}
+
 @media only screen and (prefers-color-scheme: dark) {
-    html, body, th, .name code, .source code {
+    html, body, section, th, .name code, .source code {
         background-color: black;
         color: white;
     }
-    section, h4 {
+    article, h4 {
         background-color: #111;
         color: white;
+    }
+    h4 {
+        color: #bbe;
     }
     nav ul a {
         color: #def;

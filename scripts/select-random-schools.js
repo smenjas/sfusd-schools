@@ -22,7 +22,7 @@ if (isNaN(want)) {
 /**
  * Select random schools.
  *
- * @param {Array.<Object>} schoolData - Data about all schools
+ * @param {Array.<School>} schoolData - Data about all schools
  * @param {number} want - How many schools to select
  * @returns {Array.<Object>} Data about some schools
  */
@@ -48,7 +48,7 @@ function selectRandomSchools(schoolData, want) {
 /**
  * Check that schools have all grade levels, when there are 2 or more.
  *
- * @param {Array.<Object>} schools - Data about some schools
+ * @param {Array.<School>} schools - Data about some schools
  * @returns {boolean} Whether the schools have all grade levels
  */
 function checkSchools(schools) {

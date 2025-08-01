@@ -63,7 +63,7 @@ function parseSchoolRow(row) {
 /**
  * Concatenate a school's name.
  *
- * @param {Object} school - Data about a school
+ * @param {School} school - Data about a school
  * @returns {string} A school's name
  */
 function concatName(school) {
@@ -255,7 +255,7 @@ function parseSchoolTypes(school) {
 /**
  * Check whether two schools' types match.
  *
- * @param {Object} a - Data about a school
+ * @param {School} a - Data about a school
  * @param {Object} b - Data about a school
  * @returns {boolean} Whether the schools' types match
  */
@@ -307,7 +307,7 @@ function parseSchoolGrades(school) {
 /**
  * Check whether two schools' grade levels match.
  *
- * @param {Object} a - Data about a school
+ * @param {School} a - Data about a school
  * @param {Object} b - Data about a school
  * @returns {boolean} Whether both schools' grade levels match
  */
@@ -353,7 +353,7 @@ function parseStartTime(hours) {
 /**
  * Check whether two schools' start times match.
  *
- * @param {Object} a - Data about a school
+ * @param {School} a - Data about a school
  * @param {Object} b - Data about a school
  * @returns {boolean} Whether both schools' start times match
  */
