@@ -39,10 +39,10 @@ function countNestedKeys(obj) {
 /**
  * Select random addresses, by adding them to a new object.
  *
- * @param {Object.<string, Object>} addressData - Data about all addresses in SF
+ * @param {StreetAddresses} addressData - All SF street addresses
  * @param {number} want - How many addresses to select
  * @param {number} maxPerStreet - The maximum number of addresses per street
- * @returns {Object.<string, Object>} Data about some addresses
+ * @returns {StreetAddresses} Some SF street addresses
  */
 function addRandomAddresses(addressData, want, maxPerStreet) {
     console.log('// Using: addRandomAddresses()');
@@ -112,7 +112,7 @@ function keepRandomProps(obj, keep) {
 /**
  * Remove street numbers until no street has more than the max allowed.
  *
- * @param {Object.<string, Object>} addressData - Data about all addresses in SF
+ * @param {StreetAddresses} addressData - All SF street addresses
  * @param {number} keep - How many addresses to keep, for each street
  */
 function limitNumbersPerStreet(addressData, keep) {
@@ -127,10 +127,10 @@ function limitNumbersPerStreet(addressData, keep) {
 /**
  * Select random addresses, by removing them from the existing object.
  *
- * @param {Object.<string, Object>} addressData - Data about all addresses in SF
+ * @param {StreetAddresses} addressData - All SF street addresses
  * @param {number} want - How many addresses to select
  * @param {number} maxPerStreet - The maximum number of addresses per street
- * @returns {Object.<string, Object>} Data about some addresses
+ * @returns {StreetAddresses} Some SF street addresses
  */
 function removeRandomAddresses(addressData, want, maxPerStreet) {
     console.log('// Using: removeRandomAddresses()');
