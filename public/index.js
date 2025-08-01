@@ -1245,12 +1245,13 @@ function getSchoolName(school, campus = true) {
 /**
  * Update the distance between each school and the user's location.
  *
+ * @param {Object.<string, Object>} addressData - SF street addresses
  * @param {Array.<Object>} schoolData - Data about all schools
  * @param {Object.<string, string>} inputs - Form input values
  * @param {Array.<number>} coords - Degrees latitude and longitude
  * @returns {boolean} Whether the page rendered
  */
-function updateDistances(schoolData, inputs, coords) {
+function updateDistances(addressData, schoolData, inputs, coords) {
     for (const school of schoolData) {
         const schoolCoords = [school.lat, school.lon];
         school.distance = calculateDistance(coords, schoolCoords);
@@ -1262,7 +1263,7 @@ function updateDistances(schoolData, inputs, coords) {
     if (inputs.menus.sort === '' || inputs.menus.sort === 'name') {
         inputs.menus.sort = 'distance';
     }
-    renderPage(schoolData, inputs, coords);
+    renderPage(addressData, schoolData, inputs, coords);
     document.getElementById('address').select();
     return true;
 }
@@ -1283,12 +1284,13 @@ function suggestAddresses(addresses) {
 /**
  * Find addresses matching what the user has typed so far.
  *
+ * @param {Object.<string, Object>} addressData - SF street addresses
  * @param {string} num - A street number, e.g. 221
  * @param {string} punct - A street name, maybe with punctuation
  * @param {string} nopunct - A street name without punctuation
  * @returns {Array.<string>} Suggested street addresses
  */
-function findAddressSuggestions(num, punct, nopunct) {
+function findAddressSuggestions(addressData, num, punct, nopunct) {
     const addresses = [];
     for (const st in addressData) {
         if (st.startsWith(nopunct) && num in addressData[st]) {
@@ -1315,10 +1317,11 @@ function findAddressSuggestions(num, punct, nopunct) {
 /**
  * Search for a street address in San Francisco, California.
  *
+ * @param {Object.<string, Object>} addressData - SF street addresses
  * @param {string} address - A street address, from form input
  * @returns {Array.<number>} Degrees latitude and longitude
  */
-function findAddress(address) {
+function findAddress(addressData, address) {
     const parts = address.split(' ');
     if (parts.length < 2) {
         suggestAddresses([]);
@@ -1332,7 +1335,7 @@ function findAddress(address) {
     const punct = parts.join(' ').toUpperCase();
     const nopunct = punct.replace(/[^A-Z0-9\s]/g, '');
     if (!(nopunct in addressData)) {
-        const addresses = findAddressSuggestions(num, punct, nopunct);
+        const addresses = findAddressSuggestions(addressData, num, punct, nopunct);
         if (addresses.length <= 10) {
             suggestAddresses(addresses);
         }
@@ -1384,11 +1387,12 @@ function findShownColumns(schools) {
 /**
  * Add event listeners to process form inputs, and update the page.
  *
+ * @param {Object.<string, Object>} addressData - SF street addresses
  * @param {Array.<Object>} schoolData - Data about all schools
  * @param {Object.<string, string>} inputs - Form input values
  * @param {Array.<number>} coords - Degrees latitude and longitude
  */
-function addEventListeners(schoolData, inputs, coords) {
+function addEventListeners(addressData, schoolData, inputs, coords) {
     // Remove existing event listeners.
     const oldAddress = document.querySelector('input[name=address]');
     oldAddress.replaceWith(oldAddress.cloneNode(true));
@@ -1410,8 +1414,8 @@ function addEventListeners(schoolData, inputs, coords) {
     addressInput.addEventListener('input', event => {
         inputs.address = event.target.value;
         localStorage.setItem('inputs', JSON.stringify(inputs));
-        coords = findAddress(inputs.address);
-        updateDistances(schoolData, inputs, coords);
+        coords = findAddress(addressData, inputs.address);
+        updateDistances(addressData, schoolData, inputs, coords);
     });
 
     // Listen for select menus, to filter schools.
@@ -1422,7 +1426,7 @@ function addEventListeners(schoolData, inputs, coords) {
             const value = event.target.value;
             inputs.menus[name] = value;
             localStorage.setItem('inputs', JSON.stringify(inputs));
-            renderPage(schoolData, inputs, coords);
+            renderPage(addressData, schoolData, inputs, coords);
         });
     }
 
@@ -1445,11 +1449,12 @@ function addEventListeners(schoolData, inputs, coords) {
 /**
  * Render a web page, showing a form and school data as a table.
  *
+ * @param {Object.<string, Object>} addressData - SF street addresses
  * @param {Array.<Object>} schoolData - Data about all schools
  * @param {Object.<string, string>} inputs - Form input values
  * @param {Array.<number>} coords - Degrees latitude and longitude
  */
-function renderPage(schoolData, inputs, coords) {
+function renderPage(addressData, schoolData, inputs, coords) {
     const schools = filterSchools(schoolData, inputs.menus);
     sortSchools(schools, inputs.menus.sort);
     const shown = findShownColumns(schools);
@@ -1462,7 +1467,7 @@ function renderPage(schoolData, inputs, coords) {
         distanceMenu.removeAttribute('title');
     }
     document.getElementById('schools').innerHTML = renderTable(shown, schools, inputs.address);
-    addEventListeners(schoolData, inputs, coords);
+    addEventListeners(addressData, schoolData, inputs, coords);
     document.getElementById('address').value = escapeFormInput(inputs.address);
 }
 
@@ -1483,6 +1488,6 @@ const inputs = inputsJSON ? JSON.parse(inputsJSON) : {
 };
 
 // Calculate commute distances, and render the page.
-const coords = findAddress(inputs.address);
-updateDistances(schoolData, inputs, coords)
-    || renderPage(schoolData, inputs, coords);
+const coords = findAddress(addressData, inputs.address);
+updateDistances(addressData, schoolData, inputs, coords)
+    || renderPage(addressData, schoolData, inputs, coords);
