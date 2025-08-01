@@ -1245,7 +1245,7 @@ function getSchoolName(school, campus = true) {
 /**
  * Update the distance between each school and the user's location.
  *
- * @param {Object.<string, Object>} addressData - SF street addresses
+ * @param {StreetAddresses} addressData - All SF street addresses
  * @param {Array.<School>} schoolData - Data about all schools
  * @param {Object.<string, string>} inputs - Form input values
  * @param {Array.<number>} coords - Degrees latitude and longitude
@@ -1284,7 +1284,7 @@ function suggestAddresses(addresses) {
 /**
  * Find addresses matching what the user has typed so far.
  *
- * @param {Object.<string, Object>} addressData - SF street addresses
+ * @param {StreetAddresses} addressData - All SF street addresses
  * @param {string} num - A street number, e.g. 221
  * @param {string} punct - A street name, maybe with punctuation
  * @param {string} nopunct - A street name without punctuation
@@ -1317,7 +1317,7 @@ function findAddressSuggestions(addressData, num, punct, nopunct) {
 /**
  * Search for a street address in San Francisco, California.
  *
- * @param {Object.<string, Object>} addressData - SF street addresses
+ * @param {StreetAddresses} addressData - All SF street addresses
  * @param {string} address - A street address, from form input
  * @returns {Array.<number>} Degrees latitude and longitude
  */
@@ -1387,7 +1387,7 @@ function findShownColumns(schools) {
 /**
  * Add event listeners to process form inputs, and update the page.
  *
- * @param {Object.<string, Object>} addressData - SF street addresses
+ * @param {StreetAddresses} addressData - All SF street addresses
  * @param {Array.<School>} schoolData - Data about all schools
  * @param {Object.<string, string>} inputs - Form input values
  * @param {Array.<number>} coords - Degrees latitude and longitude
@@ -1449,7 +1449,7 @@ function addEventListeners(addressData, schoolData, inputs, coords) {
 /**
  * Render a web page, showing a form and school data as a table.
  *
- * @param {Object.<string, Object>} addressData - SF street addresses
+ * @param {StreetAddresses} addressData - All SF street addresses
  * @param {Array.<School>} schoolData - Data about all schools
  * @param {Object.<string, string>} inputs - Form input values
  * @param {Array.<number>} coords - Degrees latitude and longitude
