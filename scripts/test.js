@@ -193,9 +193,11 @@ export default class Test {
         console.time('Test.runAll()');
 
         const methods = [
+            AddressTest.abbrNumberedStreets,
             AddressTest.compareAddresses,
             AddressTest.fixNumberedStreets,
             AddressTest.normalizeAddress,
+            AddressTest.prettifyAddress,
             AddressTest.replaceStreetSuffixes,
             AddressTest.splitStreetAddress,
             GeoTest.expandCoords,

@@ -3,15 +3,27 @@
  * @module test/address
  */
 
-import { compareAddresses,
+import { abbrNumberedStreets,
+         compareAddresses,
          fixNumberedStreets,
          normalizeAddress,
+         prettifyAddress,
          replaceStreetSuffixes,
          splitStreetAddress } from '../public/address.js';
 import Test from '../scripts/test.js';
 import addressData from '../public/address-data.js';
 
 export default class AddressTest {
+    static abbrNumberedStreets() {
+        const tests = [
+            [['01ST ST'], '1ST ST'],
+            [['02ND RD'], '2ND RD'],
+            [['03RD DR'], '3RD DR'],
+            [['04TH AVE'], '4TH AVE'],
+        ];
+        return Test.run(abbrNumberedStreets, tests);
+    }
+
     static compareAddresses() {
         const tests = [
             [['123 fake street', '123 Fake St'], true],
@@ -34,6 +46,14 @@ export default class AddressTest {
             [['3125 César Chávez St'], '3125 CESAR CHAVEZ ST'],
         ];
         return Test.run(normalizeAddress, tests);
+    }
+
+    static prettifyAddress() {
+        const tests = [
+            [['151 03RD ST'], '151 3rd St'],
+            [['701 MISSION ST'], '701 Mission St'],
+        ];
+        return Test.run(prettifyAddress, tests);
     }
 
     static replaceStreetSuffixes() {
