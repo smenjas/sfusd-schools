@@ -35,6 +35,19 @@ export function expandCoords(coords) {
 }
 
 /**
+ * Generate a Google Maps URL, for latitude and longitude.
+ *
+ * @param {?LatLon} coords - Decimal degrees latitude and longitude
+ * @returns {string} A URL
+ */
+export function getCoordsURL(coords) {
+    if (!coords) {
+        return '';
+    }
+    return getMapURL(coords.join(','));
+}
+
+/**
  * Generate a Google Maps URL for directions.
  *
  * @param {string} fro - The search terms for the origin
