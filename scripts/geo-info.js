@@ -4,6 +4,7 @@
 
 import { normalizeAddress, splitStreetAddress } from '../public/address.js';
 import { expandCoords,
+         getAddressCoords,
          getCoordsURL,
          howFar,
          lonToMilesFactor } from '../public/geo.js';
@@ -85,17 +86,7 @@ const discrepancies = [];
 
 for (const school of schoolData) {
     const name = `${school.name} ${school.types[0]}`;
-    const address = normalizeAddress(school.address);
-    const [num, street] = splitStreetAddress(address);
-    if (!(street in addressData)) {
-        console.log('Street not found:', street, 'for', name);
-        continue;
-    }
-    if (!(num in addressData[street])) {
-        console.log(num, 'not found on', street, 'for', name);
-        continue;
-    }
-    const coords = expandCoords(addressData[street][num]);
+    const coords = getAddressCoords(addressData, school.address);
     const feet = Math.round(howFar(school.ll, coords) * 5280);
     discrepancies.push({
         name: name,

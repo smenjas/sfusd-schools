@@ -5,15 +5,30 @@
 
 import { degreesToRadians,
          expandCoords,
+         getAddressCoords,
          getCoordsURL,
          getDirectionsURL,
+         getJunctionCoords,
          getMapURL,
          howFar,
+         howFarAddresses,
          latToMiles,
          latToMilesFactor,
          lonToMiles,
          lonToMilesFactor } from '../public/geo.js';
 import Test from '../scripts/test.js';
+
+const addrs = {
+    'BURROWS ST': { '423': [7278, 4073] },
+    'GIRARD ST': { '350': [7278, 4055] },
+};
+
+const jcts = {
+    20889: { ll: [72806, 40706], streets: ['BURROWS ST', 'GOETTINGEN ST'], adj: [20653] },
+};
+
+const start = '423 Burrows St';
+const end = '350 Girard St';
 
 export default class GeoTest {
     static degreesToRadians() {
@@ -33,6 +48,16 @@ export default class GeoTest {
         return Test.run(expandCoords, tests);
     }
 
+    static getAddressCoords() {
+        const tests = [
+            [[addrs], null],
+            [[addrs, '123 Fake St'], null],
+            [[addrs, start], ['37.7278', '-122.4073']],
+            [[addrs, end], ['37.7278', '-122.4055']],
+        ];
+        return Test.run(getAddressCoords, tests);
+    }
+
     static getCoordsURL() {
         const tests = [
             [[], ''],
@@ -48,6 +73,14 @@ export default class GeoTest {
             [['3500 Great Hwy, 94132', '1220 Avenue M, 94132'], `${prefix}3500+Great+Hwy,+94132/1220+Avenue+M,+94132`],
         ];
         return Test.run(getDirectionsURL, tests);
+    }
+
+    static getJunctionCoords() {
+        const tests = [
+            [[jcts, 0], null],
+            [[jcts, 20889], ['37.72806', '-122.40706']],
+        ];
+        return Test.run(getJunctionCoords, tests);
     }
 
     static getMapURL() {
@@ -71,6 +104,15 @@ export default class GeoTest {
             [[[66.564056, 0], [66.564056, 1]], 27.442925480320344], // Arctic Circle
         ];
         return Test.run(howFar, tests);
+    }
+
+    static howFarAddresses() {
+        const tests = [
+            [[addrs], Infinity],
+            [[addrs, start], Infinity],
+            [[addrs, start, end], 0.09823309936777064],
+        ];
+        return Test.run(howFarAddresses, tests);
     }
 
     static latToMiles() {
