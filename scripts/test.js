@@ -199,6 +199,7 @@ export default class Test {
             AddressTest.replaceStreetSuffixes,
             AddressTest.splitStreetAddress,
             GeoTest.expandCoords,
+            GeoTest.getCoordsURL,
             GeoTest.getDirectionsURL,
             GeoTest.getMapURL,
             GeoTest.howFar,
