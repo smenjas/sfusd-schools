@@ -27,6 +27,10 @@ if (isNaN(want)) {
  * @returns {Array.<Object>} Data about some schools
  */
 function selectRandomSchools(schoolData, want) {
+    if (want >= schoolData.length) {
+        return schoolData;
+    }
+
     const schools = [];
     const indexes = new Set();
     let have = 0;
@@ -81,15 +85,10 @@ function checkSchools(schools) {
 }
 
 let schools;
-if (want >= schoolData.length) {
-    schools = schoolData;
+do {
+    schools = selectRandomSchools(schoolData, want);
 }
-else {
-    do {
-        schools = selectRandomSchools(schoolData, want);
-    }
-    while (!checkSchools(schools));
-}
+while (!checkSchools(schools));
 
 console.log('export default [');
 for (const school of schools) {
