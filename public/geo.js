@@ -3,6 +3,7 @@
  * @module public/geo
  */
 
+import { normalizeAddress, splitStreetAddress } from './address.js';
 import { encodeURLParam } from './string.js';
 
 /**
@@ -32,6 +33,45 @@ export function expandCoords(coords) {
     }
     const [lat, lon] = coords;
     return [`37.${lat}`, `-122.${lon}`];
+}
+
+/**
+ * Get the geographic coordinates of a street address.
+ *
+ * @param {StreetAddresses} addressData - All SF street addresses
+ * @param {string} address - A street address
+ * @returns {?LatLon} Decimal degrees latitude and longitude
+ */
+export function getAddressCoords(addressData, address) {
+    if (typeof address !== 'string') {
+        return null;
+    }
+    address = normalizeAddress(address);
+    const [num, street] = splitStreetAddress(address);
+    if (!(street in addressData)) {
+        console.log('Cannot find street:', street);
+        return null;
+    }
+    if (!(num in addressData[street])) {
+        console.log('Cannot find number:', num, 'on', street);
+        return null;
+    }
+    return expandCoords(addressData[street][num]);
+}
+
+/**
+ * Get the geographic coordinates for an intersection.
+ *
+ * @param {Junctions} junctions - All SF intersections
+ * @param {CNNPrefix} cnn - An intersection
+ * @returns {?LatLon} Decimal degrees latitude and longitude
+ */
+export function getJunctionCoords(junctions, cnn) {
+    if (!(cnn in junctions)) {
+        console.warn('getJunctionCoords():', cnn, 'not found');
+        return null;
+    }
+    return expandCoords(junctions[cnn].ll);
 }
 
 /**
@@ -94,6 +134,50 @@ export function howFar(a, b) {
     const y = latToMiles(latDiff);
     const x = lonToMiles(lonDiff, latMean);
     return Math.sqrt((x * x) + (y * y));
+}
+
+/**
+ * Calculate the distance between two street addresses, as the crow flies.
+ *
+ * @param {StreetAddresses} addressData - All SF street addresses
+ * @param {string} start - The starting street address
+ * @param {string} end - The ending street address
+ * @returns {number} Distance in miles
+ */
+export function howFarAddresses(addressData, start, end) {
+    const startLl = getAddressCoords(addressData, start);
+    const endLl = getAddressCoords(addressData, end);
+    return howFar(startLl, endLl);
+}
+
+/**
+ * Calculate the distance between a street address and an intersection,
+ * as the crow flies.
+ *
+ * @param {StreetAddresses} addressData - All SF street addresses
+ * @param {Junctions} junctions - All SF intersections
+ * @param {string} address - A street address
+ * @param {CNNPrefix} cnn - An intersection
+ * @returns {number} Distance in miles
+ */
+export function howFarAddressToJunction(addressData, junctions, address, cnn) {
+    const addrLl = getAddressCoords(addressData, address);
+    const jctLl = getJunctionCoords(junctions, cnn);
+    return howFar(addrLl, jctLl);
+}
+
+/**
+ * Calculate the distance between two intersections, as the crow flies.
+ *
+ * @param {Junctions} junctions - All SF intersections
+ * @param {CNNPrefix} start - An intersection
+ * @param {CNNPrefix} end - An intersection
+ * @returns {number} Distance in miles
+ */
+export function howFarJunctions(junctions, start, end) {
+    const startLl = getJunctionCoords(junctions, start);
+    const endLl = getJunctionCoords(junctions, end);
+    return howFar(startLl, endLl);
 }
 
 /**

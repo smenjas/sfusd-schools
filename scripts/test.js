@@ -5,6 +5,7 @@
 
 import AddressTest from '../test/address.js';
 import GeoTest from '../test/geo.js';
+import PathTest from '../test/path.js';
 import SortTest from '../test/sort.js';
 import StringTest from '../test/string.js';
 import TestTest from '../test/test.js';
@@ -194,21 +195,31 @@ export default class Test {
         console.time('Test.runAll()');
 
         const methods = [
+            AddressTest.abbrNumberedStreets,
             AddressTest.compareAddresses,
             AddressTest.fixNumberedStreets,
             AddressTest.normalizeAddress,
+            AddressTest.prettifyAddress,
             AddressTest.replaceStreetSuffixes,
             AddressTest.splitStreetAddress,
             GeoTest.degreesToRadians,
             GeoTest.expandCoords,
+            GeoTest.getAddressCoords,
             GeoTest.getCoordsURL,
             GeoTest.getDirectionsURL,
+            GeoTest.getJunctionCoords,
             GeoTest.getMapURL,
             GeoTest.howFar,
+            GeoTest.howFarAddresses,
             GeoTest.latToMiles,
             GeoTest.latToMilesFactor,
             GeoTest.lonToMiles,
             GeoTest.lonToMilesFactor,
+            PathTest.findPathToSchool,
+            PathTest.findSchoolDistances,
+            PathTest.getStreetJunctions,
+            PathTest.nameCNN,
+            PathTest.sumDistances,
             SortTest.sortSchools,
             StringTest.capitalize,
             StringTest.capitalizeWords,
