@@ -201,6 +201,7 @@ export default class Test {
             AddressTest.splitStreetAddress,
             GeoTest.degreesToRadians,
             GeoTest.expandCoords,
+            GeoTest.getCoordsURL,
             GeoTest.getDirectionsURL,
             GeoTest.getMapURL,
             GeoTest.howFar,

@@ -5,6 +5,7 @@
 
 import { degreesToRadians,
          expandCoords,
+         getCoordsURL,
          getDirectionsURL,
          getMapURL,
          howFar,
@@ -30,6 +31,15 @@ export default class GeoTest {
             [[[7783, 5142]], ['37.7783', '-122.5142']],
         ];
         return Test.run(expandCoords, tests);
+    }
+
+    static getCoordsURL() {
+        const tests = [
+            [[], ''],
+            [[null], ''],
+            [[['37.7783', '-122.5142']], 'https://www.google.com/maps/search/37.7783,-122.5142'],
+        ];
+        return Test.run(getCoordsURL, tests);
     }
 
     static getDirectionsURL() {

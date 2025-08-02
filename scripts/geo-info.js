@@ -4,24 +4,11 @@
 
 import { splitStreetAddress } from '../public/address.js';
 import { expandCoords,
-         getMapURL,
+         getCoordsURL,
          howFar,
          lonToMilesFactor } from '../public/geo.js';
 import addressData from '../public/address-data.js';
 import schoolData from '../public/school-data.js';
-
-/**
- * Generate a Google Maps URL.
- *
- * @param {Array.<number>} coords - Decimal portion of ° latitude, longitude
- * @returns {string} A URL
- */
-function getCoordsURL(coords) {
-    if (!coords) {
-        return '';
-    }
-    return getMapURL(expandCoords(coords).join(','));
-}
 
 let minLon = Infinity;
 let minLonLat = null;
@@ -41,41 +28,41 @@ let north = '';
 
 for (const st in addressData) {
     for (const n in addressData[st]) {
-        const lat = addressData[st][n][0].toString().padEnd(4, '0');
-        const lon = addressData[st][n][1].toString().padEnd(4, '0');
+        const coords = expandCoords(addressData[st][n]);
+        const [lat, lon] = coords;
         if (lat < minLat) {
             minLat = lat;
             minLatLon = lon;
             south = `${n} ${st}`;
-            //console.log(`New min lat for ${south}`, getCoordsURL([lat, lon]));
+            //console.log(`New min lat for ${south}`, getCoordsURL(coords));
         }
         if (lat > maxLat) {
             maxLat = lat;
             maxLatLon = lon;
             north = `${n} ${st}`;
-            //console.log(`New max lat for ${north}`, getCoordsURL([lat, lon]));
+            //console.log(`New max lat for ${north}`, getCoordsURL(coords));
         }
         if (lon < minLon) {
             minLon = lon;
             minLonLat = lat;
             east = `${n} ${st}`;
-            //console.log(`New min lon for ${east}`, getCoordsURL([lat, lon]));
+            //console.log(`New min lon for ${east}`, getCoordsURL(coords));
         }
         if (lon > maxLon) {
             maxLon = lon;
             maxLonLat = lat;
             west = `${n} ${st}`;
-            //console.log(`New max lon for ${west}`, getCoordsURL([lat, lon]));
+            //console.log(`New max lon for ${west}`, getCoordsURL(coords));
         }
     }
 }
 
 // How many miles per degree of longitude are there at the northernmost addess?
-const maxFactor = lonToMilesFactor(`37.${maxLat}`);
+const maxFactor = lonToMilesFactor(maxLat);
 console.log({maxLat, maxFactor});
 
 // How many miles per degree of longitude are there at the southernmost addess?
-const minFactor = lonToMilesFactor(`37.${minLat}`);
+const minFactor = lonToMilesFactor(minLat);
 console.log({minLat, minFactor});
 
 // Which addresses are farthest north, south, east, and west in San Francisco?
