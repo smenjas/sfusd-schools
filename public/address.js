@@ -3,9 +3,21 @@
  * @module public/address
  */
 
-import { compressWhitespace,
+import { capitalizeWords,
+         compressWhitespace,
          removeAccents,
          removePunctuation } from './string.js';
+
+/**
+ * Abbreviate single-digit numbered street names: remove the leading zero.
+ *
+ * @param {string} address - A street address, capitalized
+ * @returns {string} An abbreviated street address
+ */
+export function abbrNumberedStreets(address) {
+    const re = /\b0([1-9](ST|ND|RD|TH))\b/
+    return address.replace(re, '$1');
+}
 
 /**
  * Check whether two street addresses match.
@@ -44,6 +56,21 @@ export function normalizeAddress(address) {
     address = address.toUpperCase();
     address = replaceStreetSuffixes(address);
     address = fixNumberedStreets(address);
+    return address;
+}
+
+/**
+ * Prettify a street address, for display.
+ *
+ * @param {string} address - A normalized street address
+ * @returns {string} A presentable street address
+ */
+export function prettifyAddress(address) {
+    if (!address) {
+        return address;
+    }
+    address = abbrNumberedStreets(address);
+    address = capitalizeWords(address, true);
     return address;
 }
 
