@@ -4,6 +4,7 @@
 
 import fs from 'fs';
 import { JSDOM } from 'jsdom';
+import { compareAddresses, normalizeAddress, removeAccents } from '../public/address.js';
 import schoolData from '../public/school-data.js';
 
 /**
@@ -76,36 +77,6 @@ function concatName(school) {
 }
 
 /**
- * Remove accents from characters in a string.
- *
- * @param {string} str - A string with accents, possibly
- * @returns {string} A string without accents
- */
-function removeAccents(str) {
-  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-}
-
-/**
- * Remove punctuation from a string.
- *
- * @param {string} str - A string with punctuation, possibly
- * @returns {string} A string without punctuation
- */
-function removePunctuation(str) {
-    return str.replace(/[^A-Za-z0-9\s]/g, '');
-}
-
-/**
- * Compress whitespace in a string.
- *
- * @param {string} str - A string with redundant whitespace, possibly
- * @returns {string} A string without redundant whitespace
- */
-function compressWhitespace(str) {
-    return str.trim().replace(/\s+/g, ' ');
-}
-
-/**
  * Find possible matches for a school.
  *
  * @param {Object} b - Data about a school
@@ -174,57 +145,6 @@ function findSchool(b) {
         });
     }
     console.log(b, subsets);
-}
-
-/**
- * Replace street suffixes with standard abbreviations.
- *
- * @param {string} address - A street address, capitalized
- * @returns {string} A standardized street address
- */
-function replaceStreetSuffixes(address) {
-    const suffixes = {
-      AVE: 'AVENUE',
-      BLVD: 'BOULEVARD',
-      CIR: 'CIRCLE',
-      DR: 'DRIVE',
-      RD: 'ROAD',
-      ST: 'STREET',
-    };
-    for (const abbr in suffixes) {
-        const suffix = suffixes[abbr];
-        const re = new RegExp(`\\b${suffix}\\b`);
-        address = address.replace(re, abbr);
-    }
-    return address;
-}
-
-/**
- * Normalize a street address, for comparison.
- *
- * @param {string} address - A street address
- * @returns {string} A standardized street address
- */
-function normalizeAddress(address) {
-    address = removeAccents(address);
-    address = removePunctuation(address);
-    address = compressWhitespace(address);
-    address = address.toUpperCase();
-    address = replaceStreetSuffixes(address);
-    return address;
-}
-
-/**
- * Check whether two street addresses match.
- *
- * @param {string} a - A street address
- * @param {string} b - A street address
- * @returns {string} Whether b includes a, after normalizing them
- */
-function checkSchoolAddress(a, b) {
-    a = normalizeAddress(a);
-    b = normalizeAddress(b);
-    return b.includes(a);
 }
 
 /**
@@ -388,7 +308,7 @@ function checkSchool(b) {
     console.log(b.name, '|', b.type);
     console.log();
     */
-    if (!checkSchoolAddress(a.address, b.address)) {
+    if (!compareAddresses(a.address, b.address)) {
         console.log('Address mismatch:');
         console.log('\t', b.name);
         console.log('\t\t', normalizeAddress(b.address), 'does not include');
