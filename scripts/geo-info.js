@@ -109,13 +109,12 @@ for (const school of schoolData) {
         continue;
     }
     const coords = expandCoords(addressData[street][num]);
-    const schoolCoords = [school.lat, school.lon];
-    const feet = Math.round(calculateDistance(schoolCoords, coords) * 5280);
+    const feet = Math.round(calculateDistance(school.ll, coords) * 5280);
     discrepancies.push({
         name: name,
         address: school.address,
         feet: feet,
-        school: schoolCoords,
+        school: school.ll,
         sfdata: [parseFloat(coords[0]), parseFloat(coords[1])],
     });
     if (feet < minFeet) {
@@ -126,7 +125,7 @@ for (const school of schoolData) {
         maxFeet = feet;
         maxName = name;
     }
-    console.log(school.name, school.address, schoolCoords, coords, feet);
+    console.log(school.name, school.address, school.ll, coords, feet);
 }
 
 discrepancies.sort((a, b) => a.feet - b.feet);

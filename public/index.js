@@ -1253,8 +1253,7 @@ function getSchoolName(school, campus = true) {
  */
 function updateDistances(addressData, schoolData, inputs, coords) {
     for (const school of schoolData) {
-        const schoolCoords = [school.lat, school.lon];
-        school.distance = calculateDistance(coords, schoolCoords);
+        school.distance = calculateDistance(coords, school.ll);
     }
     if (!coords) {
         inputs.menus.within = '';
