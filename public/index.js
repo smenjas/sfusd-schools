@@ -4,10 +4,7 @@
 
 import schoolData from './school-data.js';
 import addressData from './address-data.js';
-import { calculateDistance,
-         expandCoords,
-         getDirectionsURL,
-         getMapURL } from './geo.js';
+import { expandCoords, getDirectionsURL, getMapURL, howFar } from './geo.js';
 
 /**
  * Escape form input (except spaces) for safe output to HTML.
@@ -1253,7 +1250,7 @@ function getSchoolName(school, campus = true) {
  */
 function updateDistances(addressData, schoolData, inputs, coords) {
     for (const school of schoolData) {
-        school.distance = calculateDistance(coords, school.ll);
+        school.distance = howFar(coords, school.ll);
     }
     if (!coords) {
         inputs.menus.within = '';

@@ -4,25 +4,6 @@
  */
 
 /**
- * Calculate the distance between two sets of geographic coordinates.
- *
- * @param {Array.<number>} a - Degrees latitude, longitude
- * @param {Array.<number>} b - Degrees latitude, longitude
- * @returns {number} Distance in miles
- */
-export function calculateDistance(a, b) {
-    if (!a || !b) {
-        return null;
-    }
-    const latDiff = Math.abs(a[0] - b[0]);
-    const lonDiff = Math.abs(a[1] - b[1]);
-    const lat = (latDiff / 2) + Math.min(a[0], b[0]);
-    const y = latToMiles(latDiff);
-    const x = lonToMiles(lonDiff, lat);
-    return Math.sqrt((x ** 2) + (y ** 2));
-}
-
-/**
  * Expand the decimal portion of geographic coordinates to include the whole
  * numbers for San Francisco, California: 37°N, 122°W.
  *
@@ -61,6 +42,25 @@ export function getMapURL(search) {
     }
     search = encodeURIComponent(search);
     return 'https://www.google.com/maps/search/' + search.replaceAll(' ', '+');
+}
+
+/**
+ * Calculate the distance between two sets of geographic coordinates.
+ *
+ * @param {Array.<number>} a - Decimal degrees latitude and longitude
+ * @param {Array.<number>} b - Decimal degrees latitude and longitude
+ * @returns {?number} Distance in miles
+ */
+export function howFar(a, b) {
+    if (!a || !b) {
+        return null;
+    }
+    const latDiff = Math.abs(a[0] - b[0]);
+    const lonDiff = Math.abs(a[1] - b[1]);
+    const lat = (latDiff / 2) + Math.min(a[0], b[0]);
+    const y = latToMiles(latDiff);
+    const x = lonToMiles(lonDiff, lat);
+    return Math.sqrt((x ** 2) + (y ** 2));
 }
 
 /**
