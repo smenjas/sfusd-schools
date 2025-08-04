@@ -4,7 +4,8 @@
 
 import fs from 'fs';
 import { JSDOM } from 'jsdom';
-import { compareAddresses, normalizeAddress, removeAccents } from '../public/address.js';
+import { compareAddresses, normalizeAddress } from '../public/address.js';
+import { removeAccents } from '../public/string.js';
 import schoolData from '../public/school-data.js';
 
 /**
