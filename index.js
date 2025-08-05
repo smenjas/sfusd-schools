@@ -2,9 +2,15 @@
  * @file Display, filter, and sort school data.
  */
 
-import schoolData from './school-data.js';
-import addressData from './address-data.js';
+import { fixNumberedStreets,
+         replaceStreetSuffixes,
+         splitStreetAddress } from './address.js';
+import { compressWhitespace,
+         removeAccents,
+         removePunctuation } from './string.js';
 import { expandCoords, getDirectionsURL, getMapURL, howFar } from './geo.js';
+import addressData from './address-data.js';
+import schoolData from './school-data.js';
 
 /**
  * Escape form input (except spaces) for safe output to HTML.
@@ -1282,20 +1288,32 @@ function suggestAddresses(addresses) {
  *
  * @param {StreetAddresses} addressData - All SF street addresses
  * @param {string} num - A street number, e.g. 221
- * @param {string} punct - A street name, maybe with punctuation
- * @param {string} nopunct - A street name without punctuation
+ * @param {string} nonstd - A non-standard street name, maybe with punctuation
+ * @param {string} std - A fully standardized street name, without punctuation
  * @returns {Array.<string>} Suggested street addresses
  */
-function findAddressSuggestions(addressData, num, punct, nopunct) {
+function findAddressSuggestions(addressData, num, nonstd, std) {
     const addresses = [];
     for (const st in addressData) {
-        if (st.startsWith(nopunct) && num in addressData[st]) {
+        if (!(num in addressData[st])) {
+            continue;
+        }
+        // Gracefully handle single-digit numbered street names.
+        if (st.startsWith('0')) {
+            const street = st.substring(1);
+            if (street.startsWith(nonstd)) {
+                addresses.push(`${num} ${street}`);
+                continue;
+            }
+        }
+        if (st.startsWith(std)) {
             addresses.push(`${num} ${st}`);
         }
     }
-    if (punct === nopunct) {
+    if (nonstd === std) {
         return addresses.sort();
     }
+    // Gracefully handle street names with apostrophes.
     const puncts = {
         'O\'FARRELL ST': 'OFARRELL ST',
         'O\'REILLY AVE': 'OREILLY AVE',
@@ -1303,7 +1321,7 @@ function findAddressSuggestions(addressData, num, punct, nopunct) {
     };
     for (const p in puncts) {
         const st = puncts[p];
-        if (p.startsWith(punct) && num in addressData[st]) {
+        if (p.startsWith(nonstd) && num in addressData[st]) {
             addresses.push(`${num} ${p}`);
         }
     }
@@ -1318,29 +1336,31 @@ function findAddressSuggestions(addressData, num, punct, nopunct) {
  * @returns {Array.<number>} Degrees latitude and longitude
  */
 function findAddress(addressData, address) {
-    const parts = address.split(' ');
-    if (parts.length < 2) {
+    let [num, nonstd] = splitStreetAddress(address);
+    if (!nonstd) {
         suggestAddresses([]);
         return;
     }
-    if (isNaN(parts[0])) {
+    if (isNaN(num)) {
         suggestAddresses([]);
         return;
     }
-    const num = parts.shift();
-    const punct = parts.join(' ').toUpperCase();
-    const nopunct = punct.replace(/[^A-Z0-9\s]/g, '');
-    if (!(nopunct in addressData)) {
-        const addresses = findAddressSuggestions(addressData, num, punct, nopunct);
+    nonstd = removeAccents(nonstd);
+    nonstd = compressWhitespace(nonstd);
+    nonstd = nonstd.toUpperCase();
+    nonstd = replaceStreetSuffixes(nonstd);
+    const std = fixNumberedStreets(removePunctuation(nonstd));
+    if (!(std in addressData)) {
+        const addresses = findAddressSuggestions(addressData, num, nonstd, std);
         if (addresses.length <= 10) {
             suggestAddresses(addresses);
         }
         return;
     }
-    if (!(num in addressData[nopunct])) {
+    if (!(num in addressData[std])) {
         return;
     }
-    return expandCoords(addressData[nopunct][num]);
+    return expandCoords(addressData[std][num]);
 }
 
 /**

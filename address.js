@@ -21,6 +21,17 @@ export function compareAddresses(a, b) {
 }
 
 /**
+ * Prefix single-digit numbered street names with a zero.
+ *
+ * @param {string} address - A street address, capitalized
+ * @returns {string} A standardized street address
+ */
+export function fixNumberedStreets(address) {
+    const re = /\b(1ST|2ND|3RD|(4|5|6|7|8|9)TH)\b/
+    return address.replace(re, '0$1');
+}
+
+/**
  * Normalize a street address, for comparison.
  *
  * @param {string} address - A street address
@@ -32,6 +43,7 @@ export function normalizeAddress(address) {
     address = compressWhitespace(address);
     address = address.toUpperCase();
     address = replaceStreetSuffixes(address);
+    address = fixNumberedStreets(address);
     return address;
 }
 
@@ -56,4 +68,15 @@ export function replaceStreetSuffixes(address) {
         address = address.replace(re, abbr);
     }
     return address;
+}
+
+/**
+ * Split a street address into a street number and a street name.
+ *
+ * @param {string} address - A street address, e.g. "2995 SLOAT BLVD"
+ * @returns {Array.<string>} A street number and street name
+ */
+export function splitStreetAddress(address) {
+    const [num, ...etc] = address.split(' ');
+    return [num, etc.join(' ')];
 }
