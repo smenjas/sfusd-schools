@@ -4835,7 +4835,7 @@ export default [
         charter: true,
         start: '8:30',
         neighborhood: 'Treasure Island',
-        address: '651 8th St',
+        address: '651 8th TI St',
         zip: '94130',
         ll: [37.8250048, -122.3691138],
         usnews: null,
