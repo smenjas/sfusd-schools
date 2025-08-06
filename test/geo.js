@@ -3,7 +3,10 @@
  * @module tests/geo
  */
 
-import { expandCoords,
+import { azimuthToDirection,
+         expandCoords,
+         findAzimuth,
+         findDirection,
          getCoordsURL,
          getDirectionsURL,
          getMapURL,
@@ -16,11 +19,49 @@ import { expandCoords,
 import Test from '../scripts/test.js';
 
 export default class GeoTest {
+    static azimuthToDirection() {
+        const tests = [
+            [[0], 'N'],
+            [[45], 'NE'],
+            [[90], 'E'],
+            [[135], 'SE'],
+            [[180], 'S'],
+            [[225], 'SW'],
+            [[270], 'W'],
+            [[315], 'NW'],
+        ];
+        return Test.run(azimuthToDirection, tests);
+    }
+
     static expandCoords() {
         const tests = [
             [[[7783, 5142]], ['37.7783', '-122.5142']],
         ];
         return Test.run(expandCoords, tests);
+    }
+
+    static findAzimuth() {
+        const tests = [
+            [[[0, 0], [1, 0]], 0],
+            [[[0, 0], [0, 1]], 90],
+            [[[0, 0], [-1, 0]], 180],
+            [[[0, 0], [0, -1]], 270],
+        ];
+        return Test.run(findAzimuth, tests);
+    }
+
+    static findDirection() {
+        const tests = [
+            [[[0, 0], [1, 0]], 'N'],
+            [[[0, 0], [1, 1]], 'NE'],
+            [[[0, 0], [0, 1]], 'E'],
+            [[[0, 0], [-1, 1]], 'SE'],
+            [[[0, 0], [-1, 0]], 'S'],
+            [[[0, 0], [-1, -1]], 'SW'],
+            [[[0, 0], [0, -1]], 'W'],
+            [[[0, 0], [1, -1]], 'NW'],
+        ];
+        return Test.run(findDirection, tests);
     }
 
     static getCoordsURL() {

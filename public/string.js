@@ -54,6 +54,31 @@ export function compressWhitespace(str) {
 }
 
 /**
+ * Encode input for safe output to HTML or XML.
+ *
+ * @param {string} str - A string of characters
+ * @returns {string} An encoded string of characters
+ */
+export function encode(str) {
+    str = str.toString();
+    str = str.replaceAll('&', '&amp;');
+    str = str.replaceAll('>', '&gt;');
+    str = str.replaceAll('<', '&lt;');
+    str = str.replaceAll('"', '&quot;');
+    return str;
+}
+
+/**
+ * Encode input for safe output to a URL.
+ *
+ * @param {string} value - Unsafe input
+ * @returns {string} The input string with unsafe characters encoded
+ */
+export function encodeURLParam(value) {
+    return encodeURIComponent(value).replaceAll('%20', '+');
+}
+
+/**
  * Remove accents from characters in a string.
  *
  * @param {string} str - A string with accents, possibly
