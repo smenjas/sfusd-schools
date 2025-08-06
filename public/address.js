@@ -3,6 +3,9 @@
  * @module public/address
  */
 
+import { arrayToMap } from './common.js';
+import { expandCoords } from './geo.js';
+import { renderOptions } from './html.js';
 import { capitalizeWords,
          compressWhitespace,
          removeAccents,
@@ -30,6 +33,88 @@ export function compareAddresses(a, b) {
     a = normalizeAddress(a);
     b = normalizeAddress(b);
     return b.includes(a);
+}
+
+/**
+ * Search for a street address in San Francisco, California.
+ *
+ * @param {StreetAddresses} addressData - All SF street addresses
+ * @param {string} address - A street address, from form input
+ * @returns {?LatLon} Degrees latitude and longitude
+ */
+export function findAddress(addressData, address) {
+    let [num, nonstd] = splitStreetAddress(address);
+    if (!nonstd) {
+        suggestAddresses([]);
+        return null;
+    }
+    if (isNaN(num)) {
+        suggestAddresses([]);
+        return null;
+    }
+    nonstd = removeAccents(nonstd);
+    nonstd = compressWhitespace(nonstd);
+    nonstd = nonstd.toUpperCase();
+    const std = fixNumberedStreets(removePunctuation(replaceStreetSuffixes(nonstd, true)));
+    if (!(std in addressData)) {
+        const addresses = findAddressSuggestions(addressData, num, nonstd, std);
+        if (addresses.length <= 10) {
+            suggestAddresses(addresses);
+        }
+        return null;
+    }
+    if (!(num in addressData[std])) {
+        return null;
+    }
+    return expandCoords(addressData[std][num]);
+}
+
+/**
+ * Find addresses matching what the user has typed so far.
+ *
+ * @param {StreetAddresses} addressData - All SF street addresses
+ * @param {string} num - A street number, e.g. 221
+ * @param {string} nonstd - A non-standard street name, maybe with punctuation
+ * @param {string} std - A fully standardized street name, without punctuation
+ * @returns {Array.<string>} Suggested street addresses
+ */
+export function findAddressSuggestions(addressData, num, nonstd, std) {
+    const addresses = [];
+    for (const st in addressData) {
+        if (!(num in addressData[st])) {
+            continue;
+        }
+        // Gracefully handle single-digit numbered street names.
+        if (st.startsWith('0')) {
+            const street = st.substring(1);
+            if (street.startsWith(nonstd)) {
+                addresses.push(`${num} ${street}`);
+                continue;
+            }
+        }
+        if (st.startsWith(std)) {
+            addresses.push(`${num} ${st}`);
+        }
+    }
+    if (nonstd === std) {
+        return addresses.sort();
+    }
+    // Gracefully handle street names with apostrophes.
+    const puncts = {
+        'DUNNE\'S ALY': 'DUNNES ALY',
+        'O\'FARRELL ST': 'OFARRELL ST',
+        'O\'REILLY AVE': 'OREILLY AVE',
+        'O\'SHAUGHNESSY BLVD': 'OSHAUGHNESSY BLVD',
+        'SAINT JOSEPH\'S AVE': 'SAINT JOSEPHS AVE',
+        'SAINT MARY\'S AVE': 'SAINT MARYS AVE',
+    };
+    for (const p in puncts) {
+        const st = puncts[p];
+        if (p.startsWith(nonstd) && num in addressData[st]) {
+            addresses.push(`${num} ${p}`);
+        }
+    }
+    return addresses.sort();
 }
 
 /**
@@ -134,4 +219,23 @@ export function replaceStreetSuffixes(address, omitsNumber = false) {
 export function splitStreetAddress(address) {
     const [num, ...etc] = address.split(' ');
     return [num, etc.join(' ')];
+}
+
+/**
+ * Suggest addresses matching what the user has typed so far.
+ *
+ * @param {Array.<string>} addresses - Suggested street addresses
+ */
+export function suggestAddresses(addresses) {
+    if (typeof document === 'undefined') {
+        return;
+    }
+    const datalist = document.getElementById('addresses');
+    if (!datalist) {
+        return;
+    }
+    for (let i = 0; i < addresses.length; i++) {
+        addresses[i] = capitalizeWords(addresses[i], true);
+    }
+    datalist.innerHTML = renderOptions(arrayToMap(addresses));
 }
