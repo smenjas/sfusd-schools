@@ -3,17 +3,27 @@
  * @module public/path
  */
 
-import { normalizeAddress,
+import { formatStreet,
+         normalizeAddress,
          prettifyAddress,
          splitStreetAddress } from './address.js';
-import { expandCoords,
+import { renderDirectionsLink,
+         renderLink,
+         renderList,
+         renderMapLink } from './html.js';
+import { azimuthToDirection,
+         expandCoords,
+         findAzimuth,
          getAddressCoords,
          getCoordsURL,
          getJunctionCoords,
+         getMapURL,
          howFar,
          howFarAddresses,
          howFarAddressToJunction,
-         howFarJunctions } from './geo.js';
+         howFarJunctions,
+         isBikeable,
+         isWalkable } from './geo.js';
 
 /**
  * Generate a Google Maps URL, for latitude and longitude.
@@ -35,7 +45,7 @@ function mapCNN(jcts, cnn) {
  */
 export function nameCNN(jcts, cnn) {
     if (!(cnn in jcts)) {
-        console.log('nameCNN():', cnn, 'not found');
+        //console.log('nameCNN():', cnn, 'not found');
         return;
     }
     const streets = jcts[cnn].streets;
@@ -87,7 +97,7 @@ function sortCNNs(jcts, beelines, cnns, ll) {
             continue;
         }
         if (!(cnn in jcts)) {
-            console.log('sortCNNs():', cnn, 'not found');
+            //console.log('sortCNNs():', cnn, 'not found');
             beelines[cnn] = Infinity;
             continue;
         }
@@ -109,7 +119,7 @@ function sortCNNs(jcts, beelines, cnns, ll) {
  */
 function sortStreetCNNs(jcts, stJcts, beelines, street, ll) {
     if (!(street in stJcts)) {
-        console.log('sortStreetCNNs():', street, 'not found');
+        //console.log('sortStreetCNNs():', street, 'not found');
         return [];
     }
     return sortCNNs(jcts, beelines, stJcts[street], ll);
@@ -209,7 +219,7 @@ function findPath(addressData, jcts, stJcts, beelines, start, end, place = '') {
      */
     function go(paths, here) {
         if (!(here in jcts)) {
-            console.log('go():', here, 'not found');
+            //console.log('go():', here, 'not found');
             return false;
         }
 
@@ -325,24 +335,25 @@ function findPath(addressData, jcts, stJcts, beelines, start, end, place = '') {
  * @param {StreetAddresses} addressData - All SF street addresses
  * @param {Junctions} jcts - All SF intersections
  * @param {CNNPrefixes} path - Intersections
- * @param {string} start - The starting street address
- * @param {string} end - The ending street address
+ * @param {?string} [start=null] - The starting street address
+ * @param {?string} [end=null] - The ending street address
  * @returns {number} Distance in miles
  */
 export function sumDistances(addressData, jcts, path, start, end) {
     if (!Array.isArray(path) || path.length < 1) {
         return howFarAddresses(addressData, start, end);
     }
-
-    let distance = howFarAddressToJunction(addressData, jcts, start, path[0]);
-
+    let distance = 0;
+    if (start) {
+        distance += howFarAddressToJunction(addressData, jcts, start, path[0]);
+    }
     for (let i = 1; i < path.length; i++) {
         distance += howFarJunctions(jcts, path[i - 1], path[i]);
     }
-
-    const lastCNN = path[path.length - 1];
-    distance += howFarAddressToJunction(addressData, jcts, end, lastCNN);
-
+    if (end) {
+        const lastCNN = path[path.length - 1];
+        distance += howFarAddressToJunction(addressData, jcts, end, lastCNN);
+    }
     return distance;
 }
 
@@ -469,4 +480,288 @@ export function findSchoolDistances(addressData, schoolData, jcts, start) {
     }
     console.timeEnd('findSchoolDistances()');
     return distances;
+}
+
+/**
+ * Return elements that are in both arrays.
+ *
+ * @param {Array} a - An array
+ * @param {Array} b - An array
+ * @returns {Array} Elements that are in both arrays
+ */
+function getCommonElements(a, b) {
+    return a.filter(e => b.includes(e));
+}
+
+/**
+ * Add information about a turn along a path.
+ *
+ * @param {Junctions} jcts - All SF intersections
+ * @param {Object.<CNNPrefix, Object>} turns - Turns along a path
+ * @param {string} street - A normalized street name
+ * @param {string} lastStreet - A normalized street name
+ * @param {LatLonDecimals} a - Decimal portion of ° latitude and longitude
+ * @param {LatLonDecimals} b - Decimal portion of ° latitude and longitude
+ */
+function addTurn(jcts, turns, here, street, lastStreet, a, b) {
+    const aCoords = expandCoords(a);
+    const bCoords = expandCoords(b);
+    const others = jcts[here].streets.filter(st => st !== street);
+    const cross = lastStreet ? others.filter(e => e !== lastStreet) : [];
+    turns[here] = {
+        azimuth: findAzimuth(aCoords, bCoords),
+        cross,
+        distance: 0,
+        street,
+    };
+}
+
+/**
+ * Find an adjacent junction, in the direction of an address.
+ *
+ * @param {StreetAddresses} addressData - All SF street addresses
+ * @param {Junctions} jcts - All SF intersections
+ * @param {CNNPrefix} here - An intersection
+ * @param {string} address - A normalized street address
+ * @returns {?CNNPrefix} An intersection
+ */
+function findAdjacentJunction(addressData, jcts, here, address) {
+    if (!address || !(here in jcts)) {
+        return null;
+    }
+    const adj = jcts[here].adj;
+    const [num, street] = splitStreetAddress(address);
+    if (!(street in addressData) || !(num in addressData[street])) {
+        return null;
+    }
+    const ll = expandCoords(addressData[street][num]);
+    sortCNNs(jcts, {}, adj, ll);
+    // FIXME: This finds the next closest junction, maybe not in the right direction.
+    for (const cnn of adj) {
+        if (!jcts[cnn].streets.includes(street)) {
+            continue;
+        }
+        return cnn;
+    }
+    return null;
+}
+
+/**
+ * Identify where the turns are along a path. Warning: this function will add
+ * an intersection to the beginning of the path array, if the path turns off
+ * the starting street at the first intersection.
+ *
+ * @param {StreetAddresses} addressData - All SF street addresses
+ * @param {Junctions} jcts - All SF intersections
+ * @param {CNNPrefixes} path - Intersections
+ * @param {string} start - The starting street address, normalized
+ * @param {string} end - The ending street address, normalized
+ * @returns {Object.<CNNPrefix, Object} Street & heading, by intersection
+ */
+function findTurns(addressData, jcts, path, start, end) {
+    if (!path || path.length < 2) {
+        return {};
+    }
+
+    const turns = {};
+    let here = path[0];
+    let prev = findAdjacentJunction(addressData, jcts, here, start);
+    let [startNum, street] = splitStreetAddress(start);
+
+    let next = path[1];
+    let lastStreet = street;
+    let common = getCommonElements(jcts[here].streets, jcts[next].streets);
+    street = common[0];
+    if (lastStreet !== street) {
+        // We turn off the starting street at the first intersection. Add the
+        // adjacent intersection in the direction of the starting address, so
+        // we can describe that turn.
+        path.unshift(prev);
+        addTurn(jcts, turns, prev, lastStreet, null, jcts[prev].ll, jcts[here].ll);
+    }
+    addTurn(jcts, turns, here, street, lastStreet, jcts[here].ll, jcts[next].ll);
+
+    for (let i = 1; i < path.length - 1; i++) {
+        prev = path[i - 1];
+        here = path[i];
+        next = path[i + 1];
+        if (getCommonElements(jcts[prev].streets, jcts[next].streets).length) {
+            // If the previous intersection and the next intersection have any
+            // streets in common, we didn't turn.
+            continue;
+        }
+        lastStreet = street;
+        common = getCommonElements(jcts[here].streets, jcts[next].streets);
+        street = common[0];
+        if (lastStreet !== street) {
+            addTurn(jcts, turns, here, street, lastStreet, jcts[here].ll, jcts[next].ll);
+        }
+    }
+
+    here = path[path.length - 1];
+    next = findAdjacentJunction(addressData, jcts, here, end);
+    const [endNum, endSt] = splitStreetAddress(end);
+    lastStreet = street;
+    street = endSt;
+    if (lastStreet && lastStreet !== street) {
+        addTurn(jcts, turns, here, street, lastStreet, jcts[here].ll, jcts[next].ll);
+    }
+
+    return turns;
+}
+
+/**
+ * Show a distance in feet if it's short, or miles otherwise.
+ *
+ * @param {number} miles - A distance in miles
+ * @param {boolean} showEmoji - Whether to indicate walkability/bikeability
+ * @returns {string} A distance in feet or miles, with units
+ */
+export function formatDistance(miles, showEmoji = false) {
+    if (isNaN(miles)) {
+        return '';
+    }
+    const emoji =
+        showEmoji && isWalkable(miles) ? ' &#x1F6B6; Walkable' :
+        showEmoji && isBikeable(miles) ? ' &#x1F6B2; Bikeable' :
+        '';
+    const feet = miles * 5280;
+    return (feet <= 1000) ?
+        `${feet.toFixed(0)} ft.${emoji}` :
+        `${miles.toFixed(1)} mi.${emoji}`;
+}
+
+/**
+ * Calculate the distance to the next turn, for each turn.
+ *
+ * @param {StreetAddresses} addressData - All SF street addresses
+ * @param {Junctions} jcts - All SF intersections
+ * @param {Object.<CNNPrefix, Object>} turns - Turns along a path
+ * @param {CNNPrefixes} path - Intersections
+ * @param {CNNPrefixes} newPath - Intersections
+ * @param {string} start - The starting street address, normalized
+ * @param {string} end - The ending street address, normalized
+ */
+function sumDistancesBetweenTurns(addressData, jcts, turns, path, newPath, start, end) {
+    // If we turned off the starting street at the first intersection,
+    // findTurns() added an intersection to the beginning of the path.
+    // Don't add that distance.
+    const index = (newPath.length === path.length) ? 0 : 1;
+
+    let prevTurn = null;
+    let distance = howFarAddressToJunction(addressData, jcts, start, path[0]);
+
+    if (path.length !== newPath.length) {
+        turns[newPath[0]].distance = distance;
+        distance = 0;
+    }
+
+    for (let i = index; i < newPath.length - 1; i++) {
+        const here = newPath[i];
+        const next = newPath[i + 1];
+        distance += howFarJunctions(jcts, here, next);
+
+        if (!(here in turns)) {
+            // We didn't turn at this intersection: keep adding distance.
+            continue;
+        }
+
+        if (prevTurn) {
+            turns[prevTurn].distance = distance;
+            distance = 0;
+        }
+        prevTurn = here;
+    }
+
+    if (prevTurn) {
+        turns[prevTurn].distance = distance;
+    }
+
+    // This is the last intersection. How far is the destination?
+    const here = newPath[newPath.length - 1];
+    distance = howFarAddressToJunction(addressData, jcts, end, here);
+    const turn = (here in turns) ? here : prevTurn;
+    if (turn) {
+        turns[turn].distance += distance;
+    }
+}
+
+/**
+ * Compare floating point numbers for equivalence.
+ *
+ * @param {number} a - A number
+ * @param {number} b - A number
+ * @param {number} [epsilon=0.0001] - The threshold for comparison
+ * @returns {boolean} Whether the numbers are within the threshold
+ */
+function numbersMatch(a, b, epsilon = 0.0001) {
+    return Math.abs(a - b) < epsilon;
+}
+
+/**
+ * Describe a path.
+ *
+ * @param {StreetAddresses} addressData - All SF street addresses
+ * @param {Junctions} jcts - All SF intersections
+ * @param {CNNPrefixes} path - Intersections
+ * @param {string} start - The starting street address
+ * @param {string} end - The ending street address
+ * @returns {string} HTML for an ordered list
+ */
+export function describePath(addressData, jcts, path, start, end) {
+    start = normalizeAddress(start);
+    end = normalizeAddress(end);
+    const newPath = Array.from(path); // findTurns() may alter the path array.
+    const turns = findTurns(addressData, jcts, newPath, start, end);
+    sumDistancesBetweenTurns(addressData, jcts, turns, path, newPath, start, end);
+    //logCNNs(jcts, newPath);
+
+    let list = [];
+    let count = 0;
+    let total = 0;
+
+    for (let i = 0; i < newPath.length; i++) {
+        const cnn = newPath[i];
+
+        if (!(cnn in turns)) {
+            // We didn't turn at this intersection: don't mention it.
+            continue;
+        }
+
+        let { azimuth, cross, distance, street } = turns[cnn];
+
+        let html = 'Go ';
+        if (azimuth !== null) {
+            html += `<span title="${azimuth.toFixed(0)}°">`;
+            html += azimuthToDirection(azimuth);
+            html += '</span>';
+        }
+
+        let streetName = formatStreet(street);
+        if (++count !== 1 && cross.length) {
+            const streets = cross.map(st => formatStreet(st));
+            streetName += ` at ${streets.join(' & ')}`;
+        }
+        const url = mapCNN(jcts, cnn);
+        const link = renderLink(url, streetName, true);
+        html += ` on ${link} ${formatDistance(distance)}`;
+
+        list.push(html);
+        total += distance;
+    }
+
+    list.push(`Arrive at ${renderMapLink(formatStreet(end))}`);
+
+    let html = `<p>Total: ${formatDistance(total, true)}</p>`;
+    const sum = sumDistances(addressData, jcts, path, start, end);
+    if (!numbersMatch(total, sum)) {
+        html = `<p>Total: ${total} mi.</p>`;
+        html += `<p>Sum: ${sum} mi.</p>`;
+    }
+
+    const link = renderDirectionsLink(formatStreet(start), formatStreet(end),
+        'Google Maps directions');
+    html += `<p>${link}</p>`;
+
+    return renderList(list, true) + html;
 }

@@ -4,7 +4,10 @@
  */
 
 import AddressTest from '../test/address.js';
+import CommonTest from '../test/common.js';
 import GeoTest from '../test/geo.js';
+import HTMLTest from '../test/html.js';
+import KMLTest from '../test/kml.js';
 import PathTest from '../test/path.js';
 import SortTest from '../test/sort.js';
 import StringTest from '../test/string.js';
@@ -197,13 +200,22 @@ export default class Test {
         const methods = [
             AddressTest.abbrNumberedStreets,
             AddressTest.compareAddresses,
+            AddressTest.findAddress,
+            AddressTest.findAddressSuggestions,
             AddressTest.fixNumberedStreets,
+            AddressTest.formatStreet,
             AddressTest.normalizeAddress,
             AddressTest.prettifyAddress,
             AddressTest.replaceStreetSuffixes,
             AddressTest.splitStreetAddress,
+            CommonTest.arrayToMap,
+            CommonTest.findSchool,
+            CommonTest.splitSchoolDescription,
+            GeoTest.azimuthToDirection,
             GeoTest.degreesToRadians,
             GeoTest.expandCoords,
+            GeoTest.findAzimuth,
+            GeoTest.findDirection,
             GeoTest.getCoordsURL,
             GeoTest.getDirectionsURL,
             GeoTest.getMapURL,
@@ -214,8 +226,23 @@ export default class Test {
             GeoTest.latToMilesFactor,
             GeoTest.lonToMiles,
             GeoTest.lonToMilesFactor,
+            HTMLTest.renderAddressInput,
+            HTMLTest.renderDirectionsLink,
+            HTMLTest.renderLink,
+            HTMLTest.renderList,
+            HTMLTest.renderMapLink,
+            HTMLTest.renderOptions,
+            KMLTest.getPathWaypoints,
+            KMLTest.getWaypointCoords,
+            KMLTest.kmlDoc,
+            KMLTest.kmlLineString,
+            KMLTest.kmlWaypoint,
+            KMLTest.makeGeoDoc,
+            KMLTest.makeKML,
+            PathTest.describePath,
             PathTest.findPathToSchool,
             PathTest.findSchoolDistances,
+            PathTest.formatDistance,
             PathTest.getAddressCoords,
             PathTest.getJunctionCoords,
             PathTest.getStreetJunctions,
@@ -226,6 +253,7 @@ export default class Test {
             StringTest.capitalize,
             StringTest.capitalizeWords,
             StringTest.compressWhitespace,
+            StringTest.encode,
             StringTest.encodeURLParam,
             StringTest.removeAccents,
             StringTest.removePunctuation,
