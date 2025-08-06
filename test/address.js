@@ -5,7 +5,10 @@
 
 import { abbrNumberedStreets,
          compareAddresses,
+         findAddress,
+         findAddressSuggestions,
          fixNumberedStreets,
+         formatStreet,
          normalizeAddress,
          prettifyAddress,
          replaceStreetSuffixes,
@@ -31,12 +34,41 @@ export default class AddressTest {
         return Test.run(compareAddresses, tests);
     }
 
+    static findAddress() {
+        const addrs = { 'MARINA GREEN DR': { 1:[8073, 4379] } };
+        const tests = [
+            [[addrs, '123 Fake St'], null],
+            [[addrs, '1 Marina Green Dr'], ['37.8073', '-122.4379']],
+        ];
+        return Test.run(findAddress, tests);
+    }
+
+    static findAddressSuggestions() {
+        const addrs = { 'MARINA GREEN DR': { 1:[8073, 4379] } };
+        const tests = [
+            [[addrs, '1', 'MARI', 'MARI'], ['1 MARINA GREEN DR']],
+            [[addrs, '123 fake st'], []],
+        ];
+        return Test.run(findAddressSuggestions, tests);
+    }
+
     static fixNumberedStreets() {
         const tests = [
             [['151 3RD ST'], '151 03RD ST'],
             [['701 MISSION ST'], '701 MISSION ST'],
         ];
         return Test.run(fixNumberedStreets, tests);
+    }
+
+    static formatStreet() {
+        const tests = [
+            [['03RD ST'], '3rd St'],
+            [['08TH TI ST'], '8th St Treasure Island'],
+            [['Mission St'], 'Mission St'],
+            [['I-280 S ON RAMP'], 'I-280 S on ramp'],
+            [['HWY 101 N OFF RAMP'], 'Hwy 101 N off ramp'],
+        ];
+        return Test.run(formatStreet, tests);
     }
 
     static normalizeAddress() {

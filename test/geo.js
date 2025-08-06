@@ -3,21 +3,28 @@
  * @module test/geo
  */
 
-import { degreesToRadians,
+import { azimuthToDirection,
+         degreesToRadians,
          expandCoords,
+         findAzimuth,
+         findDirection,
          getAddressCoords,
          getCoordsURL,
          getDirectionsURL,
          getJunctionCoords,
          getMapURL,
          howFar,
+         howFarComponents,
          howFarAddresses,
          isBikeable,
          isWalkable,
          latToMiles,
          latToMilesFactor,
          lonToMiles,
-         lonToMilesFactor } from '../public/geo.js';
+         lonToMilesFactor,
+         milesToFeet,
+         normalizeDegrees,
+         radiansToDegrees } from '../public/geo.js';
 import Test from '../scripts/test.js';
 
 const addrs = {
@@ -33,6 +40,23 @@ const start = '423 Burrows St';
 const end = '350 Girard St';
 
 export default class GeoTest {
+    static azimuthToDirection() {
+        const tests = [
+            [[], ''],
+            [[null], ''],
+            [[-90], 'W'],
+            [[0], 'N'],
+            [[45], 'NE'],
+            [[90], 'E'],
+            [[135], 'SE'],
+            [[180], 'S'],
+            [[225], 'SW'],
+            [[270], 'W'],
+            [[315], 'NW'],
+        ];
+        return Test.run(azimuthToDirection, tests);
+    }
+
     static degreesToRadians() {
         const tests = [
             [[], NaN],
@@ -48,6 +72,35 @@ export default class GeoTest {
             [[[7783, 5142]], ['37.7783', '-122.5142']],
         ];
         return Test.run(expandCoords, tests);
+    }
+
+    static findAzimuth() {
+        const tests = [
+            [[], null],
+            [[null, null], null],
+            [[null, [0, 0]], null],
+            [[[0, 0], null], null],
+            [[[0, 0], [0, 0]], 0],
+            [[[0, 0], [1, 0]], 0],
+            [[[0, 0], [0, 1]], 90],
+            [[[0, 0], [-1, 0]], 180],
+            [[[0, 0], [0, -1]], -90],
+        ];
+        return Test.run(findAzimuth, tests);
+    }
+
+    static findDirection() {
+        const tests = [
+            [[[0, 0], [1, 0]], 'N'],
+            [[[0, 0], [1, 1]], 'NE'],
+            [[[0, 0], [0, 1]], 'E'],
+            [[[0, 0], [-1, 1]], 'SE'],
+            [[[0, 0], [-1, 0]], 'S'],
+            [[[0, 0], [-1, -1]], 'SW'],
+            [[[0, 0], [0, -1]], 'W'],
+            [[[0, 0], [1, -1]], 'NW'],
+        ];
+        return Test.run(findDirection, tests);
     }
 
     static getAddressCoords() {
@@ -100,12 +153,27 @@ export default class GeoTest {
             [[[0, 0], null], Infinity],
             [[[0, 0], [0, 0]], 0],
             [[[0, 0], [0, 1]], 69], // 1° of longitude at the equator
-            [[[0, 0], [1, 0]], 69], // 1° of latitude, just north of the equator
+            [[[0, 0], [1, 0]], 69], // 1° of latitude, above the equator
             [[[-1.5, -2.0], [1.5, 2.0]], 345],
-            [[[23.43594, 0], [23.43594, 1]], 63.307867470495445], // Tropic of Cancer
+            [[[23.435944, 0], [23.435944, 1]], 63.307865554617976], // Tropic of Cancer
             [[[66.564056, 0], [66.564056, 1]], 27.442925480320344], // Arctic Circle
         ];
         return Test.run(howFar, tests);
+    }
+
+    static howFarComponents() {
+        const tests = [
+            [[], null],
+            [[null, [0, 0]], null],
+            [[[0, 0], null], null],
+            [[[0, 0], [0, 0]], [0, 0]],
+            [[[0, 0], [0, 1]], [69, 0]], // 1° of longitude at the equator
+            [[[0, 0], [1, 0]], [0, 69]], // 1° of latitude, above the equator
+            [[[-1.5, -2.0], [1.5, 2.0]], [276, 207]],
+            [[[23.435944, 0], [23.435944, 1]], [63.307865554617976, 0]], // Tropic of Cancer
+            [[[66.564056, 0], [66.564056, 1]], [27.442925480320344, 0]], // Arctic Circle
+        ];
+        return Test.run(howFarComponents, tests);
     }
 
     static howFarAddresses() {
@@ -159,5 +227,52 @@ export default class GeoTest {
             [[0], 69],
         ];
         return Test.run(lonToMilesFactor, tests);
+    }
+
+    static milesToFeet() {
+        const tests = [
+            [[], NaN],
+            [[1], 5280],
+        ];
+        return Test.run(milesToFeet, tests);
+    }
+
+    static normalizeDegrees() {
+        const tests = [
+            [[], NaN],
+            [[0], 0],
+            [[90], 90],
+            [[180], 180],
+            [[270], 270],
+            [[360], 0],
+            [[540], 180],
+            [[720], 0],
+            [[-90], 270],
+            [[-180], 180],
+            [[-360], 0],
+            [[-540], 180],
+            [[-720], 0],
+        ];
+        return Test.run(normalizeDegrees, tests);
+    }
+
+    static radiansToDegrees() {
+        const tests = [
+            [[], NaN],
+            [[0], 0],
+            [[Math.PI / 4], 45],
+            [[Math.PI / 2], 90],
+            [[Math.PI], 180],
+            [[Math.PI * 1.5], 270],
+            [[Math.PI * 2], 360],
+            [[Math.PI * 3], 540],
+            [[Math.PI * 4], 720],
+            [[-Math.PI / 2], -90],
+            [[-Math.PI], -180],
+            [[-Math.PI * 2], -360],
+            [[-Math.PI * 3], -540],
+            [[-Math.PI * 4], -720],
+        ];
+        return Test.run(radiansToDegrees, tests);
     }
 }
