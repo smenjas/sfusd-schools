@@ -3,6 +3,7 @@
  */
 
 import jcts from './sf-junctions.js';
+import { kmlDoc } from './kml.js';
 import { normalizeAddress, splitStreetAddress } from '../public/address.js';
 import { expandCoords, getCoordsURL, howFar } from '../public/geo.js';
 import { capitalizeWords } from '../public/string.js';
@@ -71,7 +72,7 @@ function sortCNNs(jcts, distances, cnns, ll) {
             continue;
         }
         if (!(cnn in jcts)) {
-            console.log('sortCNNs():', cnn, 'not found');
+            //console.log('sortCNNs():', cnn, 'not found');
             distances[cnn] = Infinity;
             continue;
         }
@@ -93,7 +94,7 @@ function sortCNNs(jcts, distances, cnns, ll) {
  */
 function sortStreetCNNs(jcts, stJcts, distances, street, ll) {
     if (!(street in stJcts)) {
-        console.log('sortStreetCNNs():', street, 'not found');
+        //console.log('sortStreetCNNs():', street, 'not found');
         return;
     }
     return sortCNNs(jcts, distances, stJcts[street], ll);
@@ -108,7 +109,7 @@ function sortStreetCNNs(jcts, stJcts, distances, street, ll) {
  */
 function nameCNN(jcts, cnn) {
     if (!(cnn in jcts)) {
-        console.log('nameCNN():', cnn, 'not found');
+        //console.log('nameCNN():', cnn, 'not found');
         return;
     }
     const streets = jcts[cnn].streets;
@@ -140,7 +141,7 @@ function getJctLl(jcts, cnn) {
  */
 function logCNN(jcts, cnn) {
     if (!(cnn in jcts)) {
-        console.log('logCNN():', cnn, 'not found');
+        //console.log('logCNN():', cnn, 'not found');
         return;
     }
     const name = nameCNN(jcts, cnn);
@@ -235,7 +236,7 @@ function findPath(addressData, jcts, stJcts, start, end, place = '') {
      */
     function go(paths, here) {
         if (!(here in jcts)) {
-            console.log('go():', here, 'not found');
+            //console.log('go():', here, 'not found');
             return false;
         }
 
@@ -388,6 +389,68 @@ function sumDistances(addressData, jcts, path, start, end) {
 }
 
 /**
+ * Generate waypoints.
+ *
+ * @param {StreetAddresses} addressData - All SF street addresses
+ * @param {Junctions} jcts - All SF intersections
+ * @param {string} start - The starting street address
+ * @param {string} end - The ending street address
+ * @returns {Array.<Object>} Waypoints
+ */
+function getPathWaypoints(addressData, jcts, path, start, end) {
+    const startLl = getAddressCoords(addressData, start);
+    const endLl = getAddressCoords(addressData, end);
+
+    let n = 1;
+    const startPretty = capitalizeWords(start, true);
+    const endPretty = capitalizeWords(end, true);
+    const wpts = [{ ll: startLl, name: n++, description: startPretty, sym: 'Start' }];
+    for (const cnn of path) {
+        wpts.push({
+            ll: expandCoords(jcts[cnn].ll),
+            name: n++,
+            description: nameCNN(jcts, cnn),
+            sym: 'Intersection',
+        });
+    }
+    wpts.push({ ll: endLl, name: n, description: endPretty, sym: 'End' });
+    return wpts;
+}
+
+/**
+ * Generate a file that describes a journey.
+ *
+ * @param {StreetAddresses} addressData - All SF street addresses
+ * @param {Junctions} jcts - All SF intersections
+ * @param {string} start - The starting street address
+ * @param {string} end - The ending street address
+ * @param {string} [place=''] - The name of the destination (optional)
+ * @returns {string} XML
+ */
+function makeGeoDoc(addressData, jcts, path, start, end, place = '') {
+    const startPretty = capitalizeWords(start, true);
+    const endPretty = (place !== '') ? place : capitalizeWords(end, true);
+    const name = `${startPretty} to ${endPretty}`;
+    const wpts = getPathWaypoints(addressData, jcts, path, start, end);
+    return kmlDoc(wpts, name);
+}
+
+/**
+ * Output a KML (Keyhole Markup Language) file.
+ *
+ * @param {StreetAddresses} addressData - All SF street addresses
+ * @param {Junctions} jcts - All SF intersections
+ * @param {string} start - The starting street address
+ * @param {School} school - Data about a school
+ */
+function logKML(addressData, jcts, start, school) {
+    const path = findPathToSchool(addressData, jcts, start, school);
+    const end = school.address;
+    const place = `${school.name} ${school.types[0]}`;
+    console.log(makeGeoDoc(addressData, jcts, path, start, end, place));
+}
+
+/**
  * Find a path to a school in San Francisco, California.
  *
  * @param {StreetAddresses} addressData - All SF street addresses
@@ -495,10 +558,12 @@ const start = '1700 Silver Ave'; // Silver Terrace Athletic Fields
 //const school = findSchool('El Dorado', 'Elementary');
 //const school = findSchool('Guadalupe', 'Elementary');
 //const school = findSchool('Rooftop', 'Elementary');
-//const school = findSchool('Taylor', 'Elementary');
+const school = findSchool('Taylor', 'Elementary');
 //const school = findSchool('Hoover', 'Middle');
 //const school = findSchool('Burton', 'High');
 //const school = findSchool('Life Learning', 'High');
+
+logKML(addressData, jcts, start, school); process.exit(0);
 
 for (const school of schoolData) {
     const path = findPathToSchool(addressData, jcts, start, school);
