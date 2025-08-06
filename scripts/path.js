@@ -281,17 +281,26 @@ function findPath(addressData, jcts, stJcts, start, end, place = '') {
     } // end go()
 
     // Limit execution.
-    const maxJcts = 1e4;
+    const maxJcts = 1e3;
     let jctCount = 0;
     const beeline = howFarAddresses(addressData, start, end);
-    const maxFactor = 2;
-    //const maxFactor = 17;
+    const increment = 0.25;
+    let maxFactor = 1 + increment;
+    const maxMaxFactor = 6;
 
     /** @type Paths */
-    const paths = { found: false, path: [], distance: toStart[here] };
+    let paths = { found: false, path: [], distance: toStart[here] };
 
     // Find paths to the destination.
-    go(paths, here);
+    while (!go(paths, here)) {
+        jctCount = 0;
+        paths = { found: false, path: [], distance: toStart[here] };
+        // Maybe try again, allowing for a longer path.
+        if (maxFactor >= maxMaxFactor) {
+            break; // Limit the total distance allowed.
+        }
+        maxFactor += increment;
+    }
 
     let path = [];
     let shortest = Infinity;
