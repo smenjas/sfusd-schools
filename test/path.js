@@ -3,8 +3,10 @@
  * @module test/path
  */
 
-import { findPathToSchool,
+import { describePath,
+         findPathToSchool,
          findSchoolDistances,
+         formatDistance,
          getAddressCoords,
          getJunctionCoords,
          getStreetJunctions,
@@ -42,7 +44,21 @@ const schools = [school];
 const distance = 0.19298740757998661;
 const distances = { Middle: { King: distance } };
 
+const maps = '<a target="_blank" href="https://www.google.com/maps/';
+let html = `<ol><li>Go <span title="71°">E</span> on ${maps}search/37.72806,-122.40706">Burrows St</a> 715 ft.</li>`;
+html += `<li>Go <span title="162°">S</span> on ${maps}search/37.72857,-122.40509">Girard St</a> 304 ft.</li>`;
+html += `<li>Arrive at ${maps}search/350+Girard+St">350 Girard St</a></li></ol>`;
+html += `<p>Total: 0.2 mi. &#x1F6B6; Walkable</p>`;
+html += `<p>${maps}dir/423+BURROWS+ST/350+GIRARD+ST">Google Maps directions</a></p>`;
+
 export default class PathTest {
+    static describePath() {
+        const tests = [
+            [[addrs, jcts, path, start, end], html],
+        ];
+        return Test.run(describePath, tests);
+    }
+
     static findPathToSchool() {
         const streetJunctions = {};
         for (const st in stJcts) {
@@ -59,6 +75,15 @@ export default class PathTest {
             [[addrs, schools, jcts, start], distances],
         ];
         return Test.run(findSchoolDistances, tests);
+    }
+
+    static formatDistance() {
+        const tests = [
+            [[distances['Middle']['King']], '0.2 mi.'],
+            [[distances['Middle']['King'], false], '0.2 mi.'],
+            [[distances['Middle']['King'], true], '0.2 mi. &#x1F6B6; Walkable'],
+        ];
+        return Test.run(formatDistance, tests);
     }
 
     static getAddressCoords() {
