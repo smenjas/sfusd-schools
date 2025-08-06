@@ -14,7 +14,7 @@ import { capitalizeWords } from './string.js';
  * @param {string} address - A street address
  * @returns {?LatLon} Decimal degrees latitude and longitude
  */
-function getAddressCoords(addressData, address) {
+export function getAddressCoords(addressData, address) {
     address = normalizeAddress(address);
     const [num, street] = splitStreetAddress(address);
     if (!(street in addressData)) {
@@ -35,7 +35,7 @@ function getAddressCoords(addressData, address) {
  * @param {CNNPrefix} cnn - An intersection
  * @returns {?LatLon} Decimal degrees latitude and longitude
  */
-function getJunctionCoords(jcts, cnn) {
+export function getJunctionCoords(jcts, cnn) {
     if (!(cnn in jcts)) {
         console.warn('getJunctionCoords():', cnn, 'not found');
         return null;
@@ -63,7 +63,7 @@ function mapCNN(jcts, cnn) {
  */
 export function nameCNN(jcts, cnn) {
     if (!(cnn in jcts)) {
-        console.log('nameCNN():', cnn, 'not found');
+        //console.log('nameCNN():', cnn, 'not found');
         return;
     }
     const streets = jcts[cnn].streets;
@@ -147,7 +147,7 @@ function sortCNNs(jcts, beelines, cnns, ll) {
             continue;
         }
         if (!(cnn in jcts)) {
-            console.log('sortCNNs():', cnn, 'not found');
+            //console.log('sortCNNs():', cnn, 'not found');
             beelines[cnn] = Infinity;
             continue;
         }
@@ -169,7 +169,7 @@ function sortCNNs(jcts, beelines, cnns, ll) {
  */
 function sortStreetCNNs(jcts, stJcts, beelines, street, ll) {
     if (!(street in stJcts)) {
-        console.log('sortStreetCNNs():', street, 'not found');
+        //console.log('sortStreetCNNs():', street, 'not found');
         return [];
     }
     return sortCNNs(jcts, beelines, stJcts[street], ll);
@@ -208,7 +208,7 @@ function findNearestJunction(jcts, beelines, ll) {
  * @param {StreetAddresses} addressData - All SF street addresses
  * @param {Junctions} jcts - All SF intersections
  * @param {StreetJunctions} stJcts - Look up CNNs by street name.
- * @param {Object} beelines - Distances to addresses
+ * @param {Object} beelines - Distances to addresses, as the crow flies
  * @param {string} start - The starting street address
  * @param {string} end - The ending street address
  * @param {string} [place=''] - The name of the destination (optional)
@@ -275,7 +275,7 @@ function findPath(addressData, jcts, stJcts, beelines, start, end, place = '') {
      */
     function go(paths, here) {
         if (!(here in jcts)) {
-            console.log('go():', here, 'not found');
+            //console.log('go():', here, 'not found');
             return false;
         }
 
@@ -447,7 +447,7 @@ function sumDistances(addressData, jcts, path, start, end) {
  * @param {StreetAddresses} addressData - All SF street addresses
  * @param {Junctions} jcts - All SF intersections
  * @param {StreetJunctions} stJcts - Look up CNNs by street name.
- * @param {Object} beelines - Distances to addresses
+ * @param {Object} beelines - Distances to addresses, as the crow flies
  * @param {string} start - The starting street address
  * @param {School} school - Data about a school
  * @returns {CNNPrefixes} Intersections
@@ -468,7 +468,7 @@ export function findPathToSchool(addressData, jcts, stJcts, beelines, start, sch
  * @param {StreetAddresses} addressData - All SF street addresses
  * @param {Junctions} jcts - All SF intersections
  * @param {StreetJunctions} stJcts - Look up CNNs by street name.
- * @param {Object} beelines - Distances to addresses
+ * @param {Object} beelines - Distances to addresses, as the crow flies
  * @param {string} start - The starting street address
  * @param {string} end - The ending street address
  * @param {string} [place=''] - The name of the destination (optional)
@@ -528,7 +528,7 @@ function analyzePath(addressData, jcts, path, start, end, distance = null, beeli
  * @param {Junctions} jcts - All SF intersections
  * @returns {StreetJunctions} Intersections on each street
  */
-function getStreetJunctions(jcts) {
+export function getStreetJunctions(jcts) {
     const stJcts = {};
     for (const cnn in jcts) {
         const jct = jcts[cnn];
