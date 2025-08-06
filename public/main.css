@@ -63,6 +63,10 @@ caption .legend {
     float: right;
 }
 
+[title] {
+    cursor: help;
+}
+
 a {
     color: #005;
 }
@@ -71,12 +75,12 @@ a:visited {
     color: #505;
 }
 
-main, form, table {
+main, form, table, #paths {
     background-color: #f5f5ff;
     margin: 0.5rem auto;
 }
 
-main, form {
+main, form, #paths {
     border-radius: 1rem;
     max-width: 51rem;
     padding: 1rem;
@@ -98,7 +102,7 @@ header img {
     justify-self: end;
 }
 
-p {
+p, ol {
     margin: 0.7rem 0 0;
 }
 
@@ -222,7 +226,7 @@ tr:hover {
         color: #faf;
     }
 
-    main, form, table {
+    main, form, table, #paths {
         background-color: #223;
     }
 
