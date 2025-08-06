@@ -54,7 +54,7 @@ function sortCNNs(jcts, distances, cnns, ll) {
             continue;
         }
         if (!(cnn in jcts)) {
-            console.log('sortCNNs():', cnn, 'not found');
+            //console.log('sortCNNs():', cnn, 'not found');
             distances[cnn] = Infinity;
             continue;
         }
@@ -76,7 +76,7 @@ function sortCNNs(jcts, distances, cnns, ll) {
  */
 function sortStreetCNNs(jcts, stJcts, distances, street, ll) {
     if (!(street in stJcts)) {
-        console.log('sortStreetCNNs():', street, 'not found');
+        //console.log('sortStreetCNNs():', street, 'not found');
         return;
     }
     return sortCNNs(jcts, distances, stJcts[street], ll);
@@ -91,7 +91,7 @@ function sortStreetCNNs(jcts, stJcts, distances, street, ll) {
  */
 export function nameCNN(jcts, cnn) {
     if (!(cnn in jcts)) {
-        console.log('nameCNN():', cnn, 'not found');
+        //console.log('nameCNN():', cnn, 'not found');
         return;
     }
     const streets = jcts[cnn].streets;
@@ -161,7 +161,7 @@ function mapCNN(jcts, cnn) {
  * @param {string} address - A street address
  * @returns {?LatLon} Decimal degrees latitude and longitude
  */
-function getAddressCoords(addressData, address) {
+export function getAddressCoords(addressData, address) {
     address = normalizeAddress(address);
     const [num, street] = splitStreetAddress(address);
     return expandCoords(addressData[street][num]);
@@ -218,7 +218,7 @@ function findPath(addressData, jcts, stJcts, start, end, place = '') {
      */
     function go(paths, here) {
         if (!(here in jcts)) {
-            console.log('go():', here, 'not found');
+            //console.log('go():', here, 'not found');
             return false;
         }
 
