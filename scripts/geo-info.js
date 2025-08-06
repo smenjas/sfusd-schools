@@ -7,7 +7,8 @@ import { expandCoords,
          getAddressCoords,
          getCoordsURL,
          howFar,
-         lonToMilesFactor } from '../public/geo.js';
+         lonToMilesFactor,
+         milesToFeet } from '../public/geo.js';
 import addressData from '../public/address-data.js';
 import schoolData from '../public/school-data.js';
 
@@ -87,7 +88,8 @@ const discrepancies = [];
 for (const school of schoolData) {
     const name = `${school.name} ${school.types[0]}`;
     const coords = getAddressCoords(addressData, school.address);
-    const feet = Math.round(howFar(school.ll, coords) * 5280);
+    const miles = howFar(school.ll, coords);
+    const feet = Math.round(milesToFeet(miles));
     discrepancies.push({
         name: name,
         address: school.address,
