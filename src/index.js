@@ -17,12 +17,22 @@ const server = http.createServer((request, response) => {
         content = fs.readFileSync('public/index.html', 'utf8');
         console.log('HTTP', response.statusCode, request.url);
         break;
+    case '/paths':
+        response.statusCode = 200;
+        response.setHeader('Content-Type', 'text/html');
+        content = fs.readFileSync('public/paths.html', 'utf8');
+        console.log('HTTP', response.statusCode, request.url);
+        break;
     case '/index.js':
     case '/school-data.js':
     case '/address-data.js':
     case '/address.js':
+    case '/common.js':
     case '/geo.js':
+    case '/html.js':
+    case '/kml.js':
     case '/path.js':
+    case '/paths.js':
     case '/junctions.js':
     case '/sort.js':
     case '/string.js':
