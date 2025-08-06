@@ -5,6 +5,8 @@
 
 import { abbrNumberedStreets,
          compareAddresses,
+         findAddress,
+         findAddressSuggestions,
          fixNumberedStreets,
          normalizeAddress,
          prettifyAddress,
@@ -30,6 +32,24 @@ export default class AddressTest {
             [['1 Main St', '2 Main St'], false],
         ];
         return Test.run(compareAddresses, tests);
+    }
+
+    static findAddress() {
+        const addrs = { 'MARINA GREEN DR': { 1:[8073, 4379] } };
+        const tests = [
+            [[addrs, '123 Fake St'], null],
+            [[addrs, '1 Marina Green Dr'], ['37.8073', '-122.4379']],
+        ];
+        return Test.run(findAddress, tests);
+    }
+
+    static findAddressSuggestions() {
+        const addrs = { 'MARINA GREEN DR': { 1:[8073, 4379] } };
+        const tests = [
+            [[addrs, '1', 'MARI', 'MARI'], ['1 MARINA GREEN DR']],
+            [[addrs, '123 fake st'], []],
+        ];
+        return Test.run(findAddressSuggestions, tests);
     }
 
     static fixNumberedStreets() {

@@ -6,6 +6,52 @@
 import { encodeURLParam } from './string.js';
 
 /**
+ * Convert an azimuth to a cardinal direction.
+ *
+ * @param {?number} azimuth - An azimuth, in degrees
+ * @returns {?string} A cardinal direction (N, NE, E, etc.)
+ */
+export function azimuthToDirection(azimuth) {
+    if (isNaN(azimuth)) {
+        return null;
+    }
+    azimuth %= 360;
+    if (azimuth < 22.5) return 'N';
+    if (azimuth < 67.5) return 'NE';
+    if (azimuth < 112.5) return 'E';
+    if (azimuth < 157.5) return 'SE';
+    if (azimuth < 202.5) return 'S';
+    if (azimuth < 247.5) return 'SW';
+    if (azimuth < 292.5) return 'W';
+    if (azimuth < 337.5) return 'NW';
+    return 'N';
+}
+
+/**
+ * Calculate the angle of a line from (0, 0) to the given coordinates, relative
+ * to the x-axis. Please note: this assumes a cartesian coordinate system, not
+ * geographic coordinates. For geographic coordinates, swap the arguments.
+ *
+ * @param {number} x - The x component
+ * @param {number} y - The y component
+ * @returns {number} The angle in radians
+ */
+function calcAngle(x, y) {
+    return Math.atan2(y, x);
+}
+
+/**
+ * Calculate the angle of coordinates, relative to (0, 0).
+ *
+ * @param {number} x - The x component
+ * @param {number} y - The y component
+ * @returns {number} The angle in degrees
+ */
+function calcAngleDegrees(x, y) {
+    return radiansToDegrees(calcAngle(x, y));
+}
+
+/**
  * Convert degrees to radians.
  *
  * @param {number} degrees
@@ -28,6 +74,39 @@ export function expandCoords(coords) {
     }
     const [lat, lon] = coords;
     return [`37.${lat}`, `-122.${lon}`];
+}
+
+/**
+ * Find the angle of the line between two sets of coordinates.
+ *
+ * @param {?LatLon} a - Decimal degrees latitude and longitude
+ * @param {?LatLon} b - Decimal degrees latitude and longitude
+ * @returns {?number} An azimuth, in degrees
+ */
+export function findAzimuth(a, b) {
+    const components = howFarComponents(a, b);
+    if (!components) {
+        return null;
+    }
+    const [x, y] = components;
+    // Swap the arguments, since we want the angle relative to north.
+    let degrees = calcAngleDegrees(y, x);
+    while (degrees < 0) {
+        degrees += 360;
+    }
+    return degrees;
+}
+
+/**
+ * Find the cardinal direction from one location to another.
+ *
+ * @param {?LatLon} a - Decimal degrees latitude and longitude
+ * @param {?LatLon} b - Decimal degrees latitude and longitude
+ * @returns {?string} A cardinal direction (N, NE, E, etc.)
+ */
+export function findDirection(a, b) {
+    const azimuth = findAzimuth(a, b);
+    return azimuthToDirection(azimuth);
 }
 
 /**
@@ -80,15 +159,33 @@ export function getMapURL(search) {
  * @returns {?number} Distance in miles
  */
 export function howFar(a, b) {
+    const components = howFarComponents(a, b);
+    if (!components) {
+        return null;
+    }
+    const x = Math.abs(components[0]);
+    const y = Math.abs(components[1]);
+    return Math.sqrt((x ** 2) + (y ** 2));
+}
+
+/**
+ * Calculate the distance between two locations, in separate horizontal and
+ * vertical components.
+ *
+ * @param {?LatLon} a - Decimal degrees latitude and longitude
+ * @param {?LatLon} b - Decimal degrees latitude and longitude
+ * @returns {?Array.<number>} Distances in miles
+ */
+function howFarComponents(a, b) {
     if (!a || !b) {
         return null;
     }
-    const latDiff = Math.abs(a[0] - b[0]);
-    const lonDiff = Math.abs(a[1] - b[1]);
-    const latMean = (latDiff / 2) + Math.min(a[0], b[0]);
+    const latDiff = b[0] - a[0];
+    const lonDiff = b[1] - a[1];
+    const latMean = (parseFloat(a[0]) + parseFloat(b[0])) / 2;
     const y = latToMiles(latDiff);
     const x = lonToMiles(lonDiff, latMean);
-    return Math.sqrt((x ** 2) + (y ** 2));
+    return [x, y];
 }
 
 /**
@@ -166,4 +263,14 @@ export function lonToMiles(lonDiff, lat) {
 export function lonToMilesFactor(lat) {
     const radians = degreesToRadians(lat);
     return 69 * Math.cos(radians);
+}
+
+/**
+ * Convert radians to degrees.
+ *
+ * @param {number} radians
+ * @returns {number} Degrees
+ */
+function radiansToDegrees(radians) {
+    return (radians * 180) / Math.PI;
 }
