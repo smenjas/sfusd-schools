@@ -14,7 +14,7 @@ import { capitalizeWords } from '../public/string.js';
  * @param {string} address - A street address
  * @returns {?LatLon} Decimal degrees latitude and longitude
  */
-function getAddressCoords(addressData, address) {
+export function getAddressCoords(addressData, address) {
     address = normalizeAddress(address);
     const [num, street] = splitStreetAddress(address);
     return expandCoords(addressData[street][num]);
@@ -27,7 +27,7 @@ function getAddressCoords(addressData, address) {
  * @param {CNNPrefix} cnn - An intersection
  * @returns {LatLon} Decimal degrees latitude and longitude
  */
-function getJunctionCoords(jcts, cnn) {
+export function getJunctionCoords(jcts, cnn) {
     if (!(cnn in jcts)) {
         console.warn('getJunctionCoords():', cnn, 'not found');
         return;
@@ -55,7 +55,7 @@ function mapCNN(jcts, cnn) {
  */
 export function nameCNN(jcts, cnn) {
     if (!(cnn in jcts)) {
-        console.log('nameCNN():', cnn, 'not found');
+        //console.log('nameCNN():', cnn, 'not found');
         return;
     }
     const streets = jcts[cnn].streets;
@@ -139,7 +139,7 @@ function sortCNNs(jcts, distances, cnns, ll) {
             continue;
         }
         if (!(cnn in jcts)) {
-            console.log('sortCNNs():', cnn, 'not found');
+            //console.log('sortCNNs():', cnn, 'not found');
             distances[cnn] = Infinity;
             continue;
         }
@@ -161,7 +161,7 @@ function sortCNNs(jcts, distances, cnns, ll) {
  */
 function sortStreetCNNs(jcts, stJcts, distances, street, ll) {
     if (!(street in stJcts)) {
-        console.log('sortStreetCNNs():', street, 'not found');
+        //console.log('sortStreetCNNs():', street, 'not found');
         return;
     }
     return sortCNNs(jcts, distances, stJcts[street], ll);
@@ -218,7 +218,7 @@ function findPath(addressData, jcts, stJcts, start, end, place = '') {
      */
     function go(paths, here) {
         if (!(here in jcts)) {
-            console.log('go():', here, 'not found');
+            //console.log('go():', here, 'not found');
             return false;
         }
 
@@ -395,6 +395,10 @@ function sumDistances(addressData, jcts, path, start, end) {
  * @returns {CNNPrefixes} Intersections
  */
 export function findPathToSchool(addressData, jcts, stJcts, start, school) {
+    if (!school || !('address' in school)) {
+        console.warn('school data missing');
+        return [];
+    }
     const end = school.address;
     const place = `${school.name} ${school.types[0]}`;
     return findBestPath(addressData, jcts, stJcts, start, end, place);
@@ -465,7 +469,7 @@ function analyzePath(addressData, jcts, path, start, end, distance = null, beeli
  * @param {Junctions} jcts - All SF intersections
  * @returns {StreetJunctions} Intersections on each street
  */
-function getStreetJunctions(jcts) {
+export function getStreetJunctions(jcts) {
     const stJcts = {};
     for (const cnn in jcts) {
         const jct = jcts[cnn];
