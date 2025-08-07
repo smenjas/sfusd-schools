@@ -299,6 +299,12 @@ function findPath(addressData, jcts, stJcts, beelines, start, end, place = '') {
             return false;
         }
 
+        // Limit this path to a multiple of the distance "as the crow flies."
+        const factor = paths.distance / beeline;
+        if (factor >= maxFactor) {
+            return false;
+        }
+
         // Prioritize adjacent intersections by distance to the destination.
         const jct = jcts[here];
         sortCNNs(jcts, beelines[end], jct.adj, endLl);
@@ -332,8 +338,11 @@ function findPath(addressData, jcts, stJcts, beelines, start, end, place = '') {
     } // end go()
 
     // Limit execution.
-    const maxJcts = 1e3;
+    const maxJcts = 1e4;
     let jctCount = 0;
+    const beeline = howFarAddresses(addressData, start, end);
+    const maxFactor = 2;
+    //const maxFactor = 17;
 
     /** @type Paths */
     const paths = { found: false, path: [], distance: beelines[start][here] };
@@ -376,7 +385,7 @@ function findPath(addressData, jcts, stJcts, beelines, start, end, place = '') {
     /*
     const distance = shortest + beelines[end][there];
     const prefix = `${shortestCount}/${count}`;
-    analyzePath(addressData, jcts, path, start, end, distance, null, prefix, place);
+    analyzePath(addressData, jcts, path, start, end, distance, beeline, prefix, place);
     */
 
     return path;
