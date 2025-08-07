@@ -109,10 +109,10 @@ const start = '1700 Silver Ave'; // Silver Terrace Athletic Fields
 //const school = findSchool(schoolData, 'El Dorado', 'Elementary');
 //const school = findSchool(schoolData, 'Guadalupe', 'Elementary');
 //const school = findSchool(schoolData, 'Rooftop', 'Elementary');
-const school = findSchool(schoolData, 'Taylor', 'Elementary');
+//const school = findSchool(schoolData, 'Taylor', 'Elementary');
 //const school = findSchool(schoolData, 'Hoover', 'Middle');
 //const school = findSchool(schoolData, 'Burton', 'High');
 //const school = findSchool(schoolData, 'Life Learning', 'High');
 
-logKML(addressData, jcts, start, school); process.exit(0);
+//logKML(addressData, jcts, start, school); process.exit(0);
 const distances = findSchoolDistances(addressData, schoolData, jcts, start);
