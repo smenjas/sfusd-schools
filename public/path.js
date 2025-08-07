@@ -113,6 +113,38 @@ function logCNNs(jcts, cnns) {
 }
 
 /**
+ * Determine whether an intersection is on a highway.
+ *
+ * @param {Junctions} jcts - All SF intersections
+ * @param {CNNPrefix} here - The intersection to examine
+ * @returns {boolean} Whether the intersection is on a highway
+ */
+function onHwy(jcts, here) {
+    const jct = jcts[here];
+    for (const st of jct.streets) {
+        if (st.endsWith('BOUND')) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * If on a highway, prioritize staying on it.
+ *
+ * @param {Junctions} jcts - All SF intersections
+ * @param {CNNPrefixes} cnns - Intersections to sort
+ * @param {CNNPrefix} here - The current intersection
+ * @returns {CNNPrefixes} Intersections
+ */
+function stayOnHwy(jcts, cnns, here) {
+    if (!onHwy(jcts, here)) {
+        return cnns;
+    }
+    return cnns.sort((a, b) => onHwy(jcts, a) - onHwy(jcts, b));
+}
+
+/**
  * Sort intersections by distance to the given coordinates.
  *
  * @param {Junctions} jcts - All SF intersections
@@ -276,6 +308,7 @@ function findPath(addressData, jcts, stJcts, beelines, start, end, place = '') {
         // Prioritize adjacent intersections by distance to the destination.
         const jct = jcts[here];
         sortCNNs(jcts, beelines[end], jct.adj, endLl);
+        stayOnHwy(jcts, jct.adj, here);
 
         // Visit adjacent intersections to this one.
         for (const cnn of jct.adj) {
