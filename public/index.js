@@ -5,7 +5,8 @@
 import { fixNumberedStreets,
          replaceStreetSuffixes,
          splitStreetAddress } from './address.js';
-import { compressWhitespace,
+import { capitalizeWords,
+         compressWhitespace,
          removeAccents,
          removePunctuation } from './string.js';
 import { expandCoords, getDirectionsURL, getMapURL, howFar } from './geo.js';
@@ -1279,6 +1280,9 @@ function suggestAddresses(addresses) {
     const datalist = document.getElementById('addresses');
     if (!datalist) {
         return;
+    }
+    for (let i = 0; i < addresses.length; i++) {
+        addresses[i] = capitalizeWords(addresses[i], true);
     }
     datalist.innerHTML = renderOptions(arrayToMap(addresses));
 }
