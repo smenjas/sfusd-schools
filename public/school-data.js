@@ -1,11 +1,18 @@
 /**
- * Data about primary and secondary public schools in San Francisco,
- * California.
+ * Primary and secondary public schools in San Francisco, California
  *
  * @module public/school-data
  */
 
 /**
+ * Decimal degrees latitude and longitude
+ *
+ * @typedef {Array.<number>} LatLon
+ */
+
+/**
+ * A public school in San Francisco, California
+ *
  * @typedef {Object} School
  * @property {?number} code - The SFUSD school code
  * @property {string} prefix - The prefix part of the school's name
@@ -18,7 +25,7 @@
  * @property {string} neighborhood - The school's neighborhood
  * @property {string} address - The school's street address
  * @property {string} zip - The school's zip code
- * @property {Array.<number>} ll - Latitude and longitude, in decimal degrees
+ * @property {LatLon} ll - Latitude and longitude, in decimal degrees
  * @property {?number} usnews - The school's US News rank
  * @property {?number} greatschools - The school's GreatSchools score, out of 10
  * @property {boolean} pk - Whether the school has pre-kindergarten
@@ -44,8 +51,19 @@
  */
 
 /**
- * @type {Array.<School>}
+ * All (city, not county) public schools in San Francisco, California
+ *
+ * City public schools are:
+ *
+ * - non-charter schools that caregivers apply to by ranking those they prefer
+ * - charter schools that caregivers must apply to individually
+ *
+ * County public schools serve specific students, and are not listed here.
+ *
+ * @typedef {Array.<School>} Schools
  */
+
+/** @type Schools */
 export default [
     {
         code: 507,
