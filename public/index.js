@@ -247,7 +247,7 @@ function formatOrdinal(num) {
 /**
  * Get all the grade levels in the given schools.
  *
- * @param {Array.<School>} schools - Data about some schools
+ * @param {Schools} schools - Data about some schools
  * @returns {Map} Menu option values and names for grade levels
  */
 function getSchoolGrades(schools, selected) {
@@ -281,7 +281,7 @@ function getSchoolGrades(schools, selected) {
 /**
  * Render a select menu for school grade levels.
  *
- * @param {Array.<School>} schoolData - Data about all schools
+ * @param {Schools} schoolData - Data about all schools
  * @param {Object.<string, string>} menus - Select menu input values
  * @returns {string} An HTML select menu
  */
@@ -294,7 +294,7 @@ function renderGradeMenu(schoolData, menus) {
 /**
  * Get all the language programs in the given schools.
  *
- * @param {Array.<School>} schools - Data about some schools
+ * @param {Schools} schools - Data about some schools
  * @returns {Map} Menu option values and names for language programs
  */
 function getLanguages(schools, selected) {
@@ -317,7 +317,7 @@ function getLanguages(schools, selected) {
 /**
  * Render a select menu for school language programs.
  *
- * @param {Array.<School>} schoolData - Data about all schools
+ * @param {Schools} schoolData - Data about all schools
  * @param {Object.<string, string>} menus - Select menu input values
  * @returns {string} An HTML select menu
  */
@@ -330,7 +330,7 @@ function renderLanguageMenu(schoolData, menus) {
 /**
  * Get all the neighborhoods the given schools are in.
  *
- * @param {Array.<School>} schools - Data about some schools
+ * @param {Schools} schools - Data about some schools
  * @returns {Map} Menu option values and names for neighborhoods
  */
 function getNeighborhoods(schools, selected) {
@@ -350,7 +350,7 @@ function getNeighborhoods(schools, selected) {
 /**
  * Render a select menu for neighborhoods.
  *
- * @param {Array.<School>} schoolData - Data about all schools
+ * @param {Schools} schoolData - Data about all schools
  * @param {Object.<string, string>} menus - Select menu input values
  * @returns {string} An HTML select menu
  */
@@ -363,7 +363,7 @@ function renderNeighborhoodMenu(schoolData, menus) {
 /**
  * Get all the school types to choose from, e.g. Elementary.
  *
- * @param {Array.<School>} schools - Data about some schools
+ * @param {Schools} schools - Data about some schools
  * @returns {Map} Menu option values and names for school types
  */
 function getSchoolTypes(schools, selected) {
@@ -398,7 +398,7 @@ function getSchoolTypes(schools, selected) {
 /**
  * Render a select menu for school types, e.g. Elementary.
  *
- * @param {Array.<School>} schoolData - Data about all schools
+ * @param {Schools} schoolData - Data about all schools
  * @param {Object.<string, string>} menus - Select menu input values
  * @returns {string} An HTML select menu
  */
@@ -411,7 +411,7 @@ function renderTypeMenu(schoolData, menus) {
 /**
  * Get school start times to choose from.
  *
- * @param {Array.<School>} schools - Data about some schools
+ * @param {Schools} schools - Data about some schools
  * @returns {Map} Menu option values and names for start times
  */
 function getStartTimes(schools, selected) {
@@ -446,7 +446,7 @@ function getStartTimes(schools, selected) {
 /**
  * Render a select menu for school start times.
  *
- * @param {Array.<School>} schoolData - Data about all schools
+ * @param {Schools} schoolData - Data about all schools
  * @param {Object.<string, string>} menus - Select menu input values
  * @returns {string} An HTML select menu
  */
@@ -459,7 +459,7 @@ function renderStartTimeMenu(schoolData, menus) {
 /**
  * Get which schools each school feeds into.
  *
- * @param {Array.<School>} schools - Data about some schools
+ * @param {Schools} schools - Data about some schools
  * @returns {Map} Menu option values and names for target schools
  */
 function getTargets(schools, selected) {
@@ -485,7 +485,7 @@ function getTargets(schools, selected) {
 /**
  * Render a select menu for which school each school feeds into.
  *
- * @param {Array.<School>} schoolData - Data about all schools
+ * @param {Schools} schoolData - Data about all schools
  * @param {Object.<string, string>} menus - Select menu input values
  * @returns {string} An HTML select menu
  */
@@ -498,7 +498,7 @@ function renderTargetMenu(schoolData, menus) {
 /**
  * Get maximum school commute distances.
  *
- * @param {Array.<School>} schools - Data about some schools
+ * @param {Schools} schools - Data about some schools
  * @returns {Map} Menu option values and names for commute distances
  */
 function getDistances(schools, selected) {
@@ -528,7 +528,7 @@ function getDistances(schools, selected) {
 /**
  * Render a select menu for maximum school commute distances.
  *
- * @param {Array.<School>} schoolData - Data about all schools
+ * @param {Schools} schoolData - Data about all schools
  * @param {Object.<string, string>} menus - Select menu input values
  * @returns {string} An HTML select menu
  */
@@ -610,7 +610,7 @@ function renderAddressInput() {
  * Render an HTML form, for filtering and sorting school data.
  *
  * @param {Object.<string, boolean>} shown - Which fields are shown
- * @param {Array.<School>} schoolData - Data about all schools
+ * @param {Schools} schoolData - Data about all schools
  * @param {Object} inputs - Form input values
  * @returns {string} An HTML form
  */
@@ -814,7 +814,7 @@ function renderSchoolName(school) {
  * Render one school's data as a table row.
  *
  * @param {Object.<string, boolean>} shown - Which fields are shown
- * @param {Array.<School>} schools - Data about some schools
+ * @param {Schools} schools - Data about some schools
  * @param {string} address - A street address
  * @returns {string} An HTML table row
  */
@@ -877,7 +877,7 @@ function renderRow(shown, school, address) {
  * Render school data as an HTML table.
  *
  * @param {Object.<string, boolean>} shown - Which fields are shown
- * @param {Array.<School>} schools - Data about some schools
+ * @param {Schools} schools - Data about some schools
  * @param {string} address - A street address
  * @returns {string} An HTML table
  */
@@ -1055,7 +1055,7 @@ function filterSchool(school, filters) {
 /**
  * Determine whether to show each school, based on multiple criteria.
  *
- * @param {Array.<School>} schoolData - Data about all schools
+ * @param {Schools} schoolData - Data about all schools
  * @param {Object.<string, string>} menus - Select menu input values
  * @param {?string} [menu=null] - Menu to exclude from filtering
  * @param {Array.<Object>} Data about some schools
@@ -1077,7 +1077,7 @@ function filterSchools(schoolData, menus, menu = null) {
 /**
  * Sort schools, based on multiple criteria, in place.
  *
- * @param {Array.<School>} schools - Data about some schools
+ * @param {Schools} schools - Data about some schools
  * @param {string} sort - Which field to sort by
  */
 function sortSchools(schools, sort) {
@@ -1253,9 +1253,9 @@ function getSchoolName(school, campus = true) {
  * Update the distance between each school and the user's location.
  *
  * @param {StreetAddresses} addressData - All SF street addresses
- * @param {Array.<School>} schoolData - Data about all schools
+ * @param {Schools} schoolData - Data about all schools
  * @param {Object.<string, string>} inputs - Form input values
- * @param {Array.<number>} coords - Degrees latitude and longitude
+ * @param {?LatLon} coords - Degrees latitude and longitude
  * @returns {boolean} Whether the page rendered
  */
 function updateDistances(addressData, schoolData, inputs, coords) {
@@ -1340,17 +1340,17 @@ function findAddressSuggestions(addressData, num, nonstd, std) {
  *
  * @param {StreetAddresses} addressData - All SF street addresses
  * @param {string} address - A street address, from form input
- * @returns {Array.<number>} Degrees latitude and longitude
+ * @returns {?LatLon} Degrees latitude and longitude
  */
 function findAddress(addressData, address) {
     let [num, nonstd] = splitStreetAddress(address);
     if (!nonstd) {
         suggestAddresses([]);
-        return;
+        return null;
     }
     if (isNaN(num)) {
         suggestAddresses([]);
-        return;
+        return null;
     }
     nonstd = removeAccents(nonstd);
     nonstd = compressWhitespace(nonstd);
@@ -1362,10 +1362,10 @@ function findAddress(addressData, address) {
         if (addresses.length <= 10) {
             suggestAddresses(addresses);
         }
-        return;
+        return null;
     }
     if (!(num in addressData[std])) {
-        return;
+        return null;
     }
     return expandCoords(addressData[std][num]);
 }
@@ -1373,7 +1373,7 @@ function findAddress(addressData, address) {
 /**
  * Find which columns ought to be shown, based on school data.
  *
- * @param {Array.<School>} schools - Data about some schools
+ * @param {Schools} schools - Data about some schools
  * @returns {Object.<string, boolean>} Which fields to show
  */
 function findShownColumns(schools) {
@@ -1411,9 +1411,9 @@ function findShownColumns(schools) {
  * Add event listeners to process form inputs, and update the page.
  *
  * @param {StreetAddresses} addressData - All SF street addresses
- * @param {Array.<School>} schoolData - Data about all schools
+ * @param {Schools} schoolData - Data about all schools
  * @param {Object.<string, string>} inputs - Form input values
- * @param {Array.<number>} coords - Degrees latitude and longitude
+ * @param {?LatLon} coords - Degrees latitude and longitude
  */
 function addEventListeners(addressData, schoolData, inputs, coords) {
     // Remove existing event listeners.
@@ -1473,9 +1473,9 @@ function addEventListeners(addressData, schoolData, inputs, coords) {
  * Render a web page, showing a form and school data as a table.
  *
  * @param {StreetAddresses} addressData - All SF street addresses
- * @param {Array.<School>} schoolData - Data about all schools
+ * @param {Schools} schoolData - Data about all schools
  * @param {Object.<string, string>} inputs - Form input values
- * @param {Array.<number>} coords - Degrees latitude and longitude
+ * @param {?LatLon} coords - Degrees latitude and longitude
  */
 function renderPage(addressData, schoolData, inputs, coords) {
     const schools = filterSchools(schoolData, inputs.menus);
