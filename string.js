@@ -4,6 +4,35 @@
  */
 
 /**
+ * Capitalize the first word in a string.
+ *
+ * @param {string} str - A string
+ * @param {boolean} [lower=false] - Whether to make all other letters lowercase
+ * @returns {string} A capitalized string
+ */
+export function capitalize(str, lower = false) {
+    if (lower) {
+        str = str.toLowerCase();
+    }
+    return str.at(0).toUpperCase() + str.slice(1);
+}
+
+/**
+ * Capitalize each word in a string.
+ *
+ * @param {string} str - A string
+ * @param {boolean} [lower=false] - Whether to make all other letters lowercase
+ * @returns {string} A capitalized string
+ */
+export function capitalizeWords(str, lower = false) {
+    const words = str.split(' ');
+    for (let i = 0; i < words.length; i++) {
+        words[i] = capitalize(words[i], lower);
+    }
+    return words.join(' ');
+}
+
+/**
  * Compress whitespace in a string.
  *
  * @param {string} str - A string with redundant whitespace, possibly
