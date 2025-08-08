@@ -7,10 +7,13 @@
  * Expand the decimal portion of geographic coordinates to include the whole
  * numbers for San Francisco, California: 37°N, 122°W.
  *
- * @param {Array.<number>} coords - Decimal portion of ° latitude, longitude
- * @returns {Array.<number>} Degrees latitude and longitude
+ * @param {?LatLonDecimals} coords - Decimal portion of ° latitude, longitude
+ * @returns {?LatLon} Degrees latitude and longitude
  */
 export function expandCoords(coords) {
+    if (!coords) {
+        return null
+    }
     const [lat, lon] = coords;
     return [`37.${lat}`, `-122.${lon}`];
 }
@@ -47,8 +50,8 @@ export function getMapURL(search) {
 /**
  * Calculate the distance between two sets of geographic coordinates.
  *
- * @param {Array.<number>} a - Decimal degrees latitude and longitude
- * @param {Array.<number>} b - Decimal degrees latitude and longitude
+ * @param {?LatLon} a - Decimal degrees latitude and longitude
+ * @param {?LatLon} b - Decimal degrees latitude and longitude
  * @returns {?number} Distance in miles
  */
 export function howFar(a, b) {
