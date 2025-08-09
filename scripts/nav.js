@@ -12,6 +12,7 @@ import { findSchoolDistances,
          nameCNN } from './path.js';
 import { capitalizeWords } from '../public/string.js';
 import addressData from '../public/address-data.js';
+import commuteData from './commute-data.js';
 import schoolData from '../public/school-data.js';
 
 /**
