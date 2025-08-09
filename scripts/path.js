@@ -366,7 +366,7 @@ export function addressesHowFar(addressData, start, end) {
  * @param {string} end - The ending street address
  * @returns {number} Distance in miles
  */
-function sumDistances(addressData, jcts, path, start, end) {
+export function sumDistances(addressData, jcts, path, start, end) {
     if (!Array.isArray(path) || path.length < 1) {
         return 0;
     }
