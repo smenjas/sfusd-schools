@@ -4,10 +4,12 @@
 
 import jcts from './sf-junctions.js';
 import { kmlDoc } from './kml.js';
+import { mean, median } from './stat.js';
 import { normalizeAddress, splitStreetAddress } from '../public/address.js';
 import { expandCoords, getCoordsURL, howFar } from '../public/geo.js';
 import { capitalizeWords } from '../public/string.js';
 import addressData from '../public/address-data.js';
+import commuteData from './commute-data.js';
 import schoolData from '../public/school-data.js';
 
 /**
@@ -537,6 +539,94 @@ function analyzePath(addressData, jcts, path, start, end, distance = null, beeli
 }
 
 /**
+ * Compare distances.
+ *
+ * @param {StreetAddresses} addressData - All SF street addresses
+ * @param {Array.<Object>} commuteData
+ * @param {Junctions} jcts - All SF intersections
+ * @returns {CNNPrefixes} path - Intersections
+ * @param {string} start - The starting street address
+ * @param {string} end - The ending street address
+ * @param {string} name - The school name
+ * @param {string} type - The school type
+ * @param {Object} pcts - Distance discrepancies as percentages
+ */
+function compareDistance(addressData, commuteData, jcts, path, start, end, name, type, pcts) {
+    const distance = sumDistances(addressData, jcts, path, start, end);
+    const beeline = addressesHowFar(addressData, start, end);
+    const distanceMi = parseFloat(distance.toFixed(1));
+    const beelineMi = parseFloat(beeline.toFixed(1));
+
+    name = name.replace('San Francisco', 'SF');
+    const school = getSchoolCommuteData(commuteData, name, type);
+    if (!school) return;
+    const { distance: commute, drive, bike } = school;
+    const pctDiff = Math.round(((commute - distance) / commute) * 100);
+    pcts[`${name} ${type}`] = pctDiff;
+
+    /*
+    console.log('\t',
+        beelineMi, '\t',
+        distanceMi, '\t',
+        parseFloat(commute), '\t',
+        `${pctDiff}%\t`,
+        //'drive:', drive, 'min.\t',
+        //'bike:', bike, 'min.\t',
+        name, type);
+    */
+}
+
+/**
+ * Compare distances.
+ *
+ * @param {Object} pcts - Distance discrepancies as percentages
+ */
+function compareDistances(pcts) {
+    let minPct = Infinity;
+    let minSch = '';
+    let maxPct = -Infinity;
+    let maxSch = '';
+    let totalPcts = 0;
+
+    for (const school in pcts) {
+        const pct = pcts[school];
+        if (pct < minPct) {
+            minPct = pct;
+            minSch = school;
+        }
+        if (pct > maxPct) {
+            maxPct = pct;
+            maxSch = school;
+        }
+        totalPcts += Math.abs(pct);
+    }
+
+    console.log('Minimum percent:   ', `${minPct.toFixed(0)}%`, minSch);
+    console.log('Median discrepancy:', `${median(Object.values(pcts)).toFixed(0)}%`);
+    console.log('Mean discrepancy:  ', `${mean(Object.values(pcts)).toFixed(0)}%`);
+    console.log('Maximum percent:   ', `${maxPct.toFixed(0)}%`, maxSch);
+    console.log('Percentages sum:   ', `${totalPcts.toFixed(0)}%`);
+}
+
+/**
+ * Get school commute data.
+ *
+ * @param {Array.<Object>} commuteData - Distance and travel times to schools
+ * @param {string} name - The school name
+ * @param {string} type - The school type
+ * @returns {?Object} School commute data
+ */
+function getSchoolCommuteData(commuteData, name, type) {
+    for (const school of commuteData) {
+        if (school.name === name && school.type === type) {
+            return school;
+        }
+    }
+    console.log('No match found for:', name, type);
+    return null;
+}
+
+/**
  * Look up intersections by street name.
  *
  * @typedef {Object.<Street, CNNPrefixes>} StreetJunctions
@@ -582,9 +672,12 @@ const start = '1700 Silver Ave'; // Silver Terrace Athletic Fields
 
 //logKML(addressData, jcts, start, school); process.exit(0);
 
+const pcts = {};
 for (const school of schoolData) {
     const path = findPathToSchool(addressData, jcts, start, school);
     const end = school.address;
     const place = `${school.name} ${school.types[0]}`;
-    analyzePath(addressData, jcts, path, start, end, null, null, '', place);
+    //analyzePath(addressData, jcts, path, start, end, null, null, '', place);
+    compareDistance(addressData, commuteData, jcts, path, start, end, school.name, school.types[0], pcts);
 }
+compareDistances(pcts);
