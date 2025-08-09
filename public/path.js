@@ -413,7 +413,7 @@ function findPath(addressData, jcts, stJcts, beelines, start, end, place = '') {
  * @param {string} end - The ending street address
  * @returns {number} Distance in miles
  */
-function howFarAddresses(addressData, start, end) {
+export function howFarAddresses(addressData, start, end) {
     const startLl = getAddressCoords(addressData, start);
     const endLl = getAddressCoords(addressData, end);
     return howFar(startLl, endLl);
@@ -443,7 +443,7 @@ function howFarJunctions(jcts, start, end) {
  * @param {string} end - The ending street address
  * @returns {number} Distance in miles
  */
-function sumDistances(addressData, jcts, path, start, end) {
+export function sumDistances(addressData, jcts, path, start, end) {
     if (!Array.isArray(path) || path.length < 1) {
         return 0;
     }
@@ -575,7 +575,6 @@ export function getStreetJunctions(jcts) {
 export function findSchoolDistances(addressData, schoolData, jcts, start) {
     const stJcts = getStreetJunctions(jcts);
     const beelines = {};
-    const pcts = {};
     const distances = {};
     for (const school of schoolData) {
         const path = findPathToSchool(addressData, jcts, stJcts, beelines, start, school);
