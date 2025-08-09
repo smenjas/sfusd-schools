@@ -390,7 +390,7 @@ function findPath(addressData, jcts, stJcts, beelines, start, end, place = '') {
  * @param {?string} [end=null] - The ending street address
  * @returns {number} Distance in miles
  */
-export function sumDistances(addressData, jcts, path, start, end) {
+export function sumDistances(addressData, jcts, path, start = null, end = null) {
     if (!Array.isArray(path) || path.length < 1) {
         return howFarAddresses(addressData, start, end);
     }
