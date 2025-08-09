@@ -4,13 +4,16 @@
 
 import dotenv from 'dotenv';
 import { getRouteData } from './gmaps.js';
+import { mean, median } from './stat.js';
 import { kmlDoc } from '../public/kml.js';
 import { findSchoolDistances,
          findPathToSchool,
          getAddressCoords,
          getJunctionCoords,
          getStreetJunctions,
-         nameCNN } from '../public/path.js';
+         howFarAddresses,
+         nameCNN,
+         sumDistances } from '../public/path.js';
 import { normalizeAddress } from '../public/address.js';
 import { metersToMiles } from '../public/geo.js';
 import { capitalizeWords } from '../public/string.js';
@@ -106,7 +109,7 @@ function logKML(addressData, jcts, start, school) {
  * @param {Schools} schoolData - All SF public schools
  * @param {string} start - The starting street address
  * @param {string} end - The ending street address
- * @returns {Object}
+ * @returns {Object} Distance and travel time for a given route
  */
 async function getSchoolRoute(start, end) {
     start = normalizeAddress(start);
@@ -130,7 +133,7 @@ async function getSchoolRoute(start, end) {
  *
  * @param {Schools} schoolData - All SF public schools
  * @param {string} start - The starting street address
- * @returns {Object}
+ * @returns {Object} Distances and travel times
  */
 async function getSchoolRoutes(schoolData, start) {
     const data = {};
@@ -139,6 +142,99 @@ async function getSchoolRoutes(schoolData, start) {
         data[std] = await getSchoolRoute(start, school.address);
     }
     return data;
+}
+
+function logNewRouteData() {
+    let hits = 0;
+    let misses = 0;
+    const gmData = {};
+    for (const origin of origins) {
+        const pcts = {};
+        for (const school of schoolData) {
+            compareDistance(addressData, gmapsData, jcts, path, origin,
+                school.address, school.name, school.types[0], pcts);
+        }
+        compareDistances(pcts);
+    }
+    console.log('//', {hits, misses});
+    console.log('export default', gmData);
+}
+
+/**
+ * Compare distances.
+ *
+ * @param {StreetAddresses} addressData - All SF street addresses
+ * @param {Array.<Object>} gmapsData - Distances and travel times
+ * @param {Junctions} jcts - All SF intersections
+ * @returns {CNNPrefixes} path - Intersections
+ * @param {string} start - The starting street address
+ * @param {string} end - The ending street address
+ * @param {string} name - The school name
+ * @param {string} type - The school type
+ * @param {Object} pcts - Distance discrepancies as percentages
+ */
+function compareDistance(addressData, gmapsData, jcts, path, start, end, name, type, pcts) {
+    const distance = sumDistances(addressData, jcts, path, start, end);
+    const beeline = howFarAddresses(addressData, start, end);
+    if (!beeline) {
+        console.log('Cannot calculate beeline for:', name, type);
+        return;
+    }
+    const distanceMi = parseFloat(distance.toFixed(1));
+    const beelineMi = parseFloat(beeline.toFixed(1));
+
+    name = name.replace('San Francisco', 'SF');
+    start = normalizeAddress(start);
+    end = normalizeAddress(end);
+    if (!(start in gmapsData) | !(end in gmapsData[start])) {
+        return;
+    }
+    const { m, s } = gmapsData[start][end];
+    const commute = metersToMiles(m);
+    const pctDiff = Math.round(((commute - distance) / commute) * 100);
+    pcts[`${name} ${type}`] = pctDiff;
+
+    /*
+    console.log('\t',
+        beelineMi, '\t',
+        distanceMi, '\t',
+        parseFloat(commute), '\t',
+        `${pctDiff}%\t`,
+        //'drive:', s / 60, 'min.\t',
+        name, type);
+    */
+}
+
+/**
+ * Compare distances.
+ *
+ * @param {Object} pcts - Distance discrepancies as percentages
+ */
+function compareDistances(pcts) {
+    let minPct = Infinity;
+    let minSch = '';
+    let maxPct = -Infinity;
+    let maxSch = '';
+    let totalPcts = 0;
+
+    for (const school in pcts) {
+        const pct = pcts[school];
+        if (pct < minPct) {
+            minPct = pct;
+            minSch = school;
+        }
+        if (pct > maxPct) {
+            maxPct = pct;
+            maxSch = school;
+        }
+        totalPcts += Math.abs(pct);
+    }
+
+    console.log('Minimum percent:   ', `${minPct.toFixed(0)}%`, minSch);
+    console.log('Median discrepancy:', `${median(Object.values(pcts)).toFixed(0)}%`);
+    console.log('Mean discrepancy:  ', `${mean(Object.values(pcts)).toFixed(0)}%`);
+    console.log('Maximum percent:   ', `${maxPct.toFixed(0)}%`, maxSch);
+    console.log('Percentages sum:   ', `${totalPcts.toFixed(0)}%`);
 }
 
 const origins = [
@@ -182,13 +278,16 @@ const origins = [
 //console.log(start);
 //logKML(addressData, jcts, start, school);
 //const distances = findSchoolDistances(addressData, schoolData, jcts, start);
+//logNewRouteData();
 
-let hits = 0;
-let misses = 0;
-const gmData = {};
+const stJcts = getStreetJunctions(jcts);
+const beelines = {};
 for (const origin of origins) {
-    const data = await getSchoolRoutes(schoolData, origin);
-    gmData[normalizeAddress(origin)] = data;
+    const pcts = {};
+    for (const school of schoolData) {
+        const path = findPathToSchool(addressData, jcts, stJcts, beelines, origin, school);
+        compareDistance(addressData, gmapsData, jcts, path, origin,
+            school.address, school.name, school.types[0], pcts);
+    }
+    compareDistances(pcts);
 }
-console.log('//', {hits, misses});
-console.log('export default', gmData);
