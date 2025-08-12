@@ -29,6 +29,7 @@
     "jsdom": "^26.1.0"
   },
   "devDependencies": {
+    "dotenv": "^17.2.1",
     "jsdoc": "^4.0.4"
   }
 }
