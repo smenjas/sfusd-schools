@@ -2,6 +2,8 @@
  * @file Navigate between places in San Francisco, California.
  */
 
+import dotenv from 'dotenv';
+import { getRouteData } from './gmaps.js';
 import jcts from './sf-junctions.js';
 import { kmlDoc } from './kml.js';
 import { findSchoolDistances,
@@ -14,6 +16,8 @@ import { capitalizeWords } from '../public/string.js';
 import addressData from '../public/address-data.js';
 import commuteData from './commute-data.js';
 import schoolData from '../public/school-data.js';
+
+dotenv.config({ path: '../.env', quiet: true });
 
 /**
  * Find a school.
@@ -114,5 +118,15 @@ const start = '1700 Silver Ave'; // Silver Terrace Athletic Fields
 //const school = findSchool(schoolData, 'Burton', 'High');
 //const school = findSchool(schoolData, 'Life Learning', 'High');
 
-//logKML(addressData, jcts, start, school); process.exit(0);
-const distances = findSchoolDistances(addressData, schoolData, jcts, start);
+console.log(start);
+//logKML(addressData, jcts, start, school);
+//const distances = findSchoolDistances(addressData, schoolData, jcts, start);
+//process.exit(0);
+
+for (const school of schoolData) {
+    const { miles, seconds } = await getRouteData(start, school.address);
+    //const minutes = seconds / 60;
+    //const mph = miles / (seconds / 3600);
+    //console.log({ miles, seconds, minutes, mph });
+    console.log(miles.toFixed(1), school.name, school.types[0]);
+}
