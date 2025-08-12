@@ -602,6 +602,7 @@ export function findSchoolDistances(addressData, schoolData, jcts, start) {
         //const beeline = howFarAddresses(addressData, start, end);
         //const place = `${school.name} ${type}`;
         //analyzePath(addressData, jcts, path, start, end, distance, beeline, '', place);
+        console.log(distance.toFixed(1), school.name, school.types[0]);
         if (!(type in distances)) distances[type] = {};
         distances[type][school.name] = distance;
     }
