@@ -16,7 +16,8 @@ import { azimuthToDirection,
          latToMiles,
          latToMilesFactor,
          lonToMiles,
-         lonToMilesFactor } from '../public/geo.js';
+         lonToMilesFactor,
+         metersToMiles } from '../public/geo.js';
 import Test from '../scripts/test.js';
 
 export default class GeoTest {
@@ -137,5 +138,12 @@ export default class GeoTest {
             [[0], 69],
         ];
         return Test.run(lonToMilesFactor, tests);
+    }
+
+    static metersToMiles() {
+        const tests = [
+            [[1609.3444978925634], 1],
+        ];
+        return Test.run(metersToMiles, tests);
     }
 }
