@@ -221,6 +221,7 @@ export default class Test {
             GeoTest.latToMiles,
             GeoTest.lonToMiles,
             GeoTest.lonToMilesFactor,
+            GeoTest.metersToMiles,
             HTMLTest.renderAddressInput,
             HTMLTest.renderDirectionsLink,
             HTMLTest.renderLink,
