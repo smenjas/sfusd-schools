@@ -230,6 +230,7 @@ export default class Test {
             GeoTest.latToMilesFactor,
             GeoTest.lonToMiles,
             GeoTest.lonToMilesFactor,
+            GeoTest.metersToMiles,
             GeoTest.milesToFeet,
             GeoTest.normalizeDegrees,
             GeoTest.radiansToDegrees,

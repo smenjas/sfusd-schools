@@ -361,6 +361,16 @@ export function lonToMilesFactor(lat) {
 }
 
 /**
+ * Convert meters to miles.
+ *
+ * @param {number} meters - A distance in meters
+ * @returns {number} A distance in miles
+ */
+export function metersToMiles(meters) {
+    return meters * 0.000621371;
+}
+
+/**
  * Convert miles to feet.
  *
  * @param {number} miles - A distance in miles
