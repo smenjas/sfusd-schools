@@ -18,6 +18,14 @@ import { capitalizeWords } from '../public/string.js';
 export function getAddressCoords(addressData, address) {
     address = normalizeAddress(address);
     const [num, street] = splitStreetAddress(address);
+    if (!(street in addressData)) {
+        console.log('Cannot find street:', street);
+        return null;
+    }
+    if (!(num in addressData[street])) {
+        console.log('Cannot find number:', num, 'on', street);
+        return null;
+    }
     return expandCoords(addressData[street][num]);
 }
 
@@ -45,6 +53,33 @@ export function getJunctionCoords(jcts, cnn) {
  */
 function mapCNN(jcts, cnn) {
     return getCoordsURL(getJunctionCoords(jcts, cnn));
+}
+
+/**
+ * Sort CNNs by distance to the given coordinates, along a given street.
+ *
+ * @param {Junctions} jcts - All SF intersections
+ * @param {Object.<CNNPrefix, number>} distances - Distances in miles
+ * @param {LatLon} ll - Degrees latitude and longitude
+ * @returns {CNNPrefix} The nearest intersection
+ */
+function findNearestJunction(jcts, distances, ll) {
+    let min = Infinity;
+    let minCNN = null;
+    for (const cnn in jcts) {
+        if (cnn in distances) {
+            continue;
+        }
+        const coords = getJunctionCoords(jcts, cnn);
+        const distance = howFar(ll, coords);
+        distances[cnn] = distance;
+        if (distance < min) {
+            min = distance;
+            minCNN = cnn;
+        }
+    }
+    //console.log('findNearestJunction():', minCNN, 'is', min, 'mi. away.');
+    return minCNN;
 }
 
 /**
@@ -186,20 +221,38 @@ function findPath(addressData, jcts, stJcts, start, end, place = '') {
     // Get the starting coordinates.
     start = normalizeAddress(start);
     const [startNum, startSt] = splitStreetAddress(start);
+    if (!(startSt in addressData)) {
+        console.log('Cannot find street:', startSt);
+        return [];
+    }
+    if (!(startNum in addressData[startSt])) {
+        console.log('Cannot find number:', startNum, 'on', startSt);
+        return [];
+    }
     const startLl = expandCoords(addressData[startSt][startNum]);
 
     // Which intersection is nearest to the start?
     const startCNNs = sortStreetCNNs(jcts, stJcts, toStart, startSt, startLl);
-    let here = startCNNs[0];
+    let here = startCNNs.length ? startCNNs[0] :
+        findNearestJunction(jcts, toStart, startLl);
 
     // Get the ending coordinates.
     end = normalizeAddress(end);
     const [endNum, endSt] = splitStreetAddress(end);
+    if (!(endSt in addressData)) {
+        console.log('Cannot find street:', endSt);
+        return [];
+    }
+    if (!(endNum in addressData[endSt])) {
+        console.log('Cannot find number:', endNum, 'on', endSt);
+        return [];
+    }
     const endLl = expandCoords(addressData[endSt][endNum]);
 
     // Which intersection is nearest to the end?
     const endCNNs = sortStreetCNNs(jcts, stJcts, fromEnd, endSt, endLl);
-    const there = parseInt(endCNNs[0]);
+    const there = endCNNs.length ? parseInt(endCNNs[0]) :
+        findNearestJunction(jcts, fromEnd, endLl);
 
     /**
      * A deeply nested record of paths to a destination.
