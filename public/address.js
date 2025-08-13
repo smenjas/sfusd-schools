@@ -64,7 +64,7 @@ export function replaceStreetSuffixes(address) {
     };
     for (const abbr in suffixes) {
         const suffix = suffixes[abbr];
-        const re = new RegExp(`\\b${suffix}\\b`);
+        const re = new RegExp(`\\b${suffix}$`);
         address = address.replace(re, abbr);
     }
     return address;
