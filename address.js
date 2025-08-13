@@ -67,16 +67,23 @@ export function getStreetSuffixes() {
  * Replace street suffixes with standard abbreviations.
  *
  * @param {string} address - A street address, capitalized
+ * @param {boolean} omitsNumber - Whether the street number is omitted
  * @returns {string} A standardized street address
  */
-export function replaceStreetSuffixes(address) {
+export function replaceStreetSuffixes(address, omitsNumber = false) {
     const suffixes = getStreetSuffixes();
-    for (const abbr in suffixes) {
-        const suffix = suffixes[abbr];
-        const re = new RegExp(`\\b${suffix}\\b`);
-        address = address.replace(re, abbr);
+    const parts = address.split(' ');
+    const begin = omitsNumber ? 1 : 2;
+    for (let i = begin; i < parts.length; i++) {
+        let part = parts[i];
+        for (const abbr in suffixes) {
+            const suffix = suffixes[abbr];
+            const re = new RegExp(`^${suffix}$`);
+            part = part.replace(re, abbr);
+        }
+        parts[i] = part;
     }
-    return address;
+    return parts.join(' ');
 }
 
 /**

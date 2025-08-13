@@ -1355,8 +1355,7 @@ function findAddress(addressData, address) {
     nonstd = removeAccents(nonstd);
     nonstd = compressWhitespace(nonstd);
     nonstd = nonstd.toUpperCase();
-    nonstd = replaceStreetSuffixes(nonstd);
-    const std = fixNumberedStreets(removePunctuation(nonstd));
+    const std = fixNumberedStreets(removePunctuation(replaceStreetSuffixes(nonstd, true)));
     if (!(std in addressData)) {
         const addresses = findAddressSuggestions(addressData, num, nonstd, std);
         if (addresses.length <= 10) {
