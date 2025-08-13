@@ -59,20 +59,20 @@ function mapCNN(jcts, cnn) {
  * Sort CNNs by distance to the given coordinates, along a given street.
  *
  * @param {Junctions} jcts - All SF intersections
- * @param {Object.<CNNPrefix, number>} distances - Distances in miles
+ * @param {Object.<CNNPrefix, number>} beelines - Distances in miles
  * @param {LatLon} ll - Degrees latitude and longitude
  * @returns {CNNPrefix} The nearest intersection
  */
-function findNearestJunction(jcts, distances, ll) {
+function findNearestJunction(jcts, beelines, ll) {
     let min = Infinity;
     let minCNN = null;
     for (const cnn in jcts) {
-        if (cnn in distances) {
+        if (cnn in beelines) {
             continue;
         }
         const coords = getJunctionCoords(jcts, cnn);
         const distance = howFar(ll, coords);
-        distances[cnn] = distance;
+        beelines[cnn] = distance;
         if (distance < min) {
             min = distance;
             minCNN = cnn;
@@ -164,43 +164,43 @@ function stayOnHwy(jcts, cnns, here) {
  * Sort intersections by distance to the given coordinates.
  *
  * @param {Junctions} jcts - All SF intersections
- * @param {Object.<CNNPrefix, number>} distances - Distances in miles
+ * @param {Object.<CNNPrefix, number>} beelines - Distances in miles
  * @param {CNNPrefixes} cnns - Intersections
  * @param {LatLon} ll - Degrees latitude and longitude
  * @returns {CNNPrefixes} Intersections
  */
-function sortCNNs(jcts, distances, cnns, ll) {
+function sortCNNs(jcts, beelines, cnns, ll) {
     for (const cnn of cnns) {
-        if (cnn in distances) {
+        if (cnn in beelines) {
             continue;
         }
         if (!(cnn in jcts)) {
             //console.log('sortCNNs():', cnn, 'not found');
-            distances[cnn] = Infinity;
+            beelines[cnn] = Infinity;
             continue;
         }
         const coords = getJunctionCoords(jcts, cnn);
-        distances[cnn] = howFar(ll, coords);
+        beelines[cnn] = howFar(ll, coords);
     }
-    return cnns.sort((a, b) => distances[a] - distances[b]);
+    return cnns.sort((a, b) => beelines[a] - beelines[b]);
 }
 
 /**
- * Sort intersections by distance to the given coordinates, on a given street.
+ * Sort CNNs by distance to the given coordinates, along a given street.
  *
  * @param {Junctions} jcts - All SF intersections
  * @param {StreetJunctions} stJcts - CNNs keyed by street name
- * @param {Object.<CNNPrefix, number>} distances - Distances in miles
+ * @param {Object.<CNNPrefix, number>} beelines - Distances in miles
  * @param {string} street - A street name, e.g. "MARKET ST"
  * @param {LatLon} ll - Degrees latitude and longitude
  * @returns {CNNPrefixes} Intersections
  */
-function sortStreetCNNs(jcts, stJcts, distances, street, ll) {
+function sortStreetCNNs(jcts, stJcts, beelines, street, ll) {
     if (!(street in stJcts)) {
         //console.log('sortStreetCNNs():', street, 'not found');
-        return;
+        return [];
     }
-    return sortCNNs(jcts, distances, stJcts[street], ll);
+    return sortCNNs(jcts, beelines, stJcts[street], ll);
 }
 
 /**
@@ -209,15 +209,13 @@ function sortStreetCNNs(jcts, stJcts, distances, street, ll) {
  * @param {StreetAddresses} addressData - All SF street addresses
  * @param {Junctions} jcts - All SF intersections
  * @param {StreetJunctions} stJcts - Look up CNNs by street name.
+ * @param {Object} beelines - Distances to addresses
  * @param {string} start - The starting street address
  * @param {string} end - The ending street address
  * @param {string} [place=''] - The name of the destination (optional)
  * @returns {CNNPrefixes} Intersections
  */
-function findPath(addressData, jcts, stJcts, start, end, place = '') {
-    const toStart = {};
-    const fromEnd = {};
-
+function findPath(addressData, jcts, stJcts, beelines, start, end, place = '') {
     // Get the starting coordinates.
     start = normalizeAddress(start);
     const [startNum, startSt] = splitStreetAddress(start);
@@ -232,9 +230,12 @@ function findPath(addressData, jcts, stJcts, start, end, place = '') {
     const startLl = expandCoords(addressData[startSt][startNum]);
 
     // Which intersection is nearest to the start?
-    const startCNNs = sortStreetCNNs(jcts, stJcts, toStart, startSt, startLl);
+    if (!(start in beelines)) {
+        beelines[start] = {};
+    }
+    const startCNNs = sortStreetCNNs(jcts, stJcts, beelines[start], startSt, startLl);
     let here = startCNNs.length ? startCNNs[0] :
-        findNearestJunction(jcts, toStart, startLl);
+        findNearestJunction(jcts, beelines[start], startLl);
 
     // Get the ending coordinates.
     end = normalizeAddress(end);
@@ -250,9 +251,12 @@ function findPath(addressData, jcts, stJcts, start, end, place = '') {
     const endLl = expandCoords(addressData[endSt][endNum]);
 
     // Which intersection is nearest to the end?
-    const endCNNs = sortStreetCNNs(jcts, stJcts, fromEnd, endSt, endLl);
+    if (!(end in beelines)) {
+        beelines[end] = {};
+    }
+    const endCNNs = sortStreetCNNs(jcts, stJcts, beelines[end], endSt, endLl);
     const there = endCNNs.length ? parseInt(endCNNs[0]) :
-        findNearestJunction(jcts, fromEnd, endLl);
+        findNearestJunction(jcts, beelines[end], endLl);
 
     /**
      * A deeply nested record of paths to a destination.
@@ -304,7 +308,7 @@ function findPath(addressData, jcts, stJcts, start, end, place = '') {
 
         // Prioritize adjacent intersections by distance to the destination.
         const jct = jcts[here];
-        sortCNNs(jcts, fromEnd, jct.adj, endLl);
+        sortCNNs(jcts, beelines[end], jct.adj, endLl);
         stayOnHwy(jcts, jct.adj, here);
 
         // Visit adjacent intersections to this one.
@@ -343,12 +347,12 @@ function findPath(addressData, jcts, stJcts, start, end, place = '') {
     const maxMaxFactor = 6;
 
     /** @type Paths */
-    let paths = { found: false, path: [], distance: toStart[here] };
+    let paths = { found: false, path: [], distance: beelines[start][here] };
 
     // Find paths to the destination.
     while (!go(paths, here)) {
         jctCount = 0;
-        paths = { found: false, path: [], distance: toStart[here] };
+        paths = { found: false, path: [], distance: beelines[start][here] };
         // Maybe try again, allowing for a longer path.
         if (maxFactor >= maxMaxFactor) {
             break; // Limit the total distance allowed.
@@ -389,7 +393,7 @@ function findPath(addressData, jcts, stJcts, start, end, place = '') {
     findShortestPath(paths, here, there);
 
     /*
-    const distance = shortest + fromEnd[there];
+    const distance = shortest + beelines[end][there];
     const prefix = `${shortestCount}/${count}`;
     analyzePath(addressData, jcts, path, start, end, distance, beeline, prefix, place);
     */
@@ -462,18 +466,19 @@ function sumDistances(addressData, jcts, path, start, end) {
  * @param {StreetAddresses} addressData - All SF street addresses
  * @param {Junctions} jcts - All SF intersections
  * @param {StreetJunctions} stJcts - Look up CNNs by street name.
+ * @param {Object} beelines - Distances to addresses
  * @param {string} start - The starting street address
  * @param {School} school - Data about a school
  * @returns {CNNPrefixes} Intersections
  */
-export function findPathToSchool(addressData, jcts, stJcts, start, school) {
+export function findPathToSchool(addressData, jcts, stJcts, beelines, start, school) {
     if (!school || !('address' in school)) {
         console.warn('school data missing');
         return [];
     }
     const end = school.address;
     const place = `${school.name} ${school.types[0]}`;
-    return findBestPath(addressData, jcts, stJcts, start, end, place);
+    return findBestPath(addressData, jcts, stJcts, beelines, start, end, place);
 }
 
 /**
@@ -482,14 +487,15 @@ export function findPathToSchool(addressData, jcts, stJcts, start, school) {
  * @param {StreetAddresses} addressData - All SF street addresses
  * @param {Junctions} jcts - All SF intersections
  * @param {StreetJunctions} stJcts - Look up CNNs by street name.
+ * @param {Object} beelines - Distances to addresses
  * @param {string} start - The starting street address
  * @param {string} end - The ending street address
  * @param {string} [place=''] - The name of the destination (optional)
  * @returns {CNNPrefixes} Intersections
  */
-function findBestPath(addressData, jcts, stJcts, start, end, place = '') {
-    const to = findPath(addressData, jcts, stJcts, start, end, place);
-    const fro = findPath(addressData, jcts, stJcts, end, start, place);
+function findBestPath(addressData, jcts, stJcts, beelines, start, end, place = '') {
+    const to = findPath(addressData, jcts, stJcts, beelines, start, end, place);
+    const fro = findPath(addressData, jcts, stJcts, beelines, end, start, place);
     if (!to.length) return fro.reverse();
     if (!fro.length) return to;
     const toDistance = sumDistances(addressData, jcts, to, start, end);
@@ -652,10 +658,11 @@ function compareDistances(pcts) {
  */
 export function findSchoolDistances(addressData, schoolData, jcts, start) {
     const stJcts = getStreetJunctions(jcts);
+    const beelines = {};
     const pcts = {};
     const distances = {};
     for (const school of schoolData) {
-        const path = findPathToSchool(addressData, jcts, stJcts, start, school);
+        const path = findPathToSchool(addressData, jcts, stJcts, beelines, start, school);
         const end = school.address;
         const type = school.types[0];
         const place = `${school.name} ${type}`;
