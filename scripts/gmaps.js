@@ -3,8 +3,6 @@
  * @module scripts/gmaps
  */
 
-import { metersToMiles } from '../public/geo.js';
-
 /**
  * Request route info from Google Maps.
  *
@@ -57,8 +55,5 @@ export async function getRouteData(start, end) {
     end += addrSuffix;
     const data = await requestRoute(apiKey, start, end);
     const { distanceMeters: meters, duration } = data.routes[0];
-    return {
-        miles: metersToMiles(meters),
-        seconds: parseInt(duration),
-    };
+    return { m: meters, s: parseInt(duration) };
 }
