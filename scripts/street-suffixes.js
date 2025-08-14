@@ -35,6 +35,21 @@ function replaceStreetSuffixAbbreviations(address) {
     return parts.join(' ');
 }
 
+const suffixes = new Set();
+
+for (const st in addressData) {
+    const parts = st.split(' ');
+    let suffix = parts.pop();
+    if (suffix === 'NORTH' || suffix === 'EAST' ||
+        suffix === 'SOUTH' || suffix === 'WEST') {
+        suffix = parts.pop();
+    }
+    suffixes.add(suffix);
+}
+
+console.log('All street suffixes:');
+console.log(Array.from(suffixes).sort());
+
 for (const street in addressData) {
     const num = Object.keys(addressData[street])[0];
     const address = `${num} ${street}`;
