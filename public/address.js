@@ -55,12 +55,24 @@ export function normalizeAddress(address) {
  */
 export function replaceStreetSuffixes(address) {
     const suffixes = {
+      ALY: 'ALLEY',
       AVE: 'AVENUE',
       BLVD: 'BOULEVARD',
       CIR: 'CIRCLE',
+      CT: 'COURT',
       DR: 'DRIVE',
+      HL: 'HILL',
+      HWY: 'HIGHWAY',
+      LN: 'LANE',
+      PL: 'PLACE',
+      PLZ: 'PLAZA',
+      PSGE: 'PASSAGE',
       RD: 'ROAD',
       ST: 'STREET',
+      STWY: 'STAIRWAY',
+      TER: 'TERRACE',
+      TUNL: 'TUNNEL',
+      XING: 'CROSSING',
     };
     for (const abbr in suffixes) {
         const suffix = suffixes[abbr];
