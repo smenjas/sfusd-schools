@@ -536,8 +536,8 @@ export function findSchoolDistances(addressData, schoolData, jcts, start) {
         const path = findPathToSchool(addressData, jcts, stJcts, beelines, start, school);
         const end = normalizeAddress(school.address);
         const distance = sumDistances(addressData, jcts, path, start, end);
-        const place = `${school.name} ${school.types[0]}`;
-        analyzePath(addressData, jcts, path, start, end, distance, null, '', place);
+        //const place = `${school.name} ${school.types[0]}`;
+        //analyzePath(addressData, jcts, path, start, end, distance, null, '', place);
         distances[end] = distance;
     }
     console.timeEnd('findSchoolDistances()');
