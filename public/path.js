@@ -589,9 +589,9 @@ export function findSchoolDistances(addressData, schoolData, jcts, start) {
         const end = school.address;
         const type = school.types[0];
         const distance = sumDistances(addressData, jcts, path, start, end);
-        const beeline = howFarAddresses(addressData, start, end);
-        const place = `${school.name} ${type}`;
-        analyzePath(addressData, jcts, path, start, end, distance, beeline, '', place);
+        //const beeline = howFarAddresses(addressData, start, end);
+        //const place = `${school.name} ${type}`;
+        //analyzePath(addressData, jcts, path, start, end, distance, beeline, '', place);
         if (!(type in distances)) distances[type] = {};
         distances[type][school.name] = distance;
     }
