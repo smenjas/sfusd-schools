@@ -3,8 +3,10 @@
  */
 
 import { fixNumberedStreets,
+         normalizeAddress,
          replaceStreetSuffixes,
          splitStreetAddress } from './address.js';
+import { findSchoolDistances } from './path.js';
 import { capitalizeWords,
          compressWhitespace,
          removeAccents,
@@ -12,6 +14,7 @@ import { capitalizeWords,
 import { expandCoords, getDirectionsURL, getMapURL, howFar } from './geo.js';
 import addressData from './address-data.js';
 import schoolData from './school-data.js';
+import jcts from './junctions.js';
 
 /**
  * Render a hyperlink, perhaps opening in a new browser tab.
@@ -1252,15 +1255,66 @@ function focusInput(id) {
 }
 
 /**
+ * Save distances in localStorage.
+ *
+ * @param {Object.<string, Object>} distances - Distances to schools
+ * @returns {boolean} Whether the operation proceeded without an exception
+ */
+function storeDistances(distances) {
+    if (storeItem('distances', distances)) {
+        return true;
+    }
+    // Delete least recently used origin addresses.
+    const addresses = Object.keys(distances);
+    addresses.sort((a, b) => distances[a].timestamp - distances[b].timestamp);
+    for (const address of addresses) {
+        delete distances[address];
+        if (storeItem('distances', distances)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Update the distance between each school and the user's location, taking into
+ * account obstacles on the ground (as the wolf runs, not as the crow flies).
+ * Please note: this can take a second to calculate, impacting user experience.
+ *
+ * @param {StreetAddresses} addressData - All SF street addresses
+ * @param {Schools} schoolData - Data about all schools
+ * @param {Junctions} jcts - All SF intersections
+ * @param {Object.<string, string>} inputs - Form input values
+ * @param {?LatLon} coords - Degrees latitude and longitude
+ */
+function updateDistancesByPath(addressData, schoolData, jcts, inputs, coords) {
+    const distancesJSON = localStorage.getItem('distances');
+    const distances = distancesJSON ? JSON.parse(distancesJSON) : {};
+    const address = normalizeAddress(inputs.address);
+    if (!(address in distances)) {
+        distances[address] = findSchoolDistances(addressData, schoolData, jcts, address);
+        storeDistances(distances);
+    }
+    for (const school of schoolData) {
+        const type = school.types[0];
+        school.distance = distances[address][type][school.name];
+    }
+    renderPage(addressData, schoolData, jcts, inputs, coords);
+    focusInput('address');
+}
+
+/**
  * Update the distance between each school and the user's location.
  *
  * @param {StreetAddresses} addressData - All SF street addresses
  * @param {Schools} schoolData - Data about all schools
+ * @param {Junctions} jcts - All SF intersections
  * @param {Object.<string, string>} inputs - Form input values
  * @param {?LatLon} coords - Degrees latitude and longitude
  * @returns {boolean} Whether the page rendered
  */
-function updateDistances(addressData, schoolData, inputs, coords) {
+function updateDistances(addressData, schoolData, jcts, inputs, coords) {
+    // First, update distances quickly, as the crow flies.
     for (const school of schoolData) {
         school.distance = howFar(coords, school.ll);
     }
@@ -1268,10 +1322,12 @@ function updateDistances(addressData, schoolData, inputs, coords) {
         inputs.menus.within = '';
         return false;
     }
+    // Asynchronously update distances, as the wolf runs.
+    setTimeout(updateDistancesByPath, 0, addressData, schoolData, jcts, inputs, coords);
     if (inputs.menus.sort === '' || inputs.menus.sort === 'name') {
         inputs.menus.sort = 'distance';
     }
-    renderPage(addressData, schoolData, inputs, coords);
+    renderPage(addressData, schoolData, jcts, inputs, coords);
     focusInput('address');
     return true;
 }
@@ -1413,10 +1469,11 @@ function findShownColumns(schools) {
  *
  * @param {StreetAddresses} addressData - All SF street addresses
  * @param {Schools} schoolData - Data about all schools
+ * @param {Junctions} jcts - All SF intersections
  * @param {Object.<string, string>} inputs - Form input values
  * @param {?LatLon} coords - Degrees latitude and longitude
  */
-function addEventListeners(addressData, schoolData, inputs, coords) {
+function addEventListeners(addressData, schoolData, jcts, inputs, coords) {
     // Remove existing event listeners.
     const oldAddress = document.querySelector('input[name=address]');
     oldAddress.replaceWith(oldAddress.cloneNode(true));
@@ -1439,7 +1496,7 @@ function addEventListeners(addressData, schoolData, inputs, coords) {
         inputs.address = event.target.value;
         storeItem('inputs', inputs);
         coords = findAddress(addressData, inputs.address);
-        updateDistances(addressData, schoolData, inputs, coords);
+        updateDistances(addressData, schoolData, jcts, inputs, coords);
     });
 
     // Listen for select menus, to filter schools.
@@ -1450,7 +1507,7 @@ function addEventListeners(addressData, schoolData, inputs, coords) {
             const value = event.target.value;
             inputs.menus[name] = value;
             storeItem('inputs', inputs);
-            renderPage(addressData, schoolData, inputs, coords);
+            renderPage(addressData, schoolData, jcts, inputs, coords);
         });
     }
 
@@ -1474,10 +1531,11 @@ function addEventListeners(addressData, schoolData, inputs, coords) {
  *
  * @param {StreetAddresses} addressData - All SF street addresses
  * @param {Schools} schoolData - Data about all schools
+ * @param {Junctions} jcts - All SF intersections
  * @param {Object.<string, string>} inputs - Form input values
  * @param {?LatLon} coords - Degrees latitude and longitude
  */
-function renderPage(addressData, schoolData, inputs, coords) {
+function renderPage(addressData, schoolData, jcts, inputs, coords) {
     const schools = filterSchools(schoolData, inputs.menus);
     sortSchools(schools, inputs.menus.sort);
     const shown = findShownColumns(schools);
@@ -1490,7 +1548,7 @@ function renderPage(addressData, schoolData, inputs, coords) {
         distanceMenu.removeAttribute('title');
     }
     document.getElementById('schools').innerHTML = renderTable(shown, schools, inputs.address);
-    addEventListeners(addressData, schoolData, inputs, coords);
+    addEventListeners(addressData, schoolData, jcts, inputs, coords);
     document.getElementById('address').value = inputs.address;
 }
 
@@ -1548,5 +1606,5 @@ const inputs = getStoredItem('inputs') || {
 
 // Calculate commute distances, and render the page.
 const coords = findAddress(addressData, inputs.address);
-updateDistances(addressData, schoolData, inputs, coords)
-    || renderPage(addressData, schoolData, inputs, coords);
+updateDistances(addressData, schoolData, jcts, inputs, coords)
+    || renderPage(addressData, schoolData, jcts, inputs, coords);

@@ -533,6 +533,7 @@ function getStreetJunctions(jcts) {
  * @returns {Object} The distance to each public school
  */
 export function findSchoolDistances(addressData, schoolData, jcts, start) {
+    console.time('findSchoolDistances()');
     const stJcts = getStreetJunctions(jcts);
     const beelines = {};
     const distances = {};
@@ -547,5 +548,6 @@ export function findSchoolDistances(addressData, schoolData, jcts, start) {
         if (!(type in distances)) distances[type] = {};
         distances[type][school.name] = distance;
     }
+    console.timeEnd('findSchoolDistances()');
     return distances;
 }
