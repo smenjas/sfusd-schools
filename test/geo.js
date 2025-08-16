@@ -12,6 +12,8 @@ import { degreesToRadians,
          getMapURL,
          howFar,
          howFarAddresses,
+         isBikeable,
+         isWalkable,
          latToMiles,
          latToMilesFactor,
          lonToMiles,
@@ -113,6 +115,22 @@ export default class GeoTest {
             [[addrs, start, end], 0.09823309936777064],
         ];
         return Test.run(howFarAddresses, tests);
+    }
+
+    static isBikeable() {
+        const tests = [
+            [[2], true],
+            [[3], false],
+        ];
+        return Test.run(isBikeable, tests);
+    }
+
+    static isWalkable() {
+        const tests = [
+            [[0.5], true],
+            [[1.5], false],
+        ];
+        return Test.run(isWalkable, tests);
     }
 
     static latToMiles() {
