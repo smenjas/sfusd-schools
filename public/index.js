@@ -1253,6 +1253,28 @@ function getSchoolName(school, campus = true) {
 }
 
 /**
+ * Save distances in localStorage.
+ *
+ * @param {Object.<string, Object>} distances - Distances to schools
+ * @returns {boolean} Whether the operation proceeded without an exception
+ */
+function storeDistances(distances) {
+    if (storeItem('distances', distances)) {
+        return true;
+    }
+    // Delete least recently used origin addresses.
+    const addresses = Object.keys(distances);
+    addresses.sort((a, b) => distances[a].timestamp - distances[b].timestamp);
+    for (const address of addresses) {
+        delete distances[address];
+        if (storeItem('distances', distances)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
  * Update the distance between each school and the user's location.
  *
  * @param {StreetAddresses} addressData - All SF street addresses
@@ -1262,12 +1284,12 @@ function getSchoolName(school, campus = true) {
  * @param {?LatLon} coords - Degrees latitude and longitude
  */
 function updateDistancesByPath(addressData, schoolData, jcts, inputs, coords) {
-    const distancesJSON = localStorage.getItem('distances');
-    const distances = distancesJSON ? JSON.parse(distancesJSON) : {};
+    const distances = getStoredItem('distances') || {};
     const address = normalizeAddress(inputs.address);
     if (!(address in distances)) {
         distances[address] = findSchoolDistances(addressData, schoolData, jcts, address);
-        localStorage.setItem('distances', JSON.stringify(distances));
+        distances[address]['timestamp'] = Date.now();
+        storeDistances(distances);
     }
     for (const school of schoolData) {
         const type = school.types[0];
@@ -1468,7 +1490,7 @@ function addEventListeners(addressData, schoolData, jcts, inputs, coords) {
     });
     addressInput.addEventListener('input', event => {
         inputs.address = event.target.value;
-        localStorage.setItem('inputs', JSON.stringify(inputs));
+        storeItem('inputs', inputs);
         coords = findAddress(addressData, inputs.address);
         updateDistances(addressData, schoolData, jcts, inputs, coords);
     });
@@ -1480,7 +1502,7 @@ function addEventListeners(addressData, schoolData, jcts, inputs, coords) {
             const name = event.target.name;
             const value = event.target.value;
             inputs.menus[name] = value;
-            localStorage.setItem('inputs', JSON.stringify(inputs));
+            storeItem('inputs', inputs);
             renderPage(addressData, schoolData, jcts, inputs, coords);
         });
     }
@@ -1527,9 +1549,45 @@ function renderPage(addressData, schoolData, jcts, inputs, coords) {
     document.getElementById('address').value = escapeFormInput(inputs.address);
 }
 
+/**
+ * Retrieve an item from localStorage.
+ *
+ * @param {string} name - The item's name
+ * @returns {*} The item
+ */
+function getStoredItem(name) {
+    try {
+        const json = localStorage.getItem(name);
+        if (!json) {
+            return;
+        }
+        return json ? JSON.parse(json) : json;
+    }
+    catch (error) {
+        console.error('Cannot read from localStorage:', error);
+    }
+}
+
+/**
+ * Save an item in localStorage.
+ *
+ * @param {string} name - The item's name
+ * @param {*} The item
+ * @returns {boolean} Whether the operation proceeded without an exception
+ */
+function storeItem(name, item) {
+    try {
+        localStorage.setItem(name, JSON.stringify(item));
+        return true;
+    }
+    catch (error) {
+        console.error('Cannot write to localStorage:', error);
+        return false;
+    }
+}
+
 // Retrieve saved form input, or populate default values.
-const inputsJSON = localStorage.getItem('inputs');
-const inputs = inputsJSON ? JSON.parse(inputsJSON) : {
+const inputs = getStoredItem('inputs') || {
     address: '',
     menus: {
         sort: 'name',
