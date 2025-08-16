@@ -802,8 +802,11 @@ function renderUSNewsRank(school) {
  * @returns {string} A school's name as a hyperlink, or the empty string
  */
 function renderSchoolName(school) {
-    const name = getSchoolName(school).replace(/\bSan Francisco\b/g,
+    let name = getSchoolName(school).replace(/\bSan Francisco\b/g,
         '<abbr title="San Francisco">SF</abbr>');
+    if (school.charter) {
+        name += ' (Charter)';
+    }
     return renderLink(school.urls.main, name, true);
 }
 
