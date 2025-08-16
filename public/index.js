@@ -763,11 +763,19 @@ function renderGradeRange(school) {
  * @param {?number} distance - Distance in miles
  * @returns {string} A distance in miles, or the empty string
  */
-function renderDistance(distance) {
+function renderDistance(origin, destination, distance) {
     if (distance === null || distance === undefined) {
         return '';
     }
-    return distance.toFixed(1) + ' mi.';
+    const linkText = distance.toFixed(1) + '&nbsp;mi.';
+    let html = renderDirectionsLink(origin, destination, linkText);
+    if (distance <= 1.0) {
+        html = '<span title="Walkable">&#x1F6B6;&nbsp;' + html + '</span>';
+    }
+    else if (distance <= 2.25) {
+        html = '<span title="Bikeable">&#x1F6B2;&nbsp;' + html + '</span>';
+    }
+    return html;
 }
 
 /**
@@ -826,8 +834,7 @@ function renderRow(shown, school, address) {
     const city = 'San Francisco, CA';
     const origin = `${address}, ${city}, USA`;
     const search = `${fullName}, ${school.address}, ${city} ${school.zip}`;
-    const distance = renderDistance(school.distance);
-    const directionsLink = renderDirectionsLink(origin, search, distance);
+    const directionsLink = renderDistance(origin, search, school.distance);
     const mapLink = renderMapLink(search, school.address);
     let html = '';
     html += '<tr>';
