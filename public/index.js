@@ -1425,7 +1425,7 @@ function addEventListeners(addressData, schoolData, inputs, coords) {
     });
     addressInput.addEventListener('input', event => {
         inputs.address = event.target.value;
-        localStorage.setItem('inputs', JSON.stringify(inputs));
+        storeItem('inputs', inputs);
         coords = findAddress(addressData, inputs.address);
         updateDistances(addressData, schoolData, inputs, coords);
     });
@@ -1437,7 +1437,7 @@ function addEventListeners(addressData, schoolData, inputs, coords) {
             const name = event.target.name;
             const value = event.target.value;
             inputs.menus[name] = value;
-            localStorage.setItem('inputs', JSON.stringify(inputs));
+            storeItem('inputs', inputs);
             renderPage(addressData, schoolData, inputs, coords);
         });
     }
@@ -1482,9 +1482,45 @@ function renderPage(addressData, schoolData, inputs, coords) {
     document.getElementById('address').value = inputs.address;
 }
 
+/**
+ * Retrieve an item from localStorage.
+ *
+ * @param {string} name - The item's name
+ * @returns {*} The item
+ */
+function getStoredItem(name) {
+    try {
+        const json = localStorage.getItem(name);
+        if (!json) {
+            return;
+        }
+        return json ? JSON.parse(json) : json;
+    }
+    catch (error) {
+        console.error('Cannot read from localStorage:', error);
+    }
+}
+
+/**
+ * Save an item in localStorage.
+ *
+ * @param {string} name - The item's name
+ * @param {*} The item
+ * @returns {boolean} Whether the operation proceeded without an exception
+ */
+function storeItem(name, item) {
+    try {
+        localStorage.setItem(name, JSON.stringify(item));
+        return true;
+    }
+    catch (error) {
+        console.error('Cannot write to localStorage:', error);
+        return false;
+    }
+}
+
 // Retrieve saved form input, or populate default values.
-const inputsJSON = localStorage.getItem('inputs');
-const inputs = inputsJSON ? JSON.parse(inputsJSON) : {
+const inputs = getStoredItem('inputs') || {
     address: '',
     menus: {
         sort: 'name',
