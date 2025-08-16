@@ -200,6 +200,8 @@ export default class Test {
             GeoTest.getDirectionsURL,
             GeoTest.getMapURL,
             GeoTest.howFar,
+            GeoTest.isBikeable,
+            GeoTest.isWalkable,
             GeoTest.latToMiles,
             GeoTest.lonToMiles,
             GeoTest.lonToMilesFactor,
