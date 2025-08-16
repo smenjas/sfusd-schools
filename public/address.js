@@ -48,20 +48,29 @@ export function normalizeAddress(address) {
 }
 
 /**
+ * Get street suffixes and their abbreviations.
+ *
+ * @returns {Object} Street suffixes, keyed by their abbreviations
+ */
+export function getStreetSuffixes() {
+    return {
+        AVE: 'AVENUE',
+        BLVD: 'BOULEVARD',
+        CIR: 'CIRCLE',
+        DR: 'DRIVE',
+        RD: 'ROAD',
+        ST: 'STREET',
+    };
+}
+
+/**
  * Replace street suffixes with standard abbreviations.
  *
  * @param {string} address - A street address, capitalized
  * @returns {string} A standardized street address
  */
 export function replaceStreetSuffixes(address) {
-    const suffixes = {
-      AVE: 'AVENUE',
-      BLVD: 'BOULEVARD',
-      CIR: 'CIRCLE',
-      DR: 'DRIVE',
-      RD: 'ROAD',
-      ST: 'STREET',
-    };
+    const suffixes = getStreetSuffixes();
     for (const abbr in suffixes) {
         const suffix = suffixes[abbr];
         const re = new RegExp(`\\b${suffix}\\b`);
