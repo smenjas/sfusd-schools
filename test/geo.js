@@ -8,6 +8,8 @@ import { expandCoords,
          getDirectionsURL,
          getMapURL,
          howFar,
+         isBikeable,
+         isWalkable,
          latToMiles,
          lonToMiles,
          lonToMilesFactor } from '../public/geo.js';
@@ -49,6 +51,22 @@ export default class GeoTest {
             [[[-1.5, -2.0], [1.5, 2.0]], 345],
         ];
         return Test.run(howFar, tests);
+    }
+
+    static isBikeable() {
+        const tests = [
+            [[2], true],
+            [[3], false],
+        ];
+        return Test.run(isBikeable, tests);
+    }
+
+    static isWalkable() {
+        const tests = [
+            [[0.5], true],
+            [[1.5], false],
+        ];
+        return Test.run(isWalkable, tests);
     }
 
     static latToMiles() {

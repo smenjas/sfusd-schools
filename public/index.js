@@ -6,12 +6,17 @@ import { fixNumberedStreets,
          normalizeAddress,
          replaceStreetSuffixes,
          splitStreetAddress } from './address.js';
+import { expandCoords,
+         getDirectionsURL,
+         getMapURL,
+         howFar,
+         isBikeable,
+         isWalkable } from './geo.js';
 import { findSchoolDistances } from './path.js';
 import { capitalizeWords,
          compressWhitespace,
          removeAccents,
          removePunctuation } from './string.js';
-import { expandCoords, getDirectionsURL, getMapURL, howFar } from './geo.js';
 import { sortSchools } from './sort.js';
 import addressData from './address-data.js';
 import schoolData from './school-data.js';
@@ -236,6 +241,22 @@ function formatOrdinal(num) {
         default:
             return num;
     }
+}
+
+/**
+ * Find the distance to the nearest school.
+ *
+ * @param {Schools} schools - Data about some schools
+ * @returns {number} Distance in miles
+ */
+function getMinDistance(schools) {
+    let minDistance = Infinity;
+    for (const school of schools) {
+        if (school.distance < minDistance) {
+            minDistance = school.distance;
+        }
+    }
+    return minDistance;
 }
 
 /**
@@ -754,11 +775,19 @@ function renderGradeRange(school) {
  * @param {?number} distance - Distance in miles
  * @returns {string} A distance in miles, or the empty string
  */
-function renderDistance(distance) {
+function renderDistance(origin, destination, distance) {
     if (distance === null || distance === undefined) {
         return '';
     }
-    return distance.toFixed(1) + ' mi.';
+    const linkText = distance.toFixed(1) + '&nbsp;mi.';
+    let html = renderDirectionsLink(origin, destination, linkText);
+    if (isWalkable(distance)) {
+        html = '<span title="Walkable">&#x1F6B6;&nbsp;' + html + '</span>';
+    }
+    else if (isBikeable(distance)) {
+        html = '<span title="Bikeable">&#x1F6B2;&nbsp;' + html + '</span>';
+    }
+    return html;
 }
 
 /**
@@ -817,8 +846,7 @@ function renderRow(shown, school, address) {
     const city = 'San Francisco, CA';
     const origin = `${address}, ${city}, USA`;
     const search = `${fullName}, ${school.address}, ${city} ${school.zip}`;
-    const distance = renderDistance(school.distance);
-    const directionsLink = renderDirectionsLink(origin, search, distance);
+    const directionsLink = renderDistance(origin, search, school.distance);
     const mapLink = renderMapLink(search, school.address);
     let html = '';
     html += '<tr>';
@@ -873,12 +901,21 @@ function renderRow(shown, school, address) {
  * @param {Object.<string, boolean>} shown - Which fields are shown
  * @param {Schools} schools - Data about some schools
  * @param {string} address - A street address
+ * @param {?LatLon} coords - Degrees latitude and longitude
  * @returns {string} An HTML table
  */
-function renderTable(shown, schools, address) {
+function renderTable(shown, schools, address, coords) {
     const numSchools = Object.keys(schools).length;
+    let caption = `${numSchools} Schools`;
+    if (coords) {
+        const minDistance = getMinDistance(schools);
+        if (isWalkable(minDistance) || isBikeable(minDistance)) {
+            caption += ' <span class="legend">&#x1F6B6 = walkable,';
+            caption += ' &#x1F6B2; = bikeable in 20 minutes</span>';
+        }
+    }
     let html = '<table>';
-    html += `<caption>${numSchools} Schools</caption>`;
+    html += `<caption>${caption}</caption>`;
     if (numSchools < 1) {
         html += '</table>';
         return html;
@@ -1403,7 +1440,7 @@ function renderPage(addressData, schoolData, jcts, inputs, coords) {
     else {
         distanceMenu.removeAttribute('title');
     }
-    document.getElementById('schools').innerHTML = renderTable(shown, schools, inputs.address);
+    document.getElementById('schools').innerHTML = renderTable(shown, schools, inputs.address, coords);
     addEventListeners(addressData, schoolData, jcts, inputs, coords);
     document.getElementById('address').value = inputs.address;
 }
