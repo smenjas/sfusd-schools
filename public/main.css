@@ -59,6 +59,10 @@ body, table caption {
     background-color: white;
 }
 
+caption .legend {
+    float: right;
+}
+
 a {
     color: #005;
 }
