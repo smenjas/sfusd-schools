@@ -97,6 +97,30 @@ export function howFar(a, b) {
 }
 
 /**
+ * Determine whether a destination is within biking distance.
+ *
+ * @param {number} miles - A distance in miles
+ * @returns {boolean} Whether the distance is bikeable
+ */
+export function isBikeable(miles) {
+    // Most people bike 5-10 MPH. You can ride 2.25 miles within 15 minutes at
+    // 9 MPH, and within 20 minutes at 6.75 MPH.
+    return miles <= 2.25;
+}
+
+/**
+ * Determine whether a destination is within walking distance.
+ *
+ * @param {number} miles - A distance in miles
+ * @returns {boolean} Whether the distance is walkable
+ */
+export function isWalkable(miles) {
+    // Most people walk 2-4 MPH. At 3 MPH, you can walk 0.75 miles in 15
+    // minutes, and 1 mile within 20 minutes.
+    return miles <= 1.0;
+}
+
+/**
  * Convert degrees of latitude to miles.
  *
  * This is roughly consistent everywhere on Earth's surface.
