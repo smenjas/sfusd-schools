@@ -14,6 +14,60 @@ function degreesToRadians(degrees) {
 }
 
 /**
+ * Convert radians to degrees.
+ *
+ * @param {number} radians
+ * @returns {number} Degrees
+ */
+function radiansToDegrees(radians) {
+    return (radians * 180) / Math.PI;
+}
+
+/**
+ * Convert a compass bearing to a cardinal direction.
+ *
+ * @param {number} bearing - A compass bearing, in degrees
+ * @returns {?string} A cardinal direction
+ */
+function bearingToDirection(bearing) {
+    if (isNaN(bearing)) {
+        return null;
+    }
+    bearing %= 360;
+    if (bearing < 22.5) return 'N';
+    if (bearing < 67.5) return 'NE';
+    if (bearing < 112.5) return 'E';
+    if (bearing < 157.5) return 'SE';
+    if (bearing < 202.5) return 'S';
+    if (bearing < 247.5) return 'SW';
+    if (bearing < 292.5) return 'W';
+    if (bearing < 337.5) return 'NW';
+    return 'N';
+}
+
+/**
+ * Calculate the angle of coordinates, relative to (0, 0).
+ *
+ * @param {number} x - The x component
+ * @param {number} y - The y component
+ * @returns {number} The angle in radians
+ */
+function calcAngle(x, y) {
+    return Math.atan2(y, x);
+}
+
+/**
+ * Calculate the angle of coordinates, relative to (0, 0).
+ *
+ * @param {number} x - The x component
+ * @param {number} y - The y component
+ * @returns {number} The angle in degrees
+ */
+function calcAngleDegrees(x, y) {
+    return radiansToDegrees(calcAngle(x, y));
+}
+
+/**
  * Expand the decimal portion of geographic coordinates to include the whole
  * numbers for San Francisco, California: 37°N, 122°W.
  *
@@ -26,6 +80,38 @@ export function expandCoords(coords) {
     }
     const [lat, lon] = coords;
     return [`37.${lat}`, `-122.${lon}`];
+}
+
+/**
+ * Find the angle between two sets of coordinates.
+ *
+ * @param {?LatLon} a - Decimal degrees latitude and longitude
+ * @param {?LatLon} b - Decimal degrees latitude and longitude
+ * @returns {?number} A compass bearing, in degrees
+ */
+export function findBearing(a, b) {
+    const components = howFarComponents(a, b);
+    if (!components) {
+        return null;
+    }
+    const [x, y] = components;
+    let degrees = calcAngleDegrees(x, y);
+    while (degrees < 0) {
+        degrees += 360;
+    }
+    return degrees;
+}
+
+/**
+ * Find the direction from one location to another.
+ *
+ * @param {?LatLon} a - Decimal degrees latitude and longitude
+ * @param {?LatLon} b - Decimal degrees latitude and longitude
+ * @returns {?number} A cardinal direction
+ */
+export function findDirection(a, b) {
+    const bearing = findBearing(a, b);
+    return bearingToDirection(bearing);
 }
 
 /**
@@ -78,15 +164,33 @@ export function getMapURL(search) {
  * @returns {?number} Distance in miles
  */
 export function howFar(a, b) {
+    const components = howFarComponents(a, b);
+    if (!components) {
+        return null;
+    }
+    const x = Math.abs(components[0]);
+    const y = Math.abs(components[1]);
+    return Math.sqrt((x ** 2) + (y ** 2));
+}
+
+/**
+ * Calculate the distance between two locations, in separate horizontal and
+ * vertical components.
+ *
+ * @param {?LatLon} a - Decimal degrees latitude and longitude
+ * @param {?LatLon} b - Decimal degrees latitude and longitude
+ * @returns {?Array.<number>} Distances in miles
+ */
+function howFarComponents(a, b) {
     if (!a || !b) {
         return null;
     }
-    const latDiff = Math.abs(a[0] - b[0]);
-    const lonDiff = Math.abs(a[1] - b[1]);
+    const latDiff = a[0] - b[0];
+    const lonDiff = a[1] - b[1];
     const latMean = (latDiff / 2) + Math.min(a[0], b[0]);
     const y = latToMiles(latDiff);
     const x = lonToMiles(lonDiff, latMean);
-    return Math.sqrt((x ** 2) + (y ** 2));
+    return [x, y];
 }
 
 /**
