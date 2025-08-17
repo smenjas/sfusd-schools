@@ -60,7 +60,15 @@ export default class GeoTest {
 
     static howFar() {
         const tests = [
+            [[], null],
+            [[null, [0, 0]], null],
+            [[[0, 0], null], null],
+            [[[0, 0], [0, 0]], 0],
+            [[[0, 0], [0, 1]], 69], // 1° of longitude at the equator
+            [[[0, 0], [1, 0]], 69], // 1° of latitude, just north of the equator
             [[[-1.5, -2.0], [1.5, 2.0]], 345],
+            [[[23.43594, 0], [23.43594, 1]], 63.307867470495445], // Tropic of Cancer
+            [[[66.564056, 0], [66.564056, 1]], 27.442925480320344], // Arctic Circle
         ];
         return Test.run(howFar, tests);
     }
