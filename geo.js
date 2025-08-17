@@ -90,10 +90,10 @@ export function howFar(a, b) {
     }
     const latDiff = Math.abs(a[0] - b[0]);
     const lonDiff = Math.abs(a[1] - b[1]);
-    const lat = (latDiff / 2) + Math.min(a[0], b[0]);
+    const latMean = (parseFloat(a[0]) + parseFloat(b[0])) / 2;
     const y = latToMiles(latDiff);
-    const x = lonToMiles(lonDiff, lat);
-    return Math.sqrt((x ** 2) + (y ** 2));
+    const x = lonToMiles(lonDiff, latMean);
+    return Math.sqrt((x * x) + (y * y));
 }
 
 /**
