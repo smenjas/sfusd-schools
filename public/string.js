@@ -58,6 +58,16 @@ export function encode(str) {
 }
 
 /**
+ * Encode input for safe output to a URL.
+ *
+ * @param {string} value - Unsafe input
+ * @returns {string} The input string with unsafe characters encoded
+ */
+export function encodeURLParam(value) {
+    return encodeURIComponent(value).replaceAll('%20', '+');
+}
+
+/**
  * Remove accents from characters in a string.
  *
  * @param {string} str - A string with accents, possibly
