@@ -5,6 +5,7 @@
 import dotenv from 'dotenv';
 import { getRouteData } from './gmaps.js';
 import { mean, median } from './stat.js';
+import { findSchool } from '../public/common.js';
 import { kmlDoc } from '../public/kml.js';
 import { findSchoolDistances,
          findPathToSchool,
@@ -23,22 +24,6 @@ import gmapsData from './gmaps-data.js';
 import jcts from '../public/sf-junctions.js';
 
 dotenv.config({ path: '../.env', quiet: true });
-
-/**
- * Find a school.
- *
- * @param {Schools} schoolData - All SF public schools
- * @param {string} name - A school name, e.g. "Lowell"
- * @param {string} type - A school type, e.g. "High"
- * @returns {School} Data about a school
- */
-function findSchool(schoolData, name, type) {
-    for (const school of schoolData) {
-        if (school.name === name && school.types.includes(type)) {
-            return school;
-        }
-    }
-}
 
 /**
  * Generate waypoints.
