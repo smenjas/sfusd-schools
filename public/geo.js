@@ -4,6 +4,16 @@
  */
 
 /**
+ * Convert degrees to radians.
+ *
+ * @param {number} degrees
+ * @returns {number} Radians
+ */
+function degreesToRadians(degrees) {
+    return degrees * (Math.PI / 180);
+}
+
+/**
  * Expand the decimal portion of geographic coordinates to include the whole
  * numbers for San Francisco, California: 37°N, 122°W.
  *
@@ -73,9 +83,9 @@ export function howFar(a, b) {
     }
     const latDiff = Math.abs(a[0] - b[0]);
     const lonDiff = Math.abs(a[1] - b[1]);
-    const lat = (latDiff / 2) + Math.min(a[0], b[0]);
+    const latMean = (latDiff / 2) + Math.min(a[0], b[0]);
     const y = latToMiles(latDiff);
-    const x = lonToMiles(lonDiff, lat);
+    const x = lonToMiles(lonDiff, latMean);
     return Math.sqrt((x ** 2) + (y ** 2));
 }
 
@@ -152,6 +162,6 @@ export function lonToMiles(lonDiff, lat) {
  * @returns {number} Distance in miles
  */
 export function lonToMilesFactor(lat) {
-    const radians = lat * (Math.PI / 180);
+    const radians = degreesToRadians(lat);
     return 69 * Math.cos(radians);
 }
