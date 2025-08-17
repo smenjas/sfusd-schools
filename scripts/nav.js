@@ -2,6 +2,7 @@
  * @file Navigate between places in San Francisco, California.
  */
 
+import { findSchool } from '../public/common.js';
 import { kmlDoc } from '../public/kml.js';
 import { findSchoolDistances,
          findPathToSchool,
@@ -13,22 +14,6 @@ import { prettifyAddress } from '../public/address.js';
 import addressData from '../public/address-data.js';
 import schoolData from '../public/school-data.js';
 import jcts from '../public/sf-junctions.js';
-
-/**
- * Find a school.
- *
- * @param {Schools} schoolData - All SF public schools
- * @param {string} name - A school name, e.g. "Lowell"
- * @param {string} type - A school type, e.g. "High"
- * @returns {School} Data about a school
- */
-function findSchool(schoolData, name, type) {
-    for (const school of schoolData) {
-        if (school.name === name && school.types.includes(type)) {
-            return school;
-        }
-    }
-}
 
 /**
  * Generate waypoints.
