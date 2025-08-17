@@ -165,11 +165,24 @@ export function kmlDoc(wpts, name = '') {
  * @param {School} school - Data about a school
  */
 export function logKML(addressData, jcts, start, school) {
+    console.log(makeKML(addressData, jcts, start, school));
+}
+
+/**
+ * Generate a KML (Keyhole Markup Language) file.
+ *
+ * @param {StreetAddresses} addressData - All SF street addresses
+ * @param {Junctions} jcts - All SF intersections
+ * @param {string} start - The starting street address
+ * @param {School} school - Data about a school
+ * @returns {string} XML
+ */
+export function makeKML(addressData, jcts, start, school) {
     const stJcts = getStreetJunctions(jcts);
     const path = findPathToSchool(addressData, jcts, stJcts, {}, start, school);
     const end = school.address;
     const place = `${school.name} ${school.types[0]}`;
-    console.log(makeGeoDoc(addressData, jcts, path, start, end, place));
+    return makeGeoDoc(addressData, jcts, path, start, end, place);
 }
 
 /**
