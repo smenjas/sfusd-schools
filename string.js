@@ -1,6 +1,6 @@
 /**
  * String utility functions
- * @module scripts/string
+ * @module public/string
  */
 
 /**
