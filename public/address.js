@@ -1,6 +1,6 @@
 /**
  * Street address utility functions
- * @module scripts/address
+ * @module public/address
  */
 
 import { compressWhitespace,
