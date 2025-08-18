@@ -14,16 +14,6 @@ import addressData from './address-data.js';
 import schoolData from './school-data.js';
 
 /**
- * Escape form input (except spaces) for safe output to HTML.
- *
- * @param {string} value - Unescaped user input
- * @returns {string} The input string with unsafe characters escaped
- */
-function escapeFormInput(value) {
-    return encodeURIComponent(value).replaceAll('%20', ' ');
-}
-
-/**
  * Render a hyperlink, perhaps opening in a new browser tab.
  *
  * @param {?string} url - An absolute or relative URL
@@ -1460,7 +1450,6 @@ function addEventListeners(addressData, schoolData, inputs, coords) {
             inputs.menus.sort = 'name';
         }
         addressInput.dispatchEvent(new Event('input'));
-        addressInput.value = '';
         for (const menu of menus) {
             menu.value = '';
             menu.dispatchEvent(new Event('change'));
@@ -1490,7 +1479,7 @@ function renderPage(addressData, schoolData, inputs, coords) {
     }
     document.getElementById('schools').innerHTML = renderTable(shown, schools, inputs.address);
     addEventListeners(addressData, schoolData, inputs, coords);
-    document.getElementById('address').value = escapeFormInput(inputs.address);
+    document.getElementById('address').value = inputs.address;
 }
 
 // Retrieve saved form input, or populate default values.
