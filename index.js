@@ -1240,6 +1240,18 @@ function getSchoolName(school, campus = true) {
 }
 
 /**
+ * Focus the cursor on an input element.
+ *
+ * @param {string} id - The input element's ID attribute
+ */
+function focusInput(id) {
+    const input = document.getElementById(id);
+    input.focus();
+    const length = input.value.length;
+    input.setSelectionRange(length, length);
+}
+
+/**
  * Update the distance between each school and the user's location.
  *
  * @param {StreetAddresses} addressData - All SF street addresses
@@ -1260,7 +1272,7 @@ function updateDistances(addressData, schoolData, inputs, coords) {
         inputs.menus.sort = 'distance';
     }
     renderPage(addressData, schoolData, inputs, coords);
-    document.getElementById('address').select();
+    focusInput('address');
     return true;
 }
 
