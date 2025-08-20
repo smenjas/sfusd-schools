@@ -581,11 +581,8 @@ function getCommonElements(a, b) {
 function addTurn(jcts, turns, here, street, lastStreet, a, b) {
     const aCoords = expandCoords(a);
     const bCoords = expandCoords(b);
-    const others = jcts[here].streets.filter(st => st !== street);
-    const cross = lastStreet ? others.filter(e => e !== lastStreet) : [];
     turns[here] = {
         azimuth: findAzimuth(aCoords, bCoords),
-        cross,
         distance: 0,
         street,
     };
@@ -803,7 +800,7 @@ export function describePath(addressData, jcts, path, start, end) {
             continue;
         }
 
-        let { azimuth, cross, distance, street } = turns[cnn];
+        let { azimuth, distance, street } = turns[cnn];
 
         let html = 'Go ';
         if (azimuth !== null) {
@@ -813,9 +810,8 @@ export function describePath(addressData, jcts, path, start, end) {
         }
 
         let linkText = formatStreet(street);
-        if (++count !== 1 && cross.length) {
-            const streets = cross.map(st => formatStreet(st));
-            linkText += ` at ${streets.join(' & ')}`;
+        if (linkText.endsWith(' ramp')) {
+            linkText = ' the ' + linkText;
         }
         const url = mapCNN(jcts, cnn);
         const link = renderLink(url, linkText, true);
