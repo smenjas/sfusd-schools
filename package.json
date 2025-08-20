@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "npx nodemon src/index.js",
     "doc": "rm -rf documentation; npx jsdoc -c jsdoc.json && cat jsdoc-dark.css >> documentation/styles/jsdoc-default.css",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "time node test.js"
   },
   "repository": {
     "type": "git",

@@ -224,6 +224,9 @@ export function splitStreetAddress(address) {
  * @param {Array.<string>} addresses - Suggested street addresses
  */
 export function suggestAddresses(addresses) {
+    if (typeof document === 'undefined') {
+        return;
+    }
     const datalist = document.getElementById('addresses');
     if (!datalist) {
         return;
