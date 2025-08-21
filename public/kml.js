@@ -18,6 +18,9 @@ import { encode, removeAccents, removePunctuation } from './string.js';
  * @param {string} filename - The filename: unsanitized, no extension
  */
 export function downloadKML(kml, filename) {
+    if (typeof document === 'undefined') {
+        return;
+    }
     const blob = new Blob([kml], { type: 'application/vnd.google-earth.kml+xml' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -67,6 +70,9 @@ export function getPathWaypoints(addressData, jcts, path, start, end) {
  * @returns {Object.<string, number>} Coordinates
  */
 export function getWaypointCoords(wpt) {
+    if (!wpt) {
+        return null;
+    }
     let lat, lon;
     if ('ll' in wpt && Array.isArray(wpt.ll)) {
         lat = wpt.ll[0];
@@ -78,20 +84,20 @@ export function getWaypointCoords(wpt) {
     }
     else {
         console.warn('Waypoint lacks latitude and longitude!');
-        return '';
+        return null;
     }
     if (isNaN(lat)) {
         console.warn('Waypoint latitude is not a number:', lat);
-        return '';
+        return null;
     }
     if (isNaN(lon)) {
         console.warn('Waypoint longitude is not a number:', lon);
-        return '';
+        return null;
     }
     const ele = ('ele' in wpt) ? wpt.ele : 0;
     if (isNaN(ele)) {
         console.warn('Waypoint elevation is not a number:', ele);
-        return '';
+        return null;
     }
     return { lat, lon, ele };
 }
@@ -103,6 +109,9 @@ export function getWaypointCoords(wpt) {
  * @returns {string} KML
  */
 export function kmlWaypoint(wpt) {
+    if (!wpt) {
+        return null;
+    }
     const { lat, lon, ele } = getWaypointCoords(wpt);
     const safeLat = encode(lat);
     const safeLon = encode(lon);
@@ -129,6 +138,9 @@ export function kmlWaypoint(wpt) {
  * @returns {string} KML
  */
 export function kmlLineString(wpts, name = '') {
+    if (!wpts) {
+        return null;
+    }
     let xml = '\t<Placemark>\n';
     if (name !== '') {
         xml += `\t\t<name>${encode(name)}</name>\n`;
@@ -159,6 +171,9 @@ export function kmlLineString(wpts, name = '') {
  * @returns {string} KML
  */
 export function kmlDoc(wpts, name = '') {
+    if (!wpts) {
+        return null;
+    }
     const ns = 'http://www.opengis.net/kml/2.2';
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
     xml += `<kml xmlns="${ns}">\n`;

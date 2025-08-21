@@ -4,6 +4,7 @@
  */
 
 import { getDirectionsURL, getMapURL } from './geo.js';
+import { encode } from './string.js';
 
 /**
  * Render a street address form input, with autocomplete.
@@ -44,14 +45,14 @@ export function renderDirectionsLink(fro, to, text) {
  * @returns {string} A hyperlink, or the 2nd arg if the 1st arg is empty
  */
 export function renderLink(url, text, newTab = false) {
-    if (text === null || text === '') {
+    if (text === undefined || text === null || text === '') {
         return '';
     }
-    if (url === null || url === '') {
+    if (url === undefined || url === null || url === '') {
         return text;
     }
     let link = '<a';
-    if (newTab === true) {
+    if (newTab) {
         link += ' target="_blank"';
     }
     link += ` href="${url}">${text}</a>`;
@@ -66,12 +67,12 @@ export function renderLink(url, text, newTab = false) {
  * @returns {string} A list, as HTML
  */
 export function renderList(array, ordered = false) {
-    if (array.length === 0) {
+    if (!array || !Array.isArray(array) || array.length === 0) {
         return '';
     }
     let html = ordered ? '<ol>' : '<ul>';
     for (const element of array) {
-        html += `<li>${element}</li>`;
+        html += `<li>${encode(element)}</li>`;
     }
     html += ordered ? '</ol>' : '</ul>';
     return html;
@@ -103,6 +104,9 @@ export function renderMapLink(search, text = '') {
  * @returns {string} HTML options for a select menu or datalist
  */
 export function renderOptions(options, selected) {
+    if (!(options instanceof Map) || !options.size) {
+        return '';
+    }
     let html = '';
     for (const [key, value] of options.entries()) {
         const s = (key.toString() === selected) ? ' selected' : '';
