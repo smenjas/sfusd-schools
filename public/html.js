@@ -4,6 +4,7 @@
  */
 
 import { getDirectionsURL, getMapURL } from './geo.js';
+import { encode } from './string.js';
 
 /**
  * Render a street address form input, with autocomplete.
@@ -44,14 +45,14 @@ export function renderDirectionsLink(fro, to, text) {
  * @returns {string} A hyperlink, or the 2nd arg if the 1st arg is empty
  */
 export function renderLink(url, text, newTab = false) {
-    if (text === null || text === '') {
+    if (text === undefined || text === null || text === '') {
         return '';
     }
-    if (url === null || url === '') {
+    if (url === undefined || url === null || url === '') {
         return text;
     }
     let link = '<a';
-    if (newTab === true) {
+    if (newTab) {
         link += ' target="_blank"';
     }
     link += ` href="${url}">${text}</a>`;
@@ -71,7 +72,7 @@ export function renderList(array, ordered = false) {
     }
     let html = ordered ? '<ol>' : '<ul>';
     for (const element of array) {
-        html += `<li>${element}</li>`;
+        html += `<li>${encode(element)}</li>`;
     }
     html += ordered ? '</ol>' : '</ul>';
     return html;
