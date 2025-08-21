@@ -29,9 +29,6 @@ export function renderAddressInput(name = 'address', datalist = 'addresses') {
  */
 export function renderDirectionsLink(fro, to, text) {
     const url = getDirectionsURL(fro, to);
-    if (url === '') {
-        return text;
-    }
     return renderLink(url, text, true);
 }
 
@@ -44,14 +41,14 @@ export function renderDirectionsLink(fro, to, text) {
  * @returns {string} A hyperlink, or the 2nd arg if the 1st arg is empty
  */
 export function renderLink(url, text, newTab = false) {
-    if (text === null || text === '') {
+    if (text === undefined || text === null || text === '') {
         return '';
     }
-    if (url === null || url === '') {
+    if (url === undefined || url === null || url === '') {
         return text;
     }
     let link = '<a';
-    if (newTab === true) {
+    if (newTab) {
         link += ' target="_blank"';
     }
     link += ` href="${url}">${text}</a>`;
