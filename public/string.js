@@ -25,8 +25,19 @@ export function capitalize(str, lower = false) {
  * @returns {string} A capitalized string
  */
 export function capitalizeWords(str, lower = false) {
+    const no = new Set(['a', 'an', 'and', 'as', 'at', 'but', 'by', 'for', 'in', 'nor',
+        'of', 'on', 'or', 'the', 'to', 'with']);
     const words = str.split(' ');
-    for (let i = 0; i < words.length; i++) {
+    words[0] = capitalize(words[0], lower);
+    words[words.length - 1] = capitalize(words[words.length - 1], lower);
+    for (let i = 1; i < words.length - 1; i++) {
+        const low = words[i].toLowerCase();
+        if (no.has(low)) {
+            if (lower) {
+                words[i] = low;
+            }
+            continue;
+        }
         words[i] = capitalize(words[i], lower);
     }
     return words.join(' ');
