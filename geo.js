@@ -3,6 +3,8 @@
  * @module public/geo
  */
 
+import { encodeURLParam } from './string.js';
+
 /**
  * Expand the decimal portion of geographic coordinates to include the whole
  * numbers for San Francisco, California: 37°N, 122°W.
@@ -29,7 +31,7 @@ export function getDirectionsURL(fro, to) {
     if (fro === '' || to === '') {
         return '';
     }
-    const search = `${encodeURIComponent(fro)}/${encodeURIComponent(to)}`;
+    const search = `${encodeURLParam(fro, true)}/${encodeURLParam(to, true)}`;
     return 'https://www.google.com/maps/dir/' + search.replaceAll(' ', '+');
 }
 
@@ -43,7 +45,7 @@ export function getMapURL(search) {
     if (search === '') {
         return '';
     }
-    search = encodeURIComponent(search);
+    search = encodeURLParam(search, true);
     return 'https://www.google.com/maps/search/' + search.replaceAll(' ', '+');
 }
 
