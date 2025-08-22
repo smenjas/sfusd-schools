@@ -195,6 +195,16 @@ const start = '1700 Silver Ave'; // Silver Terrace Athletic Fields
 //const start = '2995 Sloat Blvd'; // SF Zoo
 //const start = '1096 Point Lobos Ave'; // Camera Obscura
 
+// Farthest points from every school:
+//const start = '1220 Avenue M'; // Treasure Island Wastewater Treatment Plant
+//const start = '1235 Northpoint Dr'; // Farthest north address on Treasure Island
+//const start = '950 Avenue N'; // Dirt lot on Treasure Island
+//const start = '520 Spear Ave'; // Hunters Point
+//const start = '83 Harney Way'; // Candlestick Point
+//const start = '1096 Point Lobos Ave'; // Camera Obscura
+//const start = '1004 Point Lobos Ave'; // Sutro Baths
+//const start = '599 Skyline Blvd'; // The Olympic Club
+
 //console.log(start);
 //const distances = findSchoolDistances(addressData, schoolData, jcts, start);
 //logNewRouteData();
