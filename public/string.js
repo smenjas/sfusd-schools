@@ -54,6 +54,21 @@ export function compressWhitespace(str) {
 }
 
 /**
+ * Encode input for safe output to a URL.
+ *
+ * @param {string} value - Unsafe input
+ * @param {boolean} allowCommas - Whether to allow commas
+ * @returns {string} The input string with unsafe characters encoded
+ */
+export function encodeURLParam(value, allowCommas = false) {
+    value = encodeURIComponent(value).replaceAll('%20', '+');
+    if (allowCommas) {
+        value = value.replaceAll('%2C', ',');
+    }
+    return value;
+}
+
+/**
  * Remove accents from characters in a string.
  *
  * @param {string} str - A string with accents, possibly

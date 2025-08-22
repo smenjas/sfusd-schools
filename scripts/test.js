@@ -208,6 +208,7 @@ export default class Test {
             StringTest.capitalize,
             StringTest.capitalizeWords,
             StringTest.compressWhitespace,
+            StringTest.encodeURLParam,
             StringTest.removeAccents,
             StringTest.removePunctuation,
             TestTest.compare,

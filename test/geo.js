@@ -23,7 +23,7 @@ export default class GeoTest {
     static getDirectionsURL() {
         const prefix = 'https://www.google.com/maps/dir/';
         const tests = [
-            [['3500 Great Hwy, 94132', '1220 Avenue M, 94132'], `${prefix}3500%20Great%20Hwy%2C%2094132/1220%20Avenue%20M%2C%2094132`],
+            [['3500 Great Hwy, 94132', '1220 Avenue M, 94132'], `${prefix}3500+Great+Hwy,+94132/1220+Avenue+M,+94132`],
         ];
         return Test.run(getDirectionsURL, tests);
     }
@@ -31,7 +31,7 @@ export default class GeoTest {
     static getMapURL() {
         const prefix = 'https://www.google.com/maps/search/';
         const tests = [
-            [['443 Burnett Ave, 94131'], `${prefix}443%20Burnett%20Ave%2C%2094131`],
+            [['443 Burnett Ave, 94131'], `${prefix}443+Burnett+Ave,+94131`],
         ];
         return Test.run(getMapURL, tests);
     }

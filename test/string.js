@@ -6,6 +6,7 @@
 import { capitalize,
          capitalizeWords,
          compressWhitespace,
+         encodeURLParam,
          removeAccents,
          removePunctuation } from '../public/string.js';
 import Test from '../scripts/test.js';
@@ -32,6 +33,16 @@ export default class CommonTest {
             [[' I need  some   space. '], 'I need some space.'],
         ];
         return Test.run(compressWhitespace, tests);
+    }
+
+    static encodeURLParam() {
+        const tests = [
+            [['&q=gotcha'], '%26q%3Dgotcha'],
+            [['123 Fake St, 12345'], '123+Fake+St%2C+12345'],
+            [['123 Fake St, 12345', false], '123+Fake+St%2C+12345'],
+            [['123 Fake St, 12345', true], '123+Fake+St,+12345'],
+        ];
+        return Test.run(encodeURLParam, tests);
     }
 
     static removeAccents() {
