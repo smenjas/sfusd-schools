@@ -31,3 +31,7 @@ Generate documentation with:
 ```sh
 npm run doc
 ```
+Run automated tests with:
+```sh
+npm run test
+```
