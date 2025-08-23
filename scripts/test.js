@@ -8,6 +8,7 @@ import CommonTest from '../test/common.js';
 import GeoTest from '../test/geo.js';
 import HTMLTest from '../test/html.js';
 import KMLTest from '../test/kml.js';
+import PathTest from '../test/path.js';
 import StringTest from '../test/string.js';
 import TestTest from '../test/test.js';
 
@@ -235,6 +236,16 @@ export default class Test {
             KMLTest.kmlWaypoint,
             KMLTest.makeGeoDoc,
             KMLTest.makeKML,
+            PathTest.describePath,
+            PathTest.findPathToSchool,
+            PathTest.findSchoolDistances,
+            PathTest.formatDistance,
+            PathTest.getAddressCoords,
+            PathTest.getJunctionCoords,
+            PathTest.getStreetJunctions,
+            PathTest.howFarAddresses,
+            PathTest.nameCNN,
+            PathTest.sumDistances,
             StringTest.capitalize,
             StringTest.capitalizeWords,
             StringTest.compressWhitespace,
