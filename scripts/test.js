@@ -241,7 +241,7 @@ export default class Test {
             const [args, expected] = test;
             const actual = method(...args);
             const result = Test.compare(expected, actual);
-            console.assert(result, `${method.name}(`, ...args, '):', actual, '!==', expected);
+            console.assert(result, `${method.name}(`, ...args, '):', {actual, expected});
             failed += !result;
         }
         console.timeEnd(method.name);
