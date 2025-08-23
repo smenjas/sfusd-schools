@@ -815,13 +815,17 @@ function sumDistancesBetweenTurns(addressData, jcts, turns, path, newPath, start
         prevTurn = here;
     }
 
-    turns[prevTurn].distance = distance;
+    if (prevTurn) {
+        turns[prevTurn].distance = distance;
+    }
 
     // This is the last intersection. How far is the destination?
     const here = newPath[newPath.length - 1];
     distance = howFarAddressToJunction(addressData, jcts, end, here);
     const turn = (here in turns) ? here : prevTurn;
-    turns[turn].distance += distance;
+    if (turn) {
+        turns[turn].distance += distance;
+    }
 }
 
 /**
