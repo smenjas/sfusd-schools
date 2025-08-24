@@ -3,7 +3,7 @@
  * @module public/geo
  */
 
-import { normalizeAddress, splitStreetAddress } from './address.js';
+import { splitStreetAddress } from './address.js';
 import { encodeURLParam } from './string.js';
 
 /**
@@ -125,8 +125,7 @@ export function getAddressCoords(addressData, address) {
     if (typeof address !== 'string') {
         return null;
     }
-    address = normalizeAddress(address);
-    const [num, street] = splitStreetAddress(address);
+    const [num, street] = splitStreetAddress(address, true);
     if (!(street in addressData)) {
         console.log('Cannot find street:', street);
         return null;

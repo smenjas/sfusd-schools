@@ -2,7 +2,7 @@
  * @file Analyze geographic data.
  */
 
-import { normalizeAddress, splitStreetAddress } from '../public/address.js';
+import { splitStreetAddress } from '../public/address.js';
 import { expandCoords,
          getCoordsURL,
          howFar,
@@ -85,8 +85,7 @@ const discrepancies = [];
 
 for (const school of schoolData) {
     const name = `${school.name} ${school.types[0]}`;
-    const address = normalizeAddress(school.address);
-    const [num, street] = splitStreetAddress(address);
+    const [num, street] = splitStreetAddress(school.address, true);
     if (!(street in addressData)) {
         console.log('Street not found:', street, 'for', name);
         continue;
