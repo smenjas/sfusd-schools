@@ -1270,6 +1270,7 @@ function updateDistances(addressData, schoolData, inputs, coords) {
     }
     if (inputs.menus.sort === '' || inputs.menus.sort === 'name') {
         inputs.menus.sort = 'distance';
+        storeItem('inputs', inputs);
     }
     renderPage(addressData, schoolData, inputs, coords);
     focusInput('address');
