@@ -3,6 +3,8 @@
  * @module public/common
  */
 
+import { normalizeAddress } from './address.js';
+
 /**
  * Convert an array to a map.
  *
@@ -93,8 +95,7 @@ export function populateDistances(schoolData, address) {
         return false;
     }
     for (const school of schoolData) {
-        const type = school.types[0];
-        school.distance = distances[address][type][school.name];
+        school.distance = distances[address][normalizeAddress(school.address)];
     }
     return true;
 }
