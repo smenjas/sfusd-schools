@@ -211,9 +211,13 @@ export function replaceStreetSuffixes(address, omitsNumber = false) {
  * Split a street address into a street number and a street name.
  *
  * @param {string} address - A street address, e.g. "2995 SLOAT BLVD"
+ * @param {boolean} [normalize=false] - Whether to normalize the address
  * @returns {Array.<string>} A street number and street name
  */
-export function splitStreetAddress(address) {
+export function splitStreetAddress(address, normalize = false) {
+    if (normalize) {
+        address = normalizeAddress(address);
+    }
     const [num, ...etc] = address.split(' ');
     return [num, etc.join(' ')];
 }
