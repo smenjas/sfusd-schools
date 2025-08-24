@@ -9,7 +9,6 @@ import { compareAddresses,
          replaceStreetSuffixes,
          splitStreetAddress } from '../public/address.js';
 import Test from '../scripts/test.js';
-import addressData from '../public/address-data.js';
 
 export default class AddressTest {
     static compareAddresses() {
