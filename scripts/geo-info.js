@@ -2,7 +2,7 @@
  * @file Analyze geographic data.
  */
 
-import { normalizeAddress, splitStreetAddress } from '../public/address.js';
+import { splitStreetAddress } from '../public/address.js';
 import { expandCoords,
          getAddressCoords,
          getCoordsURL,
