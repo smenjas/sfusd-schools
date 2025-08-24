@@ -2,9 +2,7 @@
  * @file Find the nearest address to each school.
  */
 
-import { normalizeAddress,
-         prettifyAddress,
-         splitStreetAddress } from '../public/address.js';
+import { prettifyAddress, splitStreetAddress } from '../public/address.js';
 import { expandCoords,
          getAddressCoords,
          getDirectionsURL,
@@ -21,12 +19,11 @@ import schoolData from '../public/school-data.js';
  * @returns {?string} The nearest street address
  */
 function findNearestAddress(addressData, addr) {
-    addr = normalizeAddress(addr);
     const ll = getAddressCoords(addressData, addr);
     if (!ll) {
         return null;
     }
-    const [number, street] = splitStreetAddress(addr);
+    const [number, street] = splitStreetAddress(addr, true);
     let distance = Infinity;
     let address = null;
     for (const st in addressData) {
