@@ -6,6 +6,7 @@ import { findAddress, normalizeAddress } from './address.js';
 import { arrayToMap,
          getDefaultInputs,
          getStoredItem,
+         populateDistances,
          storeItem } from './common.js';
 import { renderAddressInput,
          renderDirectionsLink,
@@ -1060,16 +1061,14 @@ function storeDistances(distances) {
  * @param {?LatLon} coords - Degrees latitude and longitude
  */
 function updateDistancesByPath(addressData, schoolData, jcts, inputs, coords) {
-    const distances = getStoredItem('distances') || {};
-    const address = normalizeAddress(inputs.address);
-    if (!(address in distances)) {
+    const stored = populateDistances(schoolData, inputs.address);
+    if (!stored) {
+        const distances = {};
+        const address = normalizeAddress(inputs.address);
         distances[address] = findSchoolDistances(addressData, schoolData, jcts, address);
         storeDistances(distances);
     }
-    for (const school of schoolData) {
-        const type = school.types[0];
-        school.distance = distances[address][type][school.name];
-    }
+    populateDistances(schoolData, inputs.address);
     renderPage(addressData, schoolData, jcts, inputs, coords);
     focusInput('address');
 }

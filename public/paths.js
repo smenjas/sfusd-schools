@@ -2,10 +2,11 @@
  * @file Describe the paths used to calculate distances.
  */
 
-import { findAddress, normalizeAddress } from './address.js';
+import { findAddress } from './address.js';
 import { findSchool,
          getDefaultInputs,
          getStoredItem,
+         populateDistances,
          splitSchoolDescription } from './common.js';
 import { renderLink, renderList } from './html.js';
 import { downloadKML, makeKML } from './kml.js';
@@ -15,24 +16,6 @@ import { encode, encodeURLParam } from './string.js';
 import addressData from './address-data.js';
 import schoolData from './school-data.js';
 import jcts from './junctions.js';
-
-/**
- * Populate school data with distances from the given address.
- *
- * @param {Schools} schoolData - Data about all schools
- * @param {string} address - A street address
- */
-function populateDistances(schoolData, address) {
-    const distances = getStoredItem('distances') || {};
-    address = normalizeAddress(address);
-    if (!(address in distances)) {
-        return;
-    }
-    for (const school of schoolData) {
-        const type = school.types[0];
-        school.distance = distances[address][type][school.name];
-    }
-}
 
 /**
  * Generate HTML for a list of schools.
