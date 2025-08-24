@@ -88,6 +88,8 @@ export default class AddressTest {
         const tests = [
             [['151 3rd St'], ['151', '3rd St']],
             [['701 Mission St'], ['701', 'Mission St']],
+            [['701 Mission St', false], ['701', 'Mission St']],
+            [['701 Mission St', true], ['701', 'MISSION ST']],
         ];
         return Test.run(splitStreetAddress, tests);
     }
