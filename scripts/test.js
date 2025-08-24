@@ -5,6 +5,7 @@
 
 import AddressTest from '../test/address.js';
 import GeoTest from '../test/geo.js';
+import SortTest from '../test/sort.js';
 import StringTest from '../test/string.js';
 import TestTest from '../test/test.js';
 
@@ -205,6 +206,7 @@ export default class Test {
             GeoTest.latToMiles,
             GeoTest.lonToMiles,
             GeoTest.lonToMilesFactor,
+            SortTest.sortSchools,
             StringTest.capitalize,
             StringTest.capitalizeWords,
             StringTest.compressWhitespace,

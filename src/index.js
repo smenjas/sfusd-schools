@@ -22,6 +22,7 @@ const server = http.createServer((request, response) => {
     case '/address-data.js':
     case '/address.js':
     case '/geo.js':
+    case '/sort.js':
     case '/string.js':
         response.statusCode = 200;
         response.setHeader('Content-Type', 'text/javascript');
