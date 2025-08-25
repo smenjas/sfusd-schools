@@ -3,8 +3,6 @@
  * @module public/common
  */
 
-import { normalizeAddress } from './address.js';
-
 /**
  * Convert an array to a map.
  *
@@ -78,23 +76,6 @@ export function getStoredItem(name) {
     }
     catch (error) {
         console.error('Cannot read from localStorage:', error);
-    }
-}
-
-/**
- * Populate school data with distances from the given address.
- *
- * @param {Schools} schoolData - Data about all schools
- * @param {string} address - A street address
- */
-export function populateDistances(schoolData, address) {
-    const distances = getStoredItem('distances') || {};
-    address = normalizeAddress(address);
-    if (!(address in distances)) {
-        return;
-    }
-    for (const school of schoolData) {
-        school.distance = distances[address][normalizeAddress(school.address)];
     }
 }
 

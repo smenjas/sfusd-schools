@@ -31,6 +31,7 @@ const server = http.createServer((request, response) => {
     case '/geo.js':
     case '/html.js':
     case '/kml.js':
+    case '/obfuscate.js':
     case '/path.js':
     case '/paths.js':
     case '/junctions.js':
