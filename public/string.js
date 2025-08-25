@@ -58,9 +58,11 @@ export function compressWhitespace(str) {
  *
  * @param {string} value - Unsafe input
  * @param {boolean} [allowCommas=false] - Whether to allow commas
+ * @param {number} [maxLength=255] - The maximum parameter length
  * @returns {string} The input string with unsafe characters encoded
  */
-export function encodeURLParam(value, allowCommas = false) {
+export function encodeURLParam(value, allowCommas = false, maxLength = 255) {
+    value = value.substring(0, maxLength);
     value = encodeURIComponent(value).replaceAll('%20', '+');
     if (allowCommas) {
         value = value.replaceAll('%2C', ',');
