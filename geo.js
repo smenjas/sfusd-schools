@@ -35,8 +35,9 @@ export function getDirectionsURL(fro, to) {
     if (fro === '' || to === '') {
         return '';
     }
-    const search = `${encodeURLParam(fro, true)}/${encodeURLParam(to, true)}`;
-    return 'https://www.google.com/maps/dir/' + search.replaceAll(' ', '+');
+    fro = encodeURLParam(fro, true);
+    to = encodeURLParam(to, true);
+    return `https://www.google.com/maps/dir/${fro}/${to}`;
 }
 
 /**
@@ -50,7 +51,7 @@ export function getMapURL(search) {
         return '';
     }
     search = encodeURLParam(search, true);
-    return 'https://www.google.com/maps/search/' + search.replaceAll(' ', '+');
+    return `https://www.google.com/maps/search/${search}`;
 }
 
 /**
