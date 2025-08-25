@@ -6,10 +6,10 @@ import { findAddress } from './address.js';
 import { findSchool,
          getDefaultInputs,
          getStoredItem,
-         populateDistances,
          splitSchoolDescription } from './common.js';
 import { renderLink, renderList } from './html.js';
 import { downloadKML, makeKML } from './kml.js';
+import { populateDistances } from './obfuscate.js';
 import { describePath, findPathToSchool, getStreetJunctions } from './path.js';
 import { sortSchools } from './sort.js';
 import { encode, encodeURLParam } from './string.js';
