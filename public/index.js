@@ -6,7 +6,6 @@ import { findAddress, normalizeAddress } from './address.js';
 import { arrayToMap,
          getDefaultInputs,
          getStoredItem,
-         populateDistances,
          storeItem } from './common.js';
 import { renderAddressInput,
          renderDirectionsLink,
@@ -15,6 +14,7 @@ import { renderAddressInput,
          renderMapLink,
          renderOptions } from './html.js';
 import { howFar, isBikeable, isWalkable } from './geo.js';
+import { populateDistances, storeDistances } from './obfuscate.js';
 import { findSchoolDistances } from './path.js';
 import { sortSchools } from './sort.js';
 import addressData from './address-data.js';
@@ -405,7 +405,7 @@ function renderTargetMenu(schoolData, menus) {
 }
 
 /**
- * Get maximum school commute distances.
+ * Get maximum school commute distances, for a select menu filter.
  *
  * @param {Schools} schools - Data about some schools
  * @returns {Map} Menu option values and names for commute distances
@@ -1025,28 +1025,6 @@ function focusInput(id) {
     input.focus();
     const length = input.value.length;
     input.setSelectionRange(length, length);
-}
-
-/**
- * Save distances in localStorage.
- *
- * @param {Object.<string, Object>} distances - Distances to schools
- * @returns {boolean} Whether the operation proceeded without an exception
- */
-function storeDistances(distances) {
-    if (storeItem('distances', distances)) {
-        return true;
-    }
-    // Delete least recently used origin addresses.
-    const addresses = Object.keys(distances);
-    addresses.sort((a, b) => distances[a].timestamp - distances[b].timestamp);
-    for (const address of addresses) {
-        delete distances[address];
-        if (storeItem('distances', distances)) {
-            return true;
-        }
-    }
-    return false;
 }
 
 /**
