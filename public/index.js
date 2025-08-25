@@ -149,7 +149,7 @@ function arrayToMap(array) {
  * Render options for a select menu.
  *
  * @param {Map} options - Menu option values and names
- * @param {string} selected - The value selected.
+ * @param {?string} selected - The value selected.
  * @returns {string} HTML options for a select menu or datalist
  */
 function renderOptions(options, selected) {
@@ -165,8 +165,8 @@ function renderOptions(options, selected) {
  * Render a select menu.
  *
  * @param {Map} options - Menu option values and names
- * @param {string} selected - The value selected.
- * @param {string} [defaultName=null] - The name of the default option
+ * @param {?string} selected - The value selected.
+ * @param {?string} [defaultName=null] - The name of the default option
  * @param {string} [defaultValue=''] - The value of the default option
  * @returns {string} An HTML select menu
  */
@@ -1110,7 +1110,7 @@ function focusInput(id) {
  *
  * @param {StreetAddresses} addressData - All SF street addresses
  * @param {Schools} schoolData - Data about all schools
- * @param {Object.<string, string>} inputs - Form input values
+ * @param {Object} inputs - Form input values
  * @param {?LatLon} coords - Degrees latitude and longitude
  * @returns {boolean} Whether the page rendered
  */
@@ -1268,7 +1268,7 @@ function findShownColumns(schools) {
  *
  * @param {StreetAddresses} addressData - All SF street addresses
  * @param {Schools} schoolData - Data about all schools
- * @param {Object.<string, string>} inputs - Form input values
+ * @param {Object} inputs - Form input values
  * @param {?LatLon} coords - Degrees latitude and longitude
  */
 function addEventListeners(addressData, schoolData, inputs, coords) {
@@ -1329,7 +1329,7 @@ function addEventListeners(addressData, schoolData, inputs, coords) {
  *
  * @param {StreetAddresses} addressData - All SF street addresses
  * @param {Schools} schoolData - Data about all schools
- * @param {Object.<string, string>} inputs - Form input values
+ * @param {Object} inputs - Form input values
  * @param {?LatLon} coords - Degrees latitude and longitude
  */
 function renderPage(addressData, schoolData, inputs, coords) {
