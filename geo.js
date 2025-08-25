@@ -14,7 +14,11 @@ import { encodeURLParam } from './string.js';
  */
 export function expandCoords(coords) {
     if (!coords) {
-        return null
+        return null;
+    }
+    if (!Array.isArray(coords) || coords.length < 2) {
+        console.warn('Invalid geographic coordinates:', coords);
+        return null;
     }
     const [lat, lon] = coords;
     return [`37.${lat}`, `-122.${lon}`];
