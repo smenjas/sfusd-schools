@@ -25,6 +25,7 @@ import { azimuthToDirection,
          isBikeable,
          isWalkable,
          milesToFeet } from './geo.js';
+import { findOptimalPath } from './PriorityQueue.js';
 
 /**
  * Generate a Google Maps URL, for latitude and longitude.
@@ -427,7 +428,8 @@ export function findPathToSchool(addressData, jcts, stJcts, beelines, start, sch
     }
     const end = school.address;
     const place = `${school.name} ${school.types[0]}`;
-    return findPath(addressData, jcts, stJcts, beelines, start, end, place);
+    //return findPath(addressData, jcts, stJcts, beelines, start, end, place);
+    return findOptimalPath(addressData, jcts, stJcts, beelines, start, end, place);
 }
 
 /**
