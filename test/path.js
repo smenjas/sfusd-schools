@@ -32,20 +32,20 @@ const stJcts = {
     'GOETTINGEN ST': ['20889']
 }
 
-const path = [20889, 20653, 20652];
+const path = [20889, 20653, 20652, 20638];
 
 const start = '423 Burrows St';
 const end = '350 Girard St';
 const school = { name: 'King', types: ['Middle'], address: end };
 const schools = [school];
-const distance = 0.19298740757998661;
+const distance = 0.28036880566031713;
 const distances = { '350 GIRARD ST': distance };
 
 const maps = '<a target="_blank" href="https://www.google.com/maps/';
-let html = `<ol><li>Go <span title="71°">E</span> on ${maps}search/37.72806,-122.40706">Burrows St</a> 715 ft.</li>`;
-html += `<li>Go <span title="162°">S</span> on ${maps}search/37.72857,-122.40509">Girard St</a> 304 ft.</li>`;
+let html = `<ol><li>Go <span title="71°">E</span> on ${maps}search/37.72806,-122.40706">Burrows St</a> 0.2 mi.</li>`;
+html += `<li>Go <span title="162°">S</span> on ${maps}search/37.72857,-122.40509">Girard St</a> 305 ft.</li>`;
 html += `<li>Arrive at ${maps}search/350+Girard+St">350 Girard St</a></li></ol>`;
-html += `<p>Total: 0.2 mi. &#x1F6B6; Walkable</p>`;
+html += `<p>Total: 0.3 mi. &#x1F6B6; Walkable</p>`;
 html += `<p>${maps}dir/423+Burrows+St/350+Girard+St">Google Maps directions</a></p>`;
 
 export default class PathTest {
@@ -78,9 +78,9 @@ export default class PathTest {
 
     static formatDistance() {
         const tests = [
-            [[distances['350 GIRARD ST']], '0.2 mi.'],
-            [[distances['350 GIRARD ST'], false], '0.2 mi.'],
-            [[distances['350 GIRARD ST'], true], '0.2 mi. &#x1F6B6; Walkable'],
+            [[distances['350 GIRARD ST']], '0.3 mi.'],
+            [[distances['350 GIRARD ST'], false], '0.3 mi.'],
+            [[distances['350 GIRARD ST'], true], '0.3 mi. &#x1F6B6; Walkable'],
         ];
         return Test.run(formatDistance, tests);
     }

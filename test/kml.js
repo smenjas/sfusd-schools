@@ -18,19 +18,21 @@ const addrs = {
 };
 
 const jcts = {
-    20652: { ll: [72857, 40509], streets: ['BURROWS ST', 'GIRARD ST'], adj: [20653] },
+    20638: { ll: [72737, 40459], streets:['BACON ST', 'GIRARD ST'], adj: [20652] },
+    20652: { ll: [72857, 40509], streets: ['BURROWS ST', 'GIRARD ST'], adj: [20638, 20653] },
     20653: { ll: [72832, 40608], streets: ['BRUSSELS ST', 'BURROWS ST'], adj: [20652, 20889] },
     20889: { ll: [72806, 40706], streets: ['BURROWS ST', 'GOETTINGEN ST'], adj: [20653] },
 };
 
-const path = [20889, 20653, 20652];
+const path = [20889, 20653, 20652, 20638];
 
 const wpts = [
     { ll: ['37.7278', '-122.4073'], name: 1, description: '423 Burrows St', sym: 'Start' },
     { ll: ['37.72806', '-122.40706'], name: 2, description: 'Burrows St & Goettingen St', sym: 'Intersection' },
     { ll: ['37.72832', '-122.40608'], name: 3, description: 'Brussels St & Burrows St', sym: 'Intersection' },
     { ll: ['37.72857', '-122.40509'], name: 4, description: 'Burrows St & Girard St', sym: 'Intersection' },
-    { ll: ['37.7278', '-122.4055'], name: 5, description: '350 Girard St', sym: 'End' }
+    { ll: ['37.72737', '-122.40459'], name: 5, description: 'Bacon St & Girard St', sym: 'Intersection' },
+    { ll: ['37.7278', '-122.4055'], name: 6, description: '350 Girard St', sym: 'End' }
 ];
 
 const line = `  <Placemark>
@@ -44,6 +46,7 @@ const line = `  <Placemark>
         -122.40706,37.72806,0
         -122.40608,37.72832,0
         -122.40509,37.72857,0
+        -122.40459,37.72737,0
         -122.4055,37.7278,0
       </coordinates>
     </LineString>
@@ -80,6 +83,12 @@ const kml = `<?xml version="1.0" encoding="UTF-8"?>
   </Placemark>
   <Placemark>
     <name>5</name>
+    <description>Bacon St &amp; Girard St</description>
+    <sym>Intersection</sym>
+    <Point><coordinates>-122.40459,37.72737,0</coordinates></Point>
+  </Placemark>
+  <Placemark>
+    <name>6</name>
     <description>350 Girard St</description>
     <sym>End</sym>
     <Point><coordinates>-122.4055,37.7278,0</coordinates></Point>
