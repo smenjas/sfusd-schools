@@ -18,6 +18,7 @@ import { azimuthToDirection,
          howFar,
          isBikeable,
          isWalkable } from './geo.js';
+import { findOptimalPath } from './PriorityQueue.js';
 
 /**
  * Get the geographic coordinates of a street address.
@@ -153,7 +154,7 @@ function stayOnHwy(jcts, cnns, here) {
  * @param {LatLon} ll - Degrees latitude and longitude
  * @returns {CNNPrefixes} Intersections
  */
-function sortCNNs(jcts, beelines, cnns, ll) {
+export function sortCNNs(jcts, beelines, cnns, ll) {
     for (const cnn of cnns) {
         if (cnn in beelines) {
             continue;
@@ -500,7 +501,8 @@ export function findPathToSchool(addressData, jcts, stJcts, beelines, start, sch
     }
     const end = school.address;
     const place = `${school.name} ${school.types[0]}`;
-    return findBestPath(addressData, jcts, stJcts, beelines, start, end, place);
+    //return findBestPath(addressData, jcts, stJcts, beelines, start, end, place);
+    return findOptimalPath(addressData, jcts, stJcts, beelines, start, end, place);
 }
 
 /**

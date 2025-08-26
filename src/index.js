@@ -32,6 +32,7 @@ const server = http.createServer((request, response) => {
     case '/html.js':
     case '/kml.js':
     case '/obfuscate.js':
+    case '/PriorityQueue.js':
     case '/path.js':
     case '/paths.js':
     case '/junctions.js':
