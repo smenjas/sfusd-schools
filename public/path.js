@@ -18,6 +18,7 @@ import { azimuthToDirection,
          howFar,
          isBikeable,
          isWalkable } from './geo.js';
+import { findOptimalPath } from './PriorityQueue.js';
 
 /**
  * Get the geographic coordinates of a street address.
@@ -520,8 +521,8 @@ export function findPathToSchool(addressData, jcts, stJcts, beelines, start, sch
  * @returns {CNNPrefixes} Intersections
  */
 function findBestPath(addressData, jcts, stJcts, beelines, start, end, place = '') {
-    const to = findPath(addressData, jcts, stJcts, beelines, start, end, place);
-    const fro = findPath(addressData, jcts, stJcts, beelines, end, start, place);
+    const to = findOptimalPath(addressData, jcts, stJcts, beelines, start, end, place);
+    const fro = findOptimalPath(addressData, jcts, stJcts, beelines, end, start, place);
     if (!to.length) return fro.reverse();
     if (!fro.length) return to;
     const toDistance = sumDistances(addressData, jcts, to, start, end);

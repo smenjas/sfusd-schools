@@ -206,8 +206,9 @@ const start = '1700 Silver Ave'; // Silver Terrace Athletic Fields
 //const start = '599 Skyline Blvd'; // The Olympic Club
 
 //console.log(start);
-//const distances = findSchoolDistances(addressData, schoolData, jcts, start);
+const distances = findSchoolDistances(addressData, schoolData, jcts, start);
 //logNewRouteData();
+process.exit(0);
 
 const stJcts = getStreetJunctions(jcts);
 const beelines = {};
