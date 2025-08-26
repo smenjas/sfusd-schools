@@ -130,7 +130,7 @@ export function findAddressProjection(addressData, jcts, cnnA, cnnB, address) {
  */
 export function findAzimuth(a, b) {
     const components = howFarComponents(a, b);
-    if (!components) {
+    if (components === Infinity) {
         return null;
     }
     const [x, y] = components;
