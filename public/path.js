@@ -153,7 +153,7 @@ function stayOnHwy(jcts, cnns, here) {
  * @param {LatLon} ll - Degrees latitude and longitude
  * @returns {CNNPrefixes} Intersections
  */
-function sortCNNs(jcts, beelines, cnns, ll) {
+export function sortCNNs(jcts, beelines, cnns, ll) {
     for (const cnn of cnns) {
         if (cnn in beelines) {
             continue;
