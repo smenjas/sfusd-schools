@@ -5,6 +5,7 @@
 
 import { normalizeAddress, splitStreetAddress } from './address.js';
 import { expandCoords, howFar } from './geo.js';
+import { getAddressCoords, sortCNNs } from './path.js';
 
 /**
  * Priority queue implementation using a binary heap
@@ -128,6 +129,7 @@ function findNearestJunction(addressData, jcts, stJcts, address) {
     if (street in stJcts && stJcts[street].length > 0) {
         if (!(street in addressData) || !(num in addressData[street])) {
             // Address not found, use first junction on street
+            console.log('Found', num, 'on', street);
             return stJcts[street][0];
         }
 
@@ -147,6 +149,13 @@ function findNearestJunction(addressData, jcts, stJcts, address) {
                 minDistance = distance;
                 nearestCNN = cnn;
             }
+        }
+
+        // FIXME: Remove when working.
+        console.log(`Looking for junctions on street: ${street}`);
+        console.log(`Found ${stJcts[street]?.length || 0} junctions on this street`);
+        if (nearestCNN) {
+            console.log(`Selected junction ${nearestCNN} at distance ${minDistance}`);
         }
 
         if (nearestCNN !== null) {
@@ -207,6 +216,46 @@ function reconstructPath(cameFrom, current) {
 }
 
 /**
+ * Breadth first search
+ *
+ * @param {Junctions} jcts - All SF intersections
+ * @param {string} startCNN - Starting junction
+ * @param {string} goalCNN - Ending junction
+ * @param {Array} endLl - Latitude and logitude for the end address
+ * @param {number} maxDepth - Limit on how many junctions to visit
+ * @returns {Array<number>} A path as an array of junction CNNs
+ */
+function breadthFirstSearch(jcts, startCNN, goalCNN, endLl, maxDepth = 15000) {
+    const queue = [startCNN];
+    const visited = new Set([startCNN]);
+    const cameFrom = new Map();
+    const beelines = {};
+
+    while (queue.length > 0 && visited.size < maxDepth) {
+        const current = queue.shift();
+
+        if (current === goalCNN) {
+            return reconstructPath(cameFrom, current);
+        }
+
+        const junction = jcts[current];
+        if (junction?.adj) {
+            sortCNNs(jcts, beelines, junction.adj, endLl); // Sort neighbors by distance to end address
+            for (const neighbor of junction.adj) {
+                if (!visited.has(neighbor)) {
+                    visited.add(neighbor);
+                    cameFrom.set(neighbor, current);
+                    queue.push(neighbor);
+                }
+            }
+        }
+    }
+
+    console.log('Path is not connected');
+    return [];
+}
+
+/**
  * A* algorithm implementation
  *
  * @param {StreetAddresses} addressData - All SF street addresses
@@ -222,6 +271,10 @@ export function findOptimalPath(addressData, jcts, stJcts, beelines, start, end)
 
     const normalizedStart = normalizeAddress(start);
     const normalizedEnd = normalizeAddress(end);
+
+    // FIXME: Check for street (remove debug statments once working)
+    console.log('Streets in stJcts:', Object.keys(stJcts).filter(s => s.includes('SILVER')));
+    console.log('SILVER AVE in stJcts:', 'SILVER AVE' in stJcts);
 
     // Find nearest junctions to start and end
     const startCNN = findNearestJunction(addressData, jcts, stJcts, normalizedStart);
@@ -239,6 +292,12 @@ export function findOptimalPath(addressData, jcts, stJcts, beelines, start, end)
         return [];
     }
 
+    console.log({normalizedStart, startCNN, normalizedEnd, goalCNN});
+
+    // FIXME: Replace the A* logic with simple BFS (remove once A* is working)
+    const endLl = getAddressCoords(addressData, end);
+    return breadthFirstSearch(jcts, startCNN, goalCNN, endLl);
+
     // A* data structures
     const openSet = new PriorityQueue();
     const closedSet = new Set();
@@ -254,7 +313,7 @@ export function findOptimalPath(addressData, jcts, stJcts, beelines, start, end)
     openSet.enqueue(startCNN, heuristic);
 
     let nodesExplored = 0;
-    const maxNodes = 5000; // Prevent runaway searches
+    const maxNodes = 15000; // Prevent runaway searches
 
     while (!openSet.isEmpty() && nodesExplored < maxNodes) {
         const current = openSet.dequeue();
@@ -338,19 +397,4 @@ export function sumDistances(addressData, jcts, path, start, end) {
     }
 
     return totalDistance;
-}
-
-/**
- * Get coordinates for an address
- *
- * @param {StreetAddresses} addressData - All SF street addresses
- * @param {string} address - Normalized address
- * @returns {?Array<string>} Full coordinates ['37.xxxx', '-122.xxxx']
- */
-function getAddressCoords(addressData, address) {
-    const [num, street] = splitStreetAddress(normalizeAddress(address));
-    if (!(street in addressData) || !(num in addressData[street])) {
-        return null;
-    }
-    return expandCoords(addressData[street][num]);
 }

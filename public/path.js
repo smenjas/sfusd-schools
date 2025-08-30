@@ -505,7 +505,8 @@ export function findPathToSchool(addressData, jcts, stJcts, beelines, start, sch
     }
     const end = school.address;
     const place = `${school.name} ${school.types[0]}`;
-    return findBestPath(addressData, jcts, stJcts, beelines, start, end, place);
+    //return findBestPath(addressData, jcts, stJcts, beelines, start, end, place);
+    return findOptimalPath(addressData, jcts, stJcts, beelines, start, end, place);
 }
 
 /**
