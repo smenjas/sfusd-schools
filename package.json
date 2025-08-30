@@ -1,6 +1,6 @@
 {
   "name": "sfusd-schools",
-  "version": "0.5.6",
+  "version": "0.5.7",
   "type": "module",
   "description": "Compare public schools in the San Francisco Unified School District.",
   "main": "index.js",
