@@ -118,14 +118,15 @@ export function findDirection(a, b) {
  * Get the geographic coordinates of a street address.
  *
  * @param {StreetAddresses} addressData - All SF street addresses
- * @param {string} address - A street address
+ * @param {string} address - A street address, possibly normalized
+ * @param {boolean} [normalize=true] - Whether to normalize the address
  * @returns {?LatLon} Decimal degrees latitude and longitude
  */
-export function getAddressCoords(addressData, address) {
+export function getAddressCoords(addressData, address, normalize = true) {
     if (typeof address !== 'string') {
         return null;
     }
-    const [num, street] = splitStreetAddress(address, true);
+    const [num, street] = splitStreetAddress(address, normalize);
     if (!(street in addressData)) {
         console.log('Cannot find street:', street);
         return null;
