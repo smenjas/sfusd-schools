@@ -24,11 +24,12 @@ import { findOptimalPath } from './PriorityQueue.js';
  * Get the geographic coordinates of a street address.
  *
  * @param {StreetAddresses} addressData - All SF street addresses
- * @param {string} address - A street address
+ * @param {string} address - A street address, possibly normalized
+ * @param {boolean} [normalize=false] - Whether to normalize the address
  * @returns {?LatLon} Decimal degrees latitude and longitude
  */
-export function getAddressCoords(addressData, address) {
-    const [num, street] = splitStreetAddress(address, true);
+export function getAddressCoords(addressData, address, normalize = false) {
+    const [num, street] = splitStreetAddress(address, normalize);
     if (!(street in addressData)) {
         console.log('Cannot find street:', street);
         return null;
@@ -181,7 +182,7 @@ export function sortCNNs(jcts, beelines, cnns, ll) {
  */
 function sortStreetCNNs(jcts, stJcts, beelines, street, ll) {
     if (!(street in stJcts)) {
-        //console.log('sortStreetCNNs():', street, 'not found');
+        console.log('sortStreetCNNs():', street, 'not found');
         return [];
     }
     return sortCNNs(jcts, beelines, stJcts[street], ll);
@@ -431,7 +432,7 @@ export function howFarAddresses(addressData, start, end) {
  * @returns {number} Distance in miles
  */
 function howFarAddressToJunction(addressData, jcts, address, cnn) {
-    const addrLl = getAddressCoords(addressData, address);
+    const addrLl = getAddressCoords(addressData, address, true);
     const jctLl = getJunctionCoords(jcts, cnn);
     return howFar(addrLl, jctLl);
 }
