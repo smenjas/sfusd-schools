@@ -44,8 +44,8 @@ export function downloadKML(kml, filename) {
  * @returns {Array.<Object>} Waypoints
  */
 export function getPathWaypoints(addressData, jcts, path, start, end) {
-    const startLl = getAddressCoords(addressData, start);
-    const endLl = getAddressCoords(addressData, end);
+    const startLl = getAddressCoords(addressData, start, true);
+    const endLl = getAddressCoords(addressData, end, true);
 
     let n = 1;
     const startPretty = prettifyAddress(start);
