@@ -151,7 +151,7 @@ function sortCNNs(jcts, beelines, cnns, ll) {
  */
 function sortStreetCNNs(jcts, stJcts, beelines, street, ll) {
     if (!(street in stJcts)) {
-        //console.log('sortStreetCNNs():', street, 'not found');
+        console.log('sortStreetCNNs():', street, 'not found');
         return [];
     }
     return sortCNNs(jcts, beelines, stJcts[street], ll);
