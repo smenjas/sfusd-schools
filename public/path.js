@@ -170,7 +170,7 @@ function sortStreetCNNs(jcts, stJcts, beelines, street, ll) {
  */
 export function findAddressJunction(addressData, jcts, stJcts, beelines, address) {
     const [num, street] = splitStreetAddress(address);
-    const ll = getAddressCoords(addressData, address);
+    const ll = getAddressCoords(addressData, address, false);
     const cnns = sortStreetCNNs(jcts, stJcts, beelines, street, ll);
     const cnn = cnns.length ? cnns[0] : findNearestJunction(jcts, beelines, ll);
     return parseInt(cnn);
@@ -232,7 +232,7 @@ function findPath(addressData, jcts, stJcts, beelines, start, end, place = '') {
         beelines[end] = {};
     }
     const there = findAddressJunction(addressData, jcts, stJcts, beelines[end], end);
-    const endLl = getAddressCoords(addressData, end);
+    const endLl = getAddressCoords(addressData, end, false);
 
     /**
      * A deeply nested record of paths to a destination.
