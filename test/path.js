@@ -90,8 +90,11 @@ export default class PathTest {
 
     static getAddressCoords() {
         const tests = [
-            [[addrs, start], ['37.7278', '-122.4073']],
-            [[addrs, end], ['37.7278', '-122.4055']],
+            [[addrs, start], null],
+            [[addrs, start, false], null],
+            [[addrs, start, true], ['37.7278', '-122.4073']],
+            [[addrs, end], null],
+            [[addrs, end, true], ['37.7278', '-122.4055']],
         ];
         return Test.run(getAddressCoords, tests);
     }
