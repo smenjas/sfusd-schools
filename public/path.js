@@ -63,7 +63,7 @@ export function getJunctionCoords(jcts, cnn) {
  * @param {CNNPrefix} cnn - A Center-line Network Number
  * @returns {string} A URL
  */
-function mapCNN(jcts, cnn) {
+export function mapCNN(jcts, cnn) {
     return getCoordsURL(getJunctionCoords(jcts, cnn));
 }
 
@@ -214,7 +214,7 @@ export function findAddressJunction(addressData, jcts, stJcts, beelines, address
  * @param {LatLon} ll - Degrees latitude and longitude
  * @returns {CNNPrefix} The nearest intersection
  */
-function findNearestJunction(jcts, beelines, ll) {
+export function findNearestJunction(jcts, beelines, ll) {
     let min = Infinity;
     let minCNN = null;
     for (const cnn in jcts) {
@@ -431,7 +431,7 @@ export function howFarAddresses(addressData, start, end) {
  * @param {CNNPrefix} cnn - An intersection
  * @returns {number} Distance in miles
  */
-function howFarAddressToJunction(addressData, jcts, address, cnn) {
+export function howFarAddressToJunction(addressData, jcts, address, cnn) {
     const addrLl = getAddressCoords(addressData, address, true);
     const jctLl = getJunctionCoords(jcts, cnn);
     return howFar(addrLl, jctLl);
