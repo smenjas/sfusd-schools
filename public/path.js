@@ -32,7 +32,7 @@ import { azimuthToDirection,
  * @param {CNNPrefix} cnn - A Center-line Network Number
  * @returns {string} A URL
  */
-function mapCNN(jcts, cnn) {
+export function mapCNN(jcts, cnn) {
     return getCoordsURL(getJunctionCoords(jcts, cnn));
 }
 
@@ -123,7 +123,7 @@ function stayOnHwy(jcts, cnns, here) {
  * @param {LatLon} ll - Degrees latitude and longitude
  * @returns {CNNPrefixes} Intersections
  */
-function sortCNNs(jcts, beelines, cnns, ll) {
+export function sortCNNs(jcts, beelines, cnns, ll) {
     for (const cnn of cnns) {
         if (cnn in beelines) {
             continue;
@@ -183,7 +183,7 @@ export function findAddressJunction(addressData, jcts, stJcts, beelines, address
  * @param {LatLon} ll - Degrees latitude and longitude
  * @returns {CNNPrefix} The nearest intersection
  */
-function findNearestJunction(jcts, beelines, ll) {
+export function findNearestJunction(jcts, beelines, ll) {
     let min = Infinity;
     let minCNN = null;
     for (const cnn in jcts) {
