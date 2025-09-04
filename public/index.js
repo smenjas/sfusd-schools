@@ -1179,9 +1179,12 @@ function findAddressSuggestions(addressData, num, nonstd, std) {
     }
     // Gracefully handle street names with apostrophes.
     const puncts = {
+        'DUNNE\'S ALY': 'DUNNES ALY',
         'O\'FARRELL ST': 'OFARRELL ST',
         'O\'REILLY AVE': 'OREILLY AVE',
         'O\'SHAUGHNESSY BLVD': 'OSHAUGHNESSY BLVD',
+        'SAINT JOSEPH\'S AVE': 'SAINT JOSEPHS AVE',
+        'SAINT MARY\'S AVE': 'SAINT MARYS AVE',
     };
     for (const p in puncts) {
         const st = puncts[p];
