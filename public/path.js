@@ -501,29 +501,7 @@ export function findPathToSchool(addressData, jcts, stJcts, beelines, start, sch
     }
     const end = school.address;
     const place = `${school.name} ${school.types[0]}`;
-    return findBestPath(addressData, jcts, stJcts, beelines, start, end, place);
-}
-
-/**
- * Find a path between two street addresses in San Francisco, California.
- *
- * @param {StreetAddresses} addressData - All SF street addresses
- * @param {Junctions} jcts - All SF intersections
- * @param {StreetJunctions} stJcts - Look up CNNs by street name.
- * @param {Object} beelines - Distances to addresses, as the crow flies
- * @param {string} start - The starting street address
- * @param {string} end - The ending street address
- * @param {string} [place=''] - The name of the destination (optional)
- * @returns {CNNPrefixes} Intersections
- */
-function findBestPath(addressData, jcts, stJcts, beelines, start, end, place = '') {
-    const to = findPath(addressData, jcts, stJcts, beelines, start, end, place);
-    const fro = findPath(addressData, jcts, stJcts, beelines, end, start, place);
-    if (!to.length) return fro.reverse();
-    if (!fro.length) return to;
-    const toDistance = sumDistances(addressData, jcts, to, start, end);
-    const froDistance = sumDistances(addressData, jcts, fro, end, start);
-    return (toDistance < froDistance) ? to : fro.reverse();
+    return findPath(addressData, jcts, stJcts, beelines, start, end, place);
 }
 
 /**
