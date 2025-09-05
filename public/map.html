@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SF Street Map</title>
+<script type="module" src="map.js" defer></script>
+<link rel="stylesheet" href="map.css">
+<link rel="icon" type="image/x-icon" href="img/favicon.ico">
+<link rel="icon" type="image/png" href="img/sfusd-16.png" sizes="16x16">
+<link rel="icon" type="image/png" href="img/sfusd-32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="img/sfusd-57.png" sizes="57x57">
+<link rel="icon" type="image/png" href="img/sfusd-60.png" sizes="60x60">
+<link rel="icon" type="image/png" href="img/sfusd-70.png" sizes="70x70">
+<link rel="icon" type="image/png" href="img/sfusd-72.png" sizes="72x72">
+<link rel="icon" type="image/png" href="img/sfusd-76.png" sizes="76x76">
+<link rel="icon" type="image/png" href="img/sfusd-96.png" sizes="96x96">
+<link rel="icon" type="image/png" href="img/sfusd-128.png" sizes="128x128">
+<link rel="icon" type="image/png" href="img/sfusd-192.png" sizes="192x192">
+<link rel="apple-touch-icon" type="image/png" href="img/sfusd-120.png" sizes="120x120">
+<link rel="apple-touch-icon" type="image/png" href="img/sfusd-152.png" sizes="152x152">
+<link rel="apple-touch-icon" type="image/png" href="img/sfusd-167.png" sizes="167x167">
+<link rel="apple-touch-icon" type="image/png" href="img/sfusd-180.png" sizes="180x180">
+<link rel="icon" type="image/png" href="img/sfusd-400.png" sizes="400x400">
+<meta name="description" content="Map routes to public schools in San Francisco.">
+<meta name="robots" content="noindex, nofollow">
+</head>
+<body>
+
+<div class="container">
+
+<div class="controls">
+    <button id="findPathBtn" disabled>Find Path</button>
+    <button id="resetBtn">Reset</button>
+
+    <div class="zoom-controls">
+        <button id="zoomInBtn">Zoom In</button>
+        <button id="zoomOutBtn">Zoom Out</button>
+        <button id="fitViewBtn">Fit to View</button>
+    </div>
+
+    <label>
+        Speed:
+        <select id="animationSpeed">
+            <option value="0" selected>Fastest</option>
+            <option value="5">Very Fast</option>
+            <option value="20">Fast</option>
+            <option value="50">Normal</option>
+            <option value="100">Slow</option>
+            <option value="200">Very Slow</option>
+        </select>
+    </label>
+</div>
+
+<div class="map-container">
+    <canvas id="mapCanvas"></canvas>
+</div>
+
+<div class="legend">
+    <div class="legend-item">
+        <div class="legend-color" id="streets-color" style="background: #bbb;"></div>
+        <span>Streets</span>
+    </div>
+    <div class="legend-item">
+        <div class="legend-color" id="junctions-color" style="background: #ccc;"></div>
+        <span>Junctions</span>
+    </div>
+    <div class="legend-item">
+        <div class="legend-color" id="start-color" style="background: #28a745;"></div>
+        <span>Start</span>
+    </div>
+    <div class="legend-item">
+        <div class="legend-color" id="end-color" style="background: #dc3545;"></div>
+        <span>End</span>
+    </div>
+    <div class="legend-item">
+        <div class="legend-color" id="current-color" style="background: #ff6b35;"></div>
+        <span>Current</span>
+    </div>
+    <div class="legend-item">
+        <div class="legend-color" id="openSet-color" style="background: #ffc107;"></div>
+        <span>Open Set</span>
+    </div>
+    <div class="legend-item">
+        <div class="legend-color" id="closedSet-color" style="background: #db1;"></div>
+        <span>Closed Set</span>
+    </div>
+    <div class="legend-item">
+        <div class="legend-color" id="finalPath-color" style="background: #06c; width: 20px; height: 4px; border-radius: 0;"></div>
+        <span>Final Path</span>
+    </div>
+</div>
+
+<div class="info" id="infoPanel">
+    Click "Load Street Network" to begin. Then click two junctions to set start/end points.
+</div>
+
+<div class="stats" id="statsPanel">&nbsp;</div>
+
+</div>
+
+</body>
+</html>
