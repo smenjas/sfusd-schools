@@ -9,26 +9,31 @@ input, button, textarea, select {
     font: inherit;
 }
 
+input, button, textarea, select {
+    font: inherit;
+}
+
 .container {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    max-width: none;
+    width: 100vw;
+    margin: 0;
+    padding: 10px;
 }
 
 .map-container {
-    background: #f8f8f8;
-    border: 2px solid #ddd;
-    border-radius: 4px;
-    overflow: hidden;
-    position: relative;
+    flex: 1;
+    display: flex;
+    min-height: 0; /* Important for flex children */
 }
 
 canvas {
-    cursor: grab;
     display: block;
+    height: 100%;
+    width: 100%;
 }
 
 canvas:active {
@@ -55,20 +60,23 @@ button:disabled {
 }
 
 .controls {
-    align-items: center;
     display: flex;
-    flex-wrap: wrap;
+    flex-shrink: 0;
     gap: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
+}
+
+.controls label {
+    margin-top: 5px;
 }
 
 .zoom-controls {
-    display: flex;
     gap: 5px;
 }
 
 .info, .stats {
-    margin-top: 10px;
+    flex-shrink: 0;
+    margin-top: 5px;
     padding: 5px;
 }
 
@@ -85,8 +93,11 @@ button:disabled {
 }
 
 .legend {
+    align-items: center; /* Vertically center items */
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: row; /* Force horizontal layout */
+    flex-shrink: 0;
+    flex-wrap: wrap; /* Allow wrapping if needed */
     font-size: 12px;
     gap: 15px;
     margin: 10px 5px 5px;
@@ -95,7 +106,9 @@ button:disabled {
 .legend-item {
     align-items: center;
     display: flex;
+    flex-shrink: 0; /* Prevent items from shrinking */
     gap: 5px;
+    white-space: nowrap; /* Prevent text wrapping */
 }
 
 .legend-color {
