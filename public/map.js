@@ -92,6 +92,8 @@ function drawMap() {
 
     let visibleJunctions = 0;
     let visibleStreets = 0;
+    let totalJunctions = 0;
+    let sampleCoords = []; // Debug: collect some coordinates
 
     // Draw streets
     ctx.strokeStyle = '#666666';
@@ -103,6 +105,13 @@ function drawMap() {
         const [lat1, lng1] = junction.ll;
         const [x1, y1] = latLngToScreen(lat1, lng1);
 
+        totalJunctions++;
+
+        // Collect sample coordinates for debugging
+        if (sampleCoords.length < 5) {
+            sampleCoords.push(`${junctionId}: [${lat1}, ${lng1}] -> [${x1.toFixed(1)}, ${y1.toFixed(1)}]`);
+        }
+
         junction.adj.forEach(adjId => {
             if (junctions[adjId]) {
                 const connectionKey = [junctionId, adjId].sort().join('-');
@@ -113,7 +122,7 @@ function drawMap() {
                     const [x2, y2] = latLngToScreen(lat2, lng2);
 
                     // Only draw if at least one point is visible
-                    const margin = 50;
+                    const margin = 100;
                     if ((x1 >= -margin && x1 <= canvas.width + margin && y1 >= -margin && y1 <= canvas.height + margin) ||
                         (x2 >= -margin && x2 <= canvas.width + margin && y2 >= -margin && y2 <= canvas.height + margin)) {
                         ctx.moveTo(x1, y1);
@@ -152,7 +161,7 @@ function drawMap() {
         const [x, y] = latLngToScreen(lat, lng);
 
         // Skip if not visible
-        const margin = 20;
+        const margin = 50;
         if (x < -margin || x > canvas.width + margin || y < -margin || y > canvas.height + margin) {
             return;
         }
@@ -199,8 +208,10 @@ function drawMap() {
     });
 
     const debugInfo = [
-        `Rendered ${visibleJunctions} junctions, ${visibleStreets} streets`,
-        `Zoom: ${zoom.toFixed(2)}x`
+        `Rendered ${visibleJunctions}/${totalJunctions} junctions, ${visibleStreets} streets`,
+        `Zoom: ${zoom.toFixed(3)}x, Offset: [${offsetX.toFixed(1)}, ${offsetY.toFixed(1)}]`,
+        `Canvas: ${canvas.width}x${canvas.height}`,
+        `Sample coords: ${sampleCoords[0] || 'none'}`
     ].join(' | ');
 
     log(debugInfo);
@@ -224,6 +235,23 @@ function preprocessJunctions(rawJunctions) {
 
     console.log(`Preprocessed ${Object.keys(processed).length} junctions`);
     return processed;
+}
+
+function testCoordinateTransform() {
+    if (!mapBounds) return;
+
+    // Test with a few known coordinates
+    const testCoords = [
+        [mapBounds.minLat, mapBounds.minLng], // Should be near top-left
+        [mapBounds.maxLat, mapBounds.maxLng], // Should be near bottom-right
+        [(mapBounds.minLat + mapBounds.maxLat) / 2, (mapBounds.minLng + mapBounds.maxLng) / 2] // Should be center
+    ];
+
+    console.log('Coordinate transform test:');
+    testCoords.forEach(([lat, lng], i) => {
+        const [x, y] = latLngToScreen(lat, lng);
+        console.log(`Test ${i}: [${lat.toFixed(0)}, ${lng.toFixed(0)}] -> [${x.toFixed(1)}, ${y.toFixed(1)}]`);
+    });
 }
 
 function loadMap() {
@@ -251,6 +279,8 @@ function loadMap() {
 
     document.getElementById('infoPanel').textContent =
         `Street network loaded! ${Object.keys(junctions).length} junctions shown. Click two junctions to set start/end points.`;
+
+    testCoordinateTransform();
 }
 
 function setupEventListeners() {
@@ -381,6 +411,8 @@ function fitToView() {
     // Center the map
     offsetX = 0;
     offsetY = 0;
+
+    log(`Fit to view: zoom=${zoom.toFixed(3)}, offset=[${offsetX.toFixed(1)}, ${offsetY.toFixed(1)}]`);
 
     drawMap();
 }
