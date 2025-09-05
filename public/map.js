@@ -251,6 +251,26 @@ function drawFinalPath() {
     ctx.stroke();
 }
 
+function padCoord(coord) {
+    // Pad coordinates to 5 digits with trailing zeros
+    return parseInt(coord.toString().padEnd(5, '0'));
+}
+
+function preprocessJunctions(rawJunctions) {
+    const processed = {};
+
+    Object.entries(rawJunctions).forEach(([cnn, junction]) => {
+        const [lat, lon] = junction.ll;
+        processed[cnn] = {
+            ...junction,
+            ll: [padCoord(lat), padCoord(lon)]
+        };
+    });
+
+    console.log(`Preprocessed ${Object.keys(processed).length} junctions`);
+    return processed;
+}
+
 function loadMap() {
     canvas = document.getElementById('mapCanvas');
     ctx = canvas.getContext('2d');
@@ -259,6 +279,13 @@ function loadMap() {
         log("Error: Could not initialize canvas");
         return;
     }
+
+    // Preprocess coordinates to pad trailing zeros
+    const processedJunctions = preprocessJunctions(junctions);
+
+    // Replace global junctions with processed ones
+    Object.keys(junctions).forEach(key => delete junctions[key]);
+    Object.assign(junctions, processedJunctions);
 
     bounds = calculateBounds();
 
