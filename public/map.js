@@ -224,8 +224,10 @@ function drawMap() {
         ctx.stroke();
     }
 
-    // Draw junctions
-    const junctionRadius = Math.max(3, 2 / zoom);
+    // Draw junctions in layers (gray first, then colored on top)
+    const junctionRadius = Math.max(2, 1.5 / zoom);
+
+    // First pass: Draw all gray/default junctions
     Object.entries(junctions).forEach(([junctionId, junction]) => {
         const [lat, lng] = junction.ll;
         const [x, y] = latLngToScreen(lat, lng);
@@ -235,33 +237,19 @@ function drawMap() {
         if (x < -margin || x > canvas.width + margin || y < -margin || y > canvas.height + margin) {
             return;
         }
-        visibleJunctions++;
 
-        // Determine color and size
-        let color = getColor('streets');
-        let radius = junctionRadius;
+        // Only draw if it's a default/gray junction
+        if (!(selectedStart && junctionId === selectedStart) &&
+            !(selectedEnd && junctionId === selectedEnd) &&
+            currentNode !== junctionId &&
+            !openSet.has(junctionId) &&
+            !closedSet.has(junctionId)) {
 
-        if (selectedStart && junctionId === selectedStart) {
-            color = getColor('start');
-            radius = junctionRadius * 2;
-        } else if (selectedEnd && junctionId === selectedEnd) {
-            color = getColor('end');
-            radius = junctionRadius * 2;
-        } else if (currentNode === junctionId) {
-            color = getColor('current');
-            radius = junctionRadius * 1.5;
-        } else if (openSet.has(junctionId)) {
-            color = getColor('openSet');
-            radius = junctionRadius * 1.2;
-        } else if (closedSet.has(junctionId)) {
-            color = getColor('closedSet');
-            radius = junctionRadius * 1.1;
+            ctx.fillStyle = getColor('junctions');
+            ctx.beginPath();
+            ctx.arc(x, y, junctionRadius, 0, 2 * Math.PI);
+            ctx.fill();
         }
-
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, 2 * Math.PI);
-        ctx.fill();
 
         // Draw junction ID when zoomed in
         if (zoom > 12) {
@@ -276,6 +264,97 @@ function drawMap() {
             ctx.fillText(junctionId, x, y - junctionRadius - 3);
         }
     });
+
+    // Second pass: Draw closed set
+    closedSet.forEach(junctionId => {
+        if (!junctions[junctionId]) return;
+
+        const [lat, lng] = junctions[junctionId].ll;
+        const [x, y] = latLngToScreen(lat, lng);
+
+        const margin = 50;
+        if (x < -margin || x > canvas.width + margin || y < -margin || y > canvas.height + margin) {
+            return;
+        }
+
+        ctx.fillStyle = getColor('closedSet');
+        ctx.beginPath();
+        ctx.arc(x, y, junctionRadius * 1.3, 0, 2 * Math.PI);
+        ctx.fill();
+    });
+
+    // Third pass: Draw open set
+    openSet.forEach(junctionId => {
+        if (!junctions[junctionId]) return;
+
+        const [lat, lng] = junctions[junctionId].ll;
+        const [x, y] = latLngToScreen(lat, lng);
+
+        const margin = 50;
+        if (x < -margin || x > canvas.width + margin || y < -margin || y > canvas.height + margin) {
+            return;
+        }
+
+        ctx.fillStyle = getColor('openSet');
+        ctx.beginPath();
+        ctx.arc(x, y, junctionRadius * 1.8, 0, 2 * Math.PI);
+        ctx.fill();
+    });
+
+    // Fourth pass: Draw current node
+    if (currentNode && junctions[currentNode]) {
+        const [lat, lng] = junctions[currentNode].ll;
+        const [x, y] = latLngToScreen(lat, lng);
+
+        const margin = 50;
+        if (x >= -margin && x <= canvas.width + margin && y >= -margin && y <= canvas.height + margin) {
+            ctx.fillStyle = getColor('current');
+            ctx.beginPath();
+            ctx.arc(x, y, junctionRadius * 2.2, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+    }
+
+    // Fifth pass: Draw start/end points
+    if (selectedStart && junctions[selectedStart]) {
+        const [lat, lng] = junctions[selectedStart].ll;
+        const [x, y] = latLngToScreen(lat, lng);
+
+        ctx.fillStyle = getColor('start');
+        ctx.beginPath();
+        ctx.arc(x, y, junctionRadius * 3, 0, 2 * Math.PI);
+        ctx.fill();
+
+        ctx.strokeStyle = getColor('text');
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(x, y, junctionRadius * 3, 0, 2 * Math.PI);
+        ctx.stroke();
+    }
+
+    if (selectedEnd && junctions[selectedEnd]) {
+        const [lat, lng] = junctions[selectedEnd].ll;
+        const [x, y] = latLngToScreen(lat, lng);
+
+        ctx.fillStyle = getColor('end');
+        ctx.beginPath();
+        ctx.arc(x, y, junctionRadius * 3, 0, 2 * Math.PI);
+        ctx.fill();
+
+        ctx.strokeStyle = getColor('text');
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(x, y, junctionRadius * 3, 0, 2 * Math.PI);
+        ctx.stroke();
+    }
+
+    // Count visible junctions for debugging
+    visibleJunctions = Object.keys(junctions).filter(id => {
+        const [lat, lng] = junctions[id].ll;
+        const [x, y] = latLngToScreen(lat, lng);
+        const margin = 50;
+        return x >= -margin && x <= canvas.width + margin && y >= -margin && y <= canvas.height + margin;
+    }).length;
 
     const stats = [
         `Canvas: ${canvas.width}x${canvas.height}`,
