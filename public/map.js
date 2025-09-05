@@ -12,6 +12,34 @@ let lastMouseX = 0, lastMouseY = 0;
 let selectedStart = null;
 let selectedEnd = null;
 let isPathfinding = false;
+let theme = 'light';
+
+const colorThemes = {
+    light: {
+        background: '#ffffff', // White
+        streets: '#666666', // Gray
+        junctions: '#333333', // Dark gray
+        start: '#28a745', // Green
+        end: '#dc3545', // Red
+        current: '#ff6b35', // Orange
+        openSet: '#ffc107', // Yellow
+        closedSet: '#6c757d', // Gray
+        finalPath: '#0066cc', // Blue
+        text: '#000000' // Black
+    },
+    dark: {
+        background: '#1a1a1a',
+        streets: '#888888', // Gray
+        junctions: '#cccccc', // Light gray
+        start: '#4ade80', // Green
+        end: '#f87171', // Salmon
+        current: '#fb923c', // Orange
+        openSet: '#fbbf24', // Yellow
+        closedSet: '#9ca3af', // Gray
+        finalPath: '#60a5fa', // Blue
+        text: '#ffffff' // White
+    }
+};
 
 // A* visualization state
 let openSet = new Set();
@@ -22,6 +50,30 @@ let finalPath = [];
 function log(message) {
     console.log(message);
     document.getElementById('debugPanel').textContent = message;
+}
+
+function detectColorScheme() {
+    // Check if the browser supports the media query
+    if (!window.matchMedia) {
+        return;
+    }
+
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+
+    // Check if user prefers dark mode
+    theme = (media.matches) ? 'dark' : 'light';
+
+    // Listen for changes in color scheme preference
+    media.addEventListener('change', (e) => {
+        theme = e.matches ? 'dark' : 'light';
+        drawMap(); // Redraw with new colors
+    });
+
+    console.log(`Color scheme detected: ${theme}`);
+}
+
+function getColor(colorName) {
+    return colorThemes[theme][colorName];
 }
 
 function calculateMapBounds(junctionData = junctions) {
@@ -115,8 +167,8 @@ function drawMap() {
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // White background
-    ctx.fillStyle = '#ffffff';
+    // Background using theme color
+    ctx.fillStyle = getColor('background');
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     let visibleJunctions = 0;
@@ -125,7 +177,7 @@ function drawMap() {
     let sampleCoords = []; // Debug: collect some coordinates
 
     // Draw streets
-    ctx.strokeStyle = '#666666';
+    ctx.strokeStyle = getColor('streets');
     ctx.lineWidth = Math.max(2, 1 / zoom);
     ctx.beginPath();
 
@@ -162,11 +214,12 @@ function drawMap() {
             }
         });
     });
+
     ctx.stroke();
 
     // Draw final path if it exists
     if (finalPath.length > 1) {
-        ctx.strokeStyle = '#0066cc';
+        ctx.strokeStyle = getColor('finalPath');
         ctx.lineWidth = Math.max(6, 3 / zoom);
         ctx.lineCap = 'round';
         ctx.beginPath();
@@ -184,7 +237,7 @@ function drawMap() {
     }
 
     // Draw junctions in layers (gray first, then colored on top)
-    const junctionRadius = Math.max(2, 1.5 / zoom); // Much smaller default size
+    const junctionRadius = Math.max(2, 1.5 / zoom);
 
     // First pass: Draw all gray/default junctions
     Object.entries(junctions).forEach(([junctionId, junction]) => {
@@ -204,7 +257,7 @@ function drawMap() {
             !openSet.has(junctionId) &&
             !closedSet.has(junctionId)) {
 
-            ctx.fillStyle = '#333333';
+            ctx.fillStyle = getColor('junctions');
             ctx.beginPath();
             ctx.arc(x, y, junctionRadius, 0, 2 * Math.PI);
             ctx.fill();
@@ -215,8 +268,8 @@ function drawMap() {
             ctx.lineJoin = 'round';
             ctx.lineWidth = 5;
             ctx.miterLimit = 3;
-            ctx.fillStyle = '#000000';
-            ctx.strokeStyle = '#ffffff';
+            ctx.fillStyle = getColor('text');
+            ctx.strokeStyle = getColor('background');
             ctx.font = `${Math.max(12, zoom / 4)}px Arial`;
             ctx.textAlign = 'center';
             ctx.strokeText(junctionId, x, y - junctionRadius - 3);
@@ -224,7 +277,7 @@ function drawMap() {
         }
     });
 
-    // Second pass: Draw closed set (gray but part of algorithm)
+    // Second pass: Draw closed set
     closedSet.forEach(junctionId => {
         if (!junctions[junctionId]) return;
 
@@ -236,13 +289,13 @@ function drawMap() {
             return;
         }
 
-        ctx.fillStyle = '#6c757d'; // Gray for closed set
+        ctx.fillStyle = getColor('closedSet');
         ctx.beginPath();
         ctx.arc(x, y, junctionRadius * 1.3, 0, 2 * Math.PI);
         ctx.fill();
     });
 
-    // Third pass: Draw open set (yellow)
+    // Third pass: Draw open set
     openSet.forEach(junctionId => {
         if (!junctions[junctionId]) return;
 
@@ -254,38 +307,37 @@ function drawMap() {
             return;
         }
 
-        ctx.fillStyle = '#ffc107'; // Yellow for open set
+        ctx.fillStyle = getColor('openSet');
         ctx.beginPath();
         ctx.arc(x, y, junctionRadius * 1.8, 0, 2 * Math.PI);
         ctx.fill();
     });
 
-    // Fourth pass: Draw current node (orange)
+    // Fourth pass: Draw current node
     if (currentNode && junctions[currentNode]) {
         const [lat, lng] = junctions[currentNode].ll;
         const [x, y] = latLngToScreen(lat, lng);
 
         const margin = 50;
         if (x >= -margin && x <= canvas.width + margin && y >= -margin && y <= canvas.height + margin) {
-            ctx.fillStyle = '#ff6b35'; // Orange for current
+            ctx.fillStyle = getColor('current');
             ctx.beginPath();
             ctx.arc(x, y, junctionRadius * 2.2, 0, 2 * Math.PI);
             ctx.fill();
         }
     }
 
-    // Fifth pass: Draw start/end points (largest, on top)
+    // Fifth pass: Draw start/end points
     if (selectedStart && junctions[selectedStart]) {
         const [lat, lng] = junctions[selectedStart].ll;
         const [x, y] = latLngToScreen(lat, lng);
 
-        ctx.fillStyle = '#28a745'; // Green for start
+        ctx.fillStyle = getColor('start');
         ctx.beginPath();
         ctx.arc(x, y, junctionRadius * 3, 0, 2 * Math.PI);
         ctx.fill();
 
-        // Black border for visibility
-        ctx.strokeStyle = '#000000';
+        ctx.strokeStyle = getColor('text');
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(x, y, junctionRadius * 3, 0, 2 * Math.PI);
@@ -296,13 +348,12 @@ function drawMap() {
         const [lat, lng] = junctions[selectedEnd].ll;
         const [x, y] = latLngToScreen(lat, lng);
 
-        ctx.fillStyle = '#dc3545'; // Red for end
+        ctx.fillStyle = getColor('end');
         ctx.beginPath();
         ctx.arc(x, y, junctionRadius * 3, 0, 2 * Math.PI);
         ctx.fill();
 
-        // Black border for visibility
-        ctx.strokeStyle = '#000000';
+        ctx.strokeStyle = getColor('text');
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(x, y, junctionRadius * 3, 0, 2 * Math.PI);
@@ -655,6 +706,7 @@ window.addEventListener('load', () => {
 });
 
 window.addEventListener('load', () => {
+    detectColorScheme();
     document.getElementById('pathfindBtn').addEventListener('click', startPathfinding);
     document.getElementById('resetBtn').addEventListener('click', resetSelection);
     document.getElementById('zoomInBtn').addEventListener('click', zoomIn);
