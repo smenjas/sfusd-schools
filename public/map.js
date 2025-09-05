@@ -4,6 +4,8 @@ import junctions from './junctions.js';
 let canvas, ctx;
 let bounds = null;
 let zoom = 1;
+const minZoom = 1.0;
+const maxZoom = 100;
 let offsetX = 0, offsetY = 0;
 let isDragging = false;
 let lastMouseX = 0, lastMouseY = 0;
@@ -338,7 +340,7 @@ function handleWheel(e) {
     e.preventDefault();
 
     const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
-    const newZoom = Math.max(1.0, Math.min(20, zoom * zoomFactor));
+    const newZoom = Math.max(minZoom, Math.min(maxZoom, zoom * zoomFactor));
 
     // Zoom toward mouse position
     const rect = canvas.getBoundingClientRect();
@@ -410,12 +412,12 @@ function selectJunction(junctionId) {
 }
 
 function zoomIn() {
-    zoom = Math.min(20, zoom * 1.5);
+    zoom = Math.min(maxZoom, zoom * 1.5);
     drawMap();
 }
 
 function zoomOut() {
-    zoom = Math.max(1.0, zoom / 1.5);
+    zoom = Math.max(minZoom, zoom / 1.5);
     drawMap();
 }
 
