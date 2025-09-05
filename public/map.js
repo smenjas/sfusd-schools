@@ -622,8 +622,9 @@ async function startPathfinding() {
         document.getElementById('infoPanel').textContent =
             `A* running... Current: ${currentNode} | Open: ${openSet.size} | Closed: ${closedSet.size}`;
 
-        // Brief pause for visualization
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Get speed from control
+        const speed = parseInt(document.getElementById('animationSpeed').value);
+        await new Promise(resolve => setTimeout(resolve, speed));
     }
 
     document.getElementById('infoPanel').textContent =
