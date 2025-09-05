@@ -86,7 +86,7 @@ function calculateBounds(junctionData = junctions) {
     });
 
     // Add padding
-    const padding = 0.1;
+    const padding = 0.05;
     const latRange = maxLat - minLat;
     const lonRange = maxLon - minLon;
     const latPadding = latRange * padding;
@@ -185,8 +185,9 @@ function visible(x, y, margin) {
 }
 
 function drawStreets() {
+    let visibleStreets = 0;
     ctx.strokeStyle = getColor('streets');
-    ctx.lineWidth = Math.max(1, 0.5 / zoom);
+    ctx.lineWidth = Math.max(2, 1 / zoom);
     ctx.beginPath();
 
     const drawnConnections = new Set();
@@ -206,26 +207,31 @@ function drawStreets() {
             const [x2, y2] = coordsToScreen(lat2, lon2);
 
             // Only draw if at least one point is visible
-            const margin = 50;
+            const margin = 100;
             if (invisible(x1, y1, margin) && invisible(x2, y2, margin)) {
                 continue;
             }
 
             ctx.moveTo(x1, y1);
             ctx.lineTo(x2, y2);
+            visibleStreets++;
         }
     });
+
     ctx.stroke();
+    return visibleStreets;
 }
 
 function drawJunctions() {
+    let visibleJunctions = 0;
     const junctionRadius = Math.max(2, 1 / zoom);
     Object.entries(junctions).forEach(([cnn, junction]) => {
         const [lat, lon] = junction.ll;
         const [x, y] = coordsToScreen(lat, lon);
 
         // Skip if not visible
-        if (invisible(x, y, 20)) return;
+        if (invisible(x, y, 50)) return;
+        visibleJunctions++;
 
         // Determine color and size
         let color = getColor('streets');
@@ -233,28 +239,40 @@ function drawJunctions() {
 
         if (selectedStart && cnn === selectedStart) {
             color = getColor('start');
-            radius = junctionRadius * 3;
+            radius = junctionRadius * 2;
         } else if (selectedEnd && cnn === selectedEnd) {
             color = getColor('end');
-            radius = junctionRadius * 3;
+            radius = junctionRadius * 2;
         } else if (currentNode === cnn) {
             color = getColor('current');
-            radius = junctionRadius * 2;
+            radius = junctionRadius * 1.5;
         } else if (openSet.has(cnn)) {
             color = getColor('openSet');
-            radius = junctionRadius * 1.5;
+            radius = junctionRadius * 1.2;
         } else if (closedSet.has(cnn)) {
             color = getColor('closedSet');
-            radius = junctionRadius * 1.2;
+            radius = junctionRadius * 1.1;
         }
 
         ctx.fillStyle = color;
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, 2 * Math.PI);
         ctx.fill();
+    });
 
-        // Draw junction ID when zoomed in
-        if (zoom <= 20) return;
+    return visibleJunctions;
+}
+
+function drawJunctionLabels() {
+    if (zoom < 20) return;
+
+    const junctionRadius = Math.max(2, 1 / zoom);
+    Object.entries(junctions).forEach(([cnn, junction]) => {
+        const [lat, lon] = junction.ll;
+        const [x, y] = coordsToScreen(lat, lon);
+
+        // Skip if not visible
+        if (invisible(x, y, 50)) return;
 
         ctx.lineJoin = 'round';
         ctx.lineWidth = 5;
@@ -278,15 +296,15 @@ function drawMap() {
     ctx.fillStyle = getColor('background');
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    drawStreets();
-    drawJunctions();
+    const visibleStreets = drawStreets();
+    const visibleJunctions = drawJunctions();
     drawFinalPath();
+    drawJunctionLabels();
 
     const stats = [
-        `Junctions: ${Object.keys(junctions).length}`,
-        `Open: ${openSet.size}`,
-        `Closed: ${closedSet.size}`,
-        `Zoom: ${zoom.toFixed(2)}x`
+        `Canvas: ${canvas.width}x${canvas.height}`,
+        `Rendered ${visibleJunctions} junctions, ${visibleStreets} streets`,
+        `Zoom: ${zoom.toFixed(3)}x, Pan: [${panX.toFixed(1)}, ${panY.toFixed(1)}]`,
     ].join(' | ');
 
     log(stats);
@@ -296,9 +314,8 @@ function drawFinalPath() {
     if (finalPath.length < 2) return;
 
     ctx.strokeStyle = getColor('finalPath');
-    ctx.lineWidth = Math.max(4 / zoom, 2);
+    ctx.lineWidth = Math.max(6, 3 / zoom);
     ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
     ctx.beginPath();
 
     const [startLat, startLon] = junctions[finalPath[0]].ll;
@@ -381,9 +398,6 @@ function setupEventListeners() {
     canvas.addEventListener('mouseup', handleMouseUp);
     canvas.addEventListener('wheel', handleWheel);
     canvas.addEventListener('click', handleClick);
-
-    // Prevent context menu
-    canvas.addEventListener('contextmenu', e => e.preventDefault());
 }
 
 function handleMouseDown(e) {
@@ -453,7 +467,7 @@ function handleClick(e) {
         const [x, y] = coordsToScreen(lat, lon);
         const distance = coordsDistance([y, x], [mouseY, mouseX]);
 
-        if (distance < 20 && distance < closestDistance) {
+        if (distance < 15 && distance < closestDistance) {
             closestDistance = distance;
             closestCNN = cnn;
         }
@@ -473,7 +487,7 @@ function selectJunction(cnn) {
         selectedEnd = parseInt(cnn);
         document.getElementById('findPathBtn').disabled = false;
         document.getElementById('infoPanel').textContent =
-            `End point selected at junction ${cnn}. Ready for A* pathfinding!`;
+            `Route set: ${selectedStart} → ${cnn}. Ready for A* pathfinding!`;
     } else {
         // Reset selection
         selectedStart = parseInt(cnn);
