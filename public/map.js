@@ -101,8 +101,12 @@ function calculateBounds() {
 function coordsToScreen(lat, lon) {
     if (!bounds) return [0, 0];
 
-    // Convert lat/lon to normalized 0-1 coordinates
-    const normalizedX = (lon - bounds.minLon) / (bounds.maxLon - bounds.minLon);
+    // X axis: longitude (east-west), with east on right
+    // Since smaller lon = more east, we need to flip it
+    const normalizedX = (bounds.maxLon - lon) / (bounds.maxLon - bounds.minLon);
+
+    // Y axis: latitude (north-south), with north on top
+    // Since larger lat = more north, and screen Y increases downward
     const normalizedY = (bounds.maxLat - lat) / (bounds.maxLat - bounds.minLat);
 
     // Convert to base screen coordinates (before zoom/pan)
@@ -123,7 +127,8 @@ function screenToCoords(screenX, screenY) {
     const normalizedX = (screenX / zoom - offsetX) / canvas.width;
     const normalizedY = (screenY / zoom - offsetY) / canvas.height;
 
-    const lon = normalizedX * (bounds.maxLon - bounds.minLon) + bounds.minLon;
+    // Reverse the coordinate mapping
+    const lon = bounds.maxLon - normalizedX * (bounds.maxLon - bounds.minLon);
     const lat = bounds.maxLat - normalizedY * (bounds.maxLat - bounds.minLat);
 
     return [lat, lon];
