@@ -24,11 +24,11 @@ function log(message) {
     document.getElementById('debugPanel').textContent = message;
 }
 
-function calculateMapBounds() {
+function calculateMapBounds(junctionData = junctions) {
     let minLat = Infinity, maxLat = -Infinity;
     let minLng = Infinity, maxLng = -Infinity;
 
-    Object.values(junctions).forEach(junction => {
+    Object.values(junctionData).forEach(junction => {
         const [lat, lng] = junction.ll;
         minLat = Math.min(minLat, lat);
         maxLat = Math.max(maxLat, lat);
@@ -52,17 +52,41 @@ function calculateMapBounds() {
 function latLngToScreen(lat, lng) {
     if (!mapBounds) return [0, 0];
 
-    // X axis: longitude (east-west), with east on right
-    // Since smaller lng = more east, we need to flip it
+    // Calculate normalized coordinates (0-1)
     const normalizedX = (mapBounds.maxLng - lng) / (mapBounds.maxLng - mapBounds.minLng);
-
-    // Y axis: latitude (north-south), with north on top
-    // Since larger lat = more north, and screen Y increases downward
     const normalizedY = (mapBounds.maxLat - lat) / (mapBounds.maxLat - mapBounds.minLat);
 
-    // Convert to base screen coordinates (before zoom/pan)
-    const baseX = normalizedX * canvas.width;
-    const baseY = normalizedY * canvas.height;
+    // Don't apply aspect correction here - we'll handle it in the display calculations
+
+    // Calculate the actual geographic aspect ratio of SF
+    // At SF's latitude, 1° longitude ≈ 0.79 × 1° latitude in distance
+    // So our map's natural width/height ratio should be: lng_range * 0.79 / lat_range
+    const lngRange = mapBounds.maxLng - mapBounds.minLng;
+    const latRange = mapBounds.maxLat - mapBounds.minLat;
+    const mapAspectRatio = (lngRange * 0.79) / latRange;
+
+    // Calculate display dimensions to maintain geographic accuracy
+    const canvasAspectRatio = canvas.width / canvas.height;
+
+    let mapDisplayWidth, mapDisplayHeight, mapOffsetX, mapOffsetY;
+
+    if (mapAspectRatio > canvasAspectRatio) {
+        // Map is wider than canvas - fit to width
+        mapDisplayWidth = canvas.width;
+        mapDisplayHeight = canvas.width / mapAspectRatio;
+        mapOffsetX = 0;
+        mapOffsetY = (canvas.height - mapDisplayHeight) / 2;
+    } else {
+        // Map is taller than canvas - fit to height
+        mapDisplayWidth = canvas.height * mapAspectRatio;
+        mapDisplayHeight = canvas.height;
+        mapOffsetX = (canvas.width - mapDisplayWidth) / 2;
+        mapOffsetY = 0;
+    }
+
+    // Convert to screen coordinates within the map display area
+    const baseX = normalizedX * mapDisplayWidth + mapOffsetX;
+    const baseY = normalizedY * mapDisplayHeight + mapOffsetY;
 
     // Apply zoom and pan
     const screenX = (baseX + offsetX) * zoom;
@@ -259,6 +283,22 @@ function testCoordinateTransform() {
     });
 }
 
+function resizeCanvas() {
+    const container = document.querySelector('.map-container');
+    const rect = container.getBoundingClientRect();
+
+    // Set canvas size to match container
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+
+    console.log(`Canvas resized to ${canvas.width}x${canvas.height}`);
+
+    // Redraw the map with new dimensions
+    if (mapBounds) {
+        fitToView();
+    }
+}
+
 function loadMap() {
     canvas = document.getElementById('mapCanvas');
     ctx = canvas.getContext('2d');
@@ -267,6 +307,9 @@ function loadMap() {
         log("Error: Could not initialize canvas");
         return;
     }
+
+    // Resize canvas to fill container
+    resizeCanvas();
 
     // Preprocess coordinates to pad trailing zeros
     const processedJunctions = preprocessJunctions(junctions);
@@ -284,8 +327,6 @@ function loadMap() {
 
     document.getElementById('infoPanel').textContent =
         `Street network loaded! ${Object.keys(junctions).length} junctions shown. Click two junctions to set start/end points.`;
-
-    testCoordinateTransform();
 }
 
 function setupEventListeners() {
@@ -417,7 +458,7 @@ function fitToView() {
     offsetX = 0;
     offsetY = 0;
 
-    log(`Fit to view: zoom=${zoom.toFixed(3)}, offset=[${offsetX.toFixed(1)}, ${offsetY.toFixed(1)}]`);
+    log(`Fit to view: zoom=${zoom.toFixed(3)}, canvas=${canvas.width}x${canvas.height}`);
 
     drawMap();
 }
@@ -538,4 +579,10 @@ window.addEventListener('load', () => {
     document.getElementById('zoomOutBtn').addEventListener('click', zoomOut);
     document.getElementById('fitViewBtn').addEventListener('click', fitToView);
     loadMap();
+});
+
+window.addEventListener('resize', () => {
+    if (canvas) {
+        resizeCanvas();
+    }
 });
