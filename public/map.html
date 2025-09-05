@@ -33,36 +33,19 @@
 
 <div class="controls">
     <button id="pathfindBtn" disabled>Start A* Pathfinding</button>
-    <button id="resetBtn">Reset</button>
-
-    <div class="zoom-controls">
-        <button id="zoomInBtn">Zoom In</button>
-        <button id="zoomOutBtn">Zoom Out</button>
-        <button id="fitViewBtn">Fit to View</button>
-    </div>
-
-    <label>
-        Speed:
-        <select id="speedControl" onchange="updateSpeedBtn">
-            <option value="10">Very Fast</option>
-            <option value="50" selected>Fast</option>
-            <option value="100">Normal</option>
-            <option value="200">Slow</option>
-        </select>
-    </label>
-</div>
-
-<div class="map-container">
-    <canvas id="mapCanvas" width="1000" height="600"></canvas>
+    <button id="resetBtn">Reset Selection</button>
+    <button id="zoomInBtn">Zoom In</button>
+    <button id="zoomOutBtn">Zoom Out</button>
+    <button id="fitViewBtn">Fit to View</button>
 </div>
 
 <div class="legend">
     <div class="legend-item">
-        <div class="legend-color" style="background: #ccc;"></div>
+        <div class="legend-color" style="background: #666;"></div>
         <span>Streets</span>
     </div>
     <div class="legend-item">
-        <div class="legend-color" style="background: #666;"></div>
+        <div class="legend-color" style="background: #333;"></div>
         <span>Junctions</span>
     </div>
     <div class="legend-item">
@@ -91,11 +74,15 @@
     </div>
 </div>
 
+<div class="map-container">
+    <canvas id="mapCanvas" width="1000" height="700"></canvas>
+</div>
+
 <div class="info" id="infoPanel">
     Click "Load Street Network" to begin. Then click two junctions to set start/end points.
 </div>
 
-<div class="stats" id="statsPanel"></div>
+<div class="debug" id="debugPanel"></div>
 
 </div>
 
