@@ -85,12 +85,12 @@ function drawMap() {
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const minSize = Math.max(1 / zoom, 0.5);
-    const junctionRadius = Math.max(2 / zoom, 1);
+    const minSize = Math.max(1, 0.5 / zoom);
+    const junctionRadius = Math.max(2, 1 / zoom);
 
     // Draw streets
     ctx.strokeStyle = '#ddd';
-    ctx.lineWidth = Math.max(1 / zoom, 0.5);
+    ctx.lineWidth = Math.max(1, 0.5 / zoom);
     ctx.beginPath();
 
     const drawnConnections = new Set();
@@ -338,7 +338,7 @@ function selectJunction(junctionId) {
 }
 
 function zoomIn() {
-    zoom = Math.min(10, zoom * 1.5);
+    zoom = Math.min(20, zoom * 1.5);
     drawMap();
     updateStats();
 }
