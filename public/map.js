@@ -703,12 +703,26 @@ async function startPathfinding() {
         );
 
         if (currentNode === selectedEnd) {
-            // Reconstruct path
+            // Reconstruct path with safety check
             let current = selectedEnd;
-            while (current) {
+            const pathSet = new Set(); // Track visited nodes to detect cycles
+            const maxPathLength = Object.keys(junctions).length; // Safety limit
+
+            while (current && !pathSet.has(current) && finalPath.length < maxPathLength) {
+                pathSet.add(current);
                 finalPath.unshift(current);
                 current = cameFrom[current];
             }
+
+            if (pathSet.has(current)) {
+                console.error("Circular reference detected in path reconstruction!");
+                finalPath = []; // Clear the path
+            } else if (finalPath.length >= maxPathLength) {
+                console.error("Path too long - possible infinite loop!");
+                finalPath = []; // Clear the path
+            }
+
+            console.log(`Path reconstructed: ${finalPath.join(' -> ')}`);
             break;
         }
 
