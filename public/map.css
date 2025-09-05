@@ -1,0 +1,148 @@
+body {
+    background: #f0f0f0;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+input, button, textarea, select {
+    font: inherit;
+}
+
+.container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.map-container {
+    background: #f8f8f8;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+canvas {
+    cursor: grab;
+    display: block;
+}
+
+canvas:active {
+    cursor: grabbing;
+}
+
+button {
+    background: #007cba;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 8px 16px;
+}
+
+button:hover {
+    background: #005a87;
+}
+
+button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.controls {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.zoom-controls {
+    display: flex;
+    gap: 5px;
+}
+
+.info, .stats {
+    margin-top: 10px;
+    padding: 5px;
+}
+
+.info {
+    background: #e8f4f8;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.stats {
+    color: #666;
+    font-family: monospace;
+    font-size: 12px;
+}
+
+.legend {
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 12px;
+    gap: 15px;
+    margin: 10px 5px 5px;
+}
+
+.legend-item {
+    align-items: center;
+    display: flex;
+    gap: 5px;
+}
+
+.legend-color {
+    border-radius: 50%;
+    height: 12px;
+    width: 12px;
+}
+
+@media only screen and (prefers-color-scheme: dark) {
+    body, table caption {
+        background-color: black;
+        color: white;
+    }
+
+    a {
+        color: #aaf;
+    }
+
+    a:visited {
+        color: #faf;
+    }
+
+    .container {
+        background-color: #223;
+    }
+
+    .info {
+        background-color: #334;
+    }
+
+    .stats {
+        color: #aaa;
+    }
+
+    button, input, select {
+        background-color: black;
+        color: white;
+    }
+
+    button:disabled {
+        background-color: #7f7f7f;
+        color: white;
+    }
+
+    button:hover,
+    select:hover,
+    tr:hover {
+        background-color: #556;
+    }
+}
