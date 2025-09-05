@@ -162,7 +162,7 @@ function drawMap() {
                     const [x2, y2] = latLngToScreen(lat2, lng2);
 
                     // Only draw if at least one point is visible
-                    const margin = 50;
+                    const margin = 100;
                     if ((x1 >= -margin && x1 <= canvas.width + margin && y1 >= -margin && y1 <= canvas.height + margin) ||
                         (x2 >= -margin && x2 <= canvas.width + margin && y2 >= -margin && y2 <= canvas.height + margin)) {
                         ctx.moveTo(x1, y1);
@@ -202,7 +202,7 @@ function drawMap() {
         const [x, y] = latLngToScreen(lat, lng);
 
         // Skip if not visible
-        const margin = 20;
+        const margin = 50;
         if (x < -margin || x > canvas.width + margin || y < -margin || y > canvas.height + margin) {
             return;
         }
@@ -249,8 +249,9 @@ function drawMap() {
     });
 
     const stats = [
+        `Canvas: ${canvas.width}x${canvas.height}`,
         `Rendered ${visibleJunctions} junctions, ${visibleStreets} streets`,
-        `Zoom: ${zoom.toFixed(2)}x`
+        `Zoom: ${zoom.toFixed(3)}x, Offset: [${offsetX.toFixed(1)}, ${offsetY.toFixed(1)}]`,
     ].join(' | ');
 
     log(stats);
