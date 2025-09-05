@@ -1,3 +1,4 @@
+import addressData from './address-data.js';
 import junctions from './junctions.js';
 
 // Map state
@@ -13,6 +14,7 @@ let selectedStart = null;
 let selectedEnd = null;
 let isPathfinding = false;
 let theme = 'light';
+let addresses = {};
 
 const colorThemes = {
     light: {
@@ -156,6 +158,50 @@ function screenToLatLng(screenX, screenY) {
     const lat = bounds.maxLat - normalizedY * (bounds.maxLat - bounds.minLat);
 
     return [lat, lng];
+}
+
+function drawAddresses() {
+    // Only show addresses when zoomed in enough to be readable
+    if (zoom < 25) return;
+
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 5;
+    ctx.miterLimit = 3;
+    ctx.fillStyle = getColor('text');
+    ctx.strokeStyle = getColor('background');
+    ctx.font = `${Math.max(10, zoom / 5)}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    let addressCount = 0;
+
+    Object.entries(addresses).forEach(([streetName, streetAddresses]) => {
+        Object.entries(streetAddresses).forEach(([number, coords]) => {
+            const [lat, lng] = coords;
+            const [x, y] = latLngToScreen(lat, lng);
+
+            // Only draw if visible
+            const margin = 30;
+            if (x >= -margin && x <= canvas.width + margin && y >= -margin && y <= canvas.height + margin) {
+                // Draw a small dot for the address location
+                ctx.fillStyle = getColor('text');
+                ctx.beginPath();
+                ctx.arc(x, y, Math.max(1, 1.5/zoom), 0, 2 * Math.PI);
+                ctx.fill();
+
+                // Draw address number slightly offset so it doesn't overlap the dot
+                ctx.fillStyle = getColor('text');
+                ctx.strokeText(number, x, y - Math.max(8, 10/zoom));
+                ctx.fillText(number, x, y - Math.max(8, 10/zoom));
+
+                addressCount++;
+            }
+        });
+    });
+
+    if (addressCount > 0) {
+        console.log(`Drew ${addressCount} addresses at zoom ${zoom.toFixed(2)}x`);
+    }
 }
 
 function drawMap() {
@@ -348,6 +394,8 @@ function drawMap() {
         ctx.stroke();
     }
 
+    drawAddresses();
+
     // Count visible junctions for debugging
     visibleJunctions = Object.keys(junctions).filter(id => {
         const [lat, lng] = junctions[id].ll;
@@ -365,9 +413,23 @@ function drawMap() {
     log(stats);
 }
 
-function padCoordinate(coord) {
+function padCoord(coord) {
     // Pad coordinates to 5 digits with trailing zeros
     return parseInt(coord.toString().padEnd(5, '0'));
+}
+
+function preprocessAddresses(rawAddresses) {
+    const processed = {};
+
+    Object.entries(rawAddresses).forEach(([streetName, addresses]) => {
+        processed[streetName] = {};
+        Object.entries(addresses).forEach(([number, coords]) => {
+            const [lat, lng] = coords;
+            processed[streetName][number] = [padCoord(lat), padCoord(lng)];
+        });
+    });
+
+    return processed;
 }
 
 function preprocessJunctions(rawJunctions) {
@@ -377,7 +439,7 @@ function preprocessJunctions(rawJunctions) {
         const [lat, lng] = junction.ll;
         processed[id] = {
             ...junction,
-            ll: [padCoordinate(lat), padCoordinate(lng)]
+            ll: [padCoord(lat), padCoord(lng)]
         };
     });
 
@@ -414,6 +476,8 @@ function loadMap() {
     // Replace global junctions with processed ones
     Object.keys(junctions).forEach(key => delete junctions[key]);
     Object.assign(junctions, processedJunctions);
+
+    addresses = preprocessAddresses(addressData);
 
     bounds = calculateMapBounds();
     log(`Map bounds: lat ${bounds.minLat.toFixed(0)}-${bounds.maxLat.toFixed(0)}, lng ${bounds.minLng.toFixed(0)}-${bounds.maxLng.toFixed(0)}`);
