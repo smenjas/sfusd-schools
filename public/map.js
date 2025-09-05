@@ -360,11 +360,13 @@ function drawJunctionOutline(x, y, radius, color) {
 }
 
 function drawJunctions() {
+    // Draw junctions in layers (gray first, then colors on top)
     //console.time('drawJunctions()');
     let visibleJunctions = 0;
     const radius = Math.max(0.5, zoom / 2.5);
     const margin = 50;
 
+    // 1st pass: Draw all gray/default junctions
     for (const cnn in junctions) {
         const [x, y] = junctions[cnn].screen;
 
@@ -372,6 +374,7 @@ function drawJunctions() {
         if (invisible(x, y, margin)) continue;
         visibleJunctions++;
 
+        // Only draw if it's a default/gray junction
         if (cnn === start || cnn === end || here === cnn ||
             openSet.has(cnn) || closedSet.has(cnn)) {
             continue;
@@ -380,36 +383,49 @@ function drawJunctions() {
         drawJunction(x, y, radius, getColor('junctions'));
     }
 
-    if (here) {
+    // 2nd pass: Draw current node
+    if (here && junctions[here]) {
         const [x, y] = junctions[here].screen;
-        drawJunction(x, y, radius * 7, getColor('current'));
+        if (visible(x, y, margin)) {
+            drawJunction(x, y, radius * 7, getColor('current'));
+        }
     }
 
-    for (const cnn of closedSet) {
+    // 3rd pass: Draw closed set
+    closedSet.forEach(cnn => {
+        if (!junctions[cnn]) return;
         const [x, y] = junctions[cnn].screen;
+        if (invisible(x, y, margin)) return;
         drawJunction(x, y, radius * 2, getColor('closedSet'));
-    }
+    });
 
-    for (const cnn of openSet) {
+    // 4th pass: Draw open set
+    openSet.forEach(cnn => {
+        if (!junctions[cnn]) return;
         const [x, y] = junctions[cnn].screen;
+        if (invisible(x, y, margin)) return;
         drawJunction(x, y, radius * 2.5, getColor('openSet'));
-    }
+    });
 
     //console.timeEnd('drawJunctions()');
     return visibleJunctions;
 }
 
 function drawJunctionStart() {
-    if (!start) return;
+    // 5th pass: Draw starting point
+    if (!start || !junctions[start]) return;
     const [x, y] = junctions[start].screen;
+    if (invisible(x, y, 50)) return;
     const radius = Math.max(2, zoom / 2);
     drawJunction(x, y, radius * 3, getColor('start'));
     drawJunctionOutline(x, y, radius * 3, getColor('text'));
 }
 
 function drawJunctionEnd() {
-    if (!end) return;
+    // 6th pass: Draw end point
+    if (!end || !junctions[end]) return;
     const [x, y] = junctions[end].screen;
+    if (invisible(x, y, 50)) return;
     const radius = Math.max(2, zoom / 2);
     drawJunction(x, y, radius * 3, getColor('end'));
     drawJunctionOutline(x, y, radius * 3, getColor('text'));
