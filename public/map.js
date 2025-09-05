@@ -186,7 +186,7 @@ function visible(x, y, margin) {
 
 function drawStreets() {
     ctx.strokeStyle = getColor('streets');
-    ctx.lineWidth = Math.max(1 / zoom, 0.5);
+    ctx.lineWidth = Math.max(1, 0.5 / zoom);
     ctx.beginPath();
 
     const drawnConnections = new Set();
@@ -219,7 +219,7 @@ function drawStreets() {
 }
 
 function drawJunctions() {
-    const junctionRadius = Math.max(2 / zoom, 1);
+    const junctionRadius = Math.max(2, 1 / zoom);
     Object.entries(junctions).forEach(([cnn, junction]) => {
         const [lat, lon] = junction.ll;
         const [x, y] = coordsToScreen(lat, lon);
