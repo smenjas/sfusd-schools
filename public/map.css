@@ -80,6 +80,7 @@ button:disabled {
 
 .stats {
     color: #666;
+    font-family: monospace;
     font-size: 12px;
 }
 
@@ -87,7 +88,7 @@ button:disabled {
     display: flex;
     flex-wrap: wrap;
     font-size: 12px;
-    gap: 20px;
+    gap: 15px;
     margin: 10px 5px 5px;
 }
 
