@@ -224,7 +224,11 @@ function drawStreets() {
 
 function drawJunctions() {
     let visibleJunctions = 0;
-    const junctionRadius = Math.max(2, 1 / zoom);
+
+    // Draw junctions in layers (gray first, then colors on top)
+    const junctionRadius = Math.max(2, 1.5 / zoom);
+
+    // First pass: Draw all gray/default junctions
     Object.entries(junctions).forEach(([cnn, junction]) => {
         const [lat, lon] = junction.ll;
         const [x, y] = coordsToScreen(lat, lon);
@@ -233,34 +237,110 @@ function drawJunctions() {
         if (invisible(x, y, 50)) return;
         visibleJunctions++;
 
-        // Determine color and size
-        let color = getColor('streets');
-        let radius = junctionRadius;
+        ctx.fillStyle = getColor('junctions');
+        ctx.beginPath();
+        ctx.arc(x, y, junctionRadius, 0, 2 * Math.PI);
+        ctx.fill();
 
-        if (selectedStart && cnn === selectedStart) {
-            color = getColor('start');
-            radius = junctionRadius * 2;
-        } else if (selectedEnd && cnn === selectedEnd) {
-            color = getColor('end');
-            radius = junctionRadius * 2;
-        } else if (currentNode === cnn) {
-            color = getColor('current');
-            radius = junctionRadius * 1.5;
-        } else if (openSet.has(cnn)) {
-            color = getColor('openSet');
-            radius = junctionRadius * 1.2;
-        } else if (closedSet.has(cnn)) {
-            color = getColor('closedSet');
-            radius = junctionRadius * 1.1;
+        // Only draw if it's a default/gray junction
+        if (!(selectedStart && cnn === selectedStart) &&
+            !(selectedEnd && cnn === selectedEnd) &&
+            currentNode !== cnn &&
+            !openSet.has(cnn) &&
+            !closedSet.has(cnn)) {
+
+            ctx.fillStyle = getColor('junctions');
+            ctx.beginPath();
+            ctx.arc(x, y, junctionRadius, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+    });
+
+    // Second pass: Draw closed set
+    closedSet.forEach(cnn => {
+        if (!junctions[cnn]) return;
+
+        const [lat, lon] = junctions[cnn].ll;
+        const [x, y] = coordsToScreen(lat, lon);
+
+        if (invisible(x, y, 50)) {
+            return;
         }
 
-        ctx.fillStyle = color;
+        ctx.fillStyle = getColor('closedSet');
         ctx.beginPath();
-        ctx.arc(x, y, radius, 0, 2 * Math.PI);
+        ctx.arc(x, y, junctionRadius * 1.3, 0, 2 * Math.PI);
         ctx.fill();
     });
 
+    // Third pass: Draw open set
+    openSet.forEach(cnn => {
+        if (!junctions[cnn]) return;
+
+        const [lat, lon] = junctions[cnn].ll;
+        const [x, y] = coordsToScreen(lat, lon);
+
+        if (invisible(x, y, 50)) {
+            return;
+        }
+
+        ctx.fillStyle = getColor('openSet');
+        ctx.beginPath();
+        ctx.arc(x, y, junctionRadius * 1.8, 0, 2 * Math.PI);
+        ctx.fill();
+    });
+
+    // Fourth pass: Draw current node
+    if (currentNode && junctions[currentNode]) {
+        const [lat, lon] = junctions[currentNode].ll;
+        const [x, y] = coordsToScreen(lat, lon);
+
+        if (visible(x, y, 50)) {
+            ctx.fillStyle = getColor('current');
+            ctx.beginPath();
+            ctx.arc(x, y, junctionRadius * 2.2, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+    }
+
     return visibleJunctions;
+}
+
+function drawJunctionTerminals() {
+    // Fifth pass: Draw start/end points
+    const junctionRadius = Math.max(2, 1.5 / zoom);
+
+    if (selectedStart && junctions[selectedStart]) {
+        const [lat, lon] = junctions[selectedStart].ll;
+        const [x, y] = coordsToScreen(lat, lon);
+
+        ctx.fillStyle = getColor('start');
+        ctx.beginPath();
+        ctx.arc(x, y, junctionRadius * 3, 0, 2 * Math.PI);
+        ctx.fill();
+
+        ctx.strokeStyle = getColor('text');
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(x, y, junctionRadius * 3, 0, 2 * Math.PI);
+        ctx.stroke();
+    }
+
+    if (selectedEnd && junctions[selectedEnd]) {
+        const [lat, lon] = junctions[selectedEnd].ll;
+        const [x, y] = coordsToScreen(lat, lon);
+
+        ctx.fillStyle = getColor('end');
+        ctx.beginPath();
+        ctx.arc(x, y, junctionRadius * 3, 0, 2 * Math.PI);
+        ctx.fill();
+
+        ctx.strokeStyle = getColor('text');
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(x, y, junctionRadius * 3, 0, 2 * Math.PI);
+        ctx.stroke();
+    }
 }
 
 function drawJunctionLabels() {
@@ -299,6 +379,7 @@ function drawMap() {
     const visibleStreets = drawStreets();
     const visibleJunctions = drawJunctions();
     drawFinalPath();
+    drawJunctionTerminals();
     drawJunctionLabels();
 
     const stats = [
