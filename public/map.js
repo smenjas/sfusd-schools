@@ -52,8 +52,12 @@ function calculateMapBounds() {
 function latLngToScreen(lat, lng) {
     if (!mapBounds) return [0, 0];
 
-    // Convert lat/lng to normalized 0-1 coordinates
-    const normalizedX = (lng - mapBounds.minLng) / (mapBounds.maxLng - mapBounds.minLng);
+    // X axis: longitude (east-west), with east on right
+    // Since smaller lng = more east, we need to flip it
+    const normalizedX = (mapBounds.maxLng - lng) / (mapBounds.maxLng - mapBounds.minLng);
+
+    // Y axis: latitude (north-south), with north on top
+    // Since larger lat = more north, and screen Y increases downward
     const normalizedY = (mapBounds.maxLat - lat) / (mapBounds.maxLat - mapBounds.minLat);
 
     // Convert to base screen coordinates (before zoom/pan)
@@ -74,7 +78,8 @@ function screenToLatLng(screenX, screenY) {
     const normalizedX = (screenX / zoom - offsetX) / canvas.width;
     const normalizedY = (screenY / zoom - offsetY) / canvas.height;
 
-    const lng = normalizedX * (mapBounds.maxLng - mapBounds.minLng) + mapBounds.minLng;
+    // Reverse the coordinate mapping
+    const lng = mapBounds.maxLng - normalizedX * (mapBounds.maxLng - mapBounds.minLng);
     const lat = mapBounds.maxLat - normalizedY * (mapBounds.maxLat - mapBounds.minLat);
 
     return [lat, lng];
