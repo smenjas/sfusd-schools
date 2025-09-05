@@ -1,0 +1,155 @@
+body {
+    background: #f0f0f0;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+input, button, textarea, select {
+    font: inherit;
+}
+
+.container {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    max-width: none;
+    width: 100vw;
+    margin: 0;
+    padding: 10px 0;
+}
+
+.map-container {
+    flex: 1;
+    display: flex;
+    min-height: 0; /* Important for flex children */
+}
+
+canvas {
+    background: #fff;
+    display: block;
+    height: 100%;
+    width: 100%;
+}
+
+canvas:active {
+    cursor: grabbing;
+}
+
+button {
+    background: #007cba;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 8px 16px;
+}
+
+button:hover {
+    background: #005a87;
+}
+
+button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.controls {
+    align-items: center;
+    display: flex;
+    flex-shrink: 0;
+    gap: 10px;
+    margin: 0 10px 10px;
+}
+
+.zoom-controls {
+    gap: 5px;
+}
+
+.info, .stats {
+    flex-shrink: 0;
+    margin: 5px 10px 0;
+    padding: 5px;
+}
+
+.info {
+    background: #e8f4f8;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.stats {
+    color: #666;
+    font-family: monospace;
+    font-size: 12px;
+}
+
+.legend {
+    align-items: center; /* Vertically center items */
+    display: flex;
+    flex-direction: row; /* Force horizontal layout */
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    font-size: 12px;
+    gap: 15px;
+    margin: 10px 15px 5px;
+}
+
+.legend-item {
+    align-items: center;
+    display: flex;
+    flex-shrink: 0;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+.legend-color {
+    border-radius: 50%;
+    height: 12px;
+    width: 12px;
+}
+
+@media only screen and (prefers-color-scheme: dark) {
+    body, canvas {
+        background: black;
+        color: white;
+    }
+
+    a {
+        color: #aaf;
+    }
+
+    a:visited {
+        color: #faf;
+    }
+
+    .container {
+        background: #223;
+    }
+
+    .info {
+        background: #334;
+    }
+
+    .stats {
+        color: #aaa;
+    }
+
+    button, input, select {
+        background: black;
+        color: white;
+    }
+
+    button:disabled {
+        background: #7f7f7f;
+        color: white;
+    }
+
+    button:hover,
+    select:hover,
+    tr:hover {
+        background: #556;
+    }
+}
