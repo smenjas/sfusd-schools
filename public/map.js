@@ -1,3 +1,4 @@
+import addressData from './address-data.js';
 import junctions from './junctions.js';
 import schoolData from './school-data.js';
 
@@ -19,6 +20,7 @@ let initialPinchDistance = 0;
 let initialPinchCenter = { x: 0, y: 0 };
 let initialZoom = 1;
 let theme = 'light';
+let addresses = {};
 let schools = [];
 
 const colors = {
@@ -239,6 +241,47 @@ function drawArrow(x1, y1, x2, y2, color) {
     );
     ctx.lineTo(arrowX, arrowY);
     ctx.fill();
+}
+
+function drawAddresses() {
+    // Only show addresses when zoomed in enough to be readable
+    if (zoom < 40) return 0;
+
+    //console.time('drawAddresses()');
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 5;
+    ctx.miterLimit = 3;
+    ctx.fillStyle = getColor('text');
+    ctx.strokeStyle = getColor('background');
+    ctx.font = `${Math.max(10, zoom / 5)}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    let addressCount = 0;
+
+    Object.entries(addresses).forEach(([street, numbers]) => {
+        Object.entries(numbers).forEach(([number, coords]) => {
+            const [x, y] = coords.screen;
+
+            if (invisible(x, y, 30)) return;
+
+            // Draw a small dot for the address location
+            ctx.fillStyle = getColor('text');
+            ctx.beginPath();
+            ctx.arc(x, y, Math.max(1, 0.025 * zoom), 0, 2 * Math.PI);
+            ctx.fill();
+
+            // Draw address number slightly offset so it doesn't overlap the dot
+            ctx.fillStyle = getColor('text');
+            ctx.strokeText(number, x, y - Math.max(8, 10/zoom));
+            ctx.fillText(number, x, y - Math.max(8, 10/zoom));
+
+            addressCount++;
+        });
+    });
+
+    //console.timeEnd('drawAddresses()');
+    return addressCount;
 }
 
 function drawSchool(ctx, size, school) {
@@ -526,7 +569,9 @@ function drawDetails() {
     drawJunctionStart();
     drawJunctionEnd();
     drawJunctionLabels();
-    return drawSchools();
+    const addressCount = drawAddresses();
+    const schoolCount = drawSchools();
+    return { addressCount, schoolCount };
 }
 
 function drawMap() {
@@ -541,17 +586,19 @@ function drawMap() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Update screen coordinates.
+    if (zoom >= 40) postprocessAddresses();
     postprocessJunctions();
     postprocessSchools();
 
     const streetCount = drawStreets();
     const junctionCount = drawJunctions();
-    const schoolCount = drawDetails();
+    const { addressCount, schoolCount } = drawDetails();
 
     const counts = [
         `${junctionCount} junctions`,
         `${streetCount} streets`,
         `${schoolCount} schools`,
+        `${addressCount} addresses`,
     ].join(', ');
     const stats = [
         `Canvas: ${canvas.width}x${canvas.height}`,
@@ -588,6 +635,18 @@ function padCoord(coord) {
     return parseInt(coord.toString().padEnd(5, '0'));
 }
 
+function postprocessAddresses() {
+    console.time('postprocessAddresses()');
+    // Calculate the screen coordinates for each junction.
+    for (const street in addresses) {
+        for (const number in addresses[street]) {
+            const [lat, lon] = addresses[street][number].ll;
+            addresses[street][number].screen = coordsToScreen(lat, lon);
+        }
+    }
+    console.timeEnd('postprocessAddresses()');
+}
+
 function postprocessJunctions() {
     // Calculate the screen coordinates for each junction.
     //console.time('postprocessJunctions()');
@@ -606,6 +665,23 @@ function postprocessSchools() {
         schools[i].screen = coordsToScreen(lat, lon);
     }
     //console.timeEnd('postprocessSchools()');
+}
+
+function preprocessAddresses(rawAddresses) {
+    const processed = {};
+
+    Object.entries(rawAddresses).forEach(([street, numbers]) => {
+        processed[street] = {};
+        Object.entries(numbers).forEach(([number, ll]) => {
+            const [lat, lon] = ll;
+            processed[street][number] = {
+                ll: [padCoord(lat), padCoord(lon)],
+                screen: null,
+            };
+        });
+    });
+
+    return processed;
 }
 
 function preprocessJunctions(rawJunctions) {
@@ -699,6 +775,7 @@ function loadMap() {
     Object.keys(junctions).forEach(key => delete junctions[key]);
     Object.assign(junctions, processedJunctions);
 
+    addresses = preprocessAddresses(addressData);
     schools = preprocessSchools(schoolData);
 
     // Must calculate map boundaries before calling resizeCanvas().
