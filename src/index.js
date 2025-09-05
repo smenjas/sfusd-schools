@@ -17,10 +17,11 @@ const server = http.createServer((request, response) => {
         content = fs.readFileSync('public/index.html', 'utf8');
         console.log('HTTP', response.statusCode, request.url);
         break;
+    case '/map':
     case '/paths':
         response.statusCode = 200;
         response.setHeader('Content-Type', 'text/html');
-        content = fs.readFileSync('public/paths.html', 'utf8');
+        content = fs.readFileSync('public/' + path + '.html', 'utf8');
         console.log('HTTP', response.statusCode, request.url);
         break;
     case '/index.js':
@@ -31,6 +32,7 @@ const server = http.createServer((request, response) => {
     case '/geo.js':
     case '/html.js':
     case '/kml.js':
+    case '/map.js':
     case '/obfuscate.js':
     case '/PriorityQueue.js':
     case '/path.js':
@@ -48,6 +50,7 @@ const server = http.createServer((request, response) => {
         content = JSON.stringify(schoolData);
         break;
     case '/main.css':
+    case '/map.css':
         response.statusCode = 200;
         response.setHeader('Content-Type', 'text/css');
         content = fs.readFileSync('public' + path, 'utf8');
