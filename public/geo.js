@@ -92,7 +92,16 @@ export function howFar(a, b) {
  * @returns {number} Distance in miles
  */
 export function latToMiles(latDiff) {
-    return 69 * latDiff;
+    return latToMilesFactor() * latDiff;
+}
+
+/**
+ * Return how many miles there are per degree of latitude.
+ *
+ * @returns {number} Distance in miles
+ */
+export function latToMilesFactor() {
+    return 69;
 }
 
 /**
@@ -133,5 +142,5 @@ export function lonToMiles(lonDiff, lat) {
  */
 export function lonToMilesFactor(lat) {
     const radians = degreesToRadians(lat);
-    return 69 * Math.cos(radians);
+    return latToMilesFactor() * Math.cos(radians);
 }
