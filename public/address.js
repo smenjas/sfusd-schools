@@ -18,6 +18,9 @@ import { capitalizeWords,
  * @returns {string} An abbreviated street address
  */
 export function abbrNumberedStreets(address) {
+    if (typeof address !== 'string') {
+        return address;
+    }
     const re = /\b0([1-9](ST|ND|RD|TH))\b/
     return address.replace(re, '$1');
 }
@@ -124,6 +127,9 @@ export function findAddressSuggestions(addressData, num, nonstd, std) {
  * @returns {string} A standardized street address
  */
 export function fixNumberedStreets(address) {
+    if (typeof address !== 'string') {
+        return address;
+    }
     const re = /\b(1ST|2ND|3RD|(4|5|6|7|8|9)TH)\b/
     return address.replace(re, '0$1');
 }
@@ -135,6 +141,9 @@ export function fixNumberedStreets(address) {
  * @returns {string} A standardized street address
  */
 export function normalizeAddress(address) {
+    if (typeof address !== 'string') {
+        return address;
+    }
     address = removeAccents(address);
     address = removePunctuation(address);
     address = compressWhitespace(address);
@@ -218,6 +227,9 @@ export function replaceStreetSuffixes(address, omitsNumber = false) {
  * @returns {Array.<string>} A street number and street name
  */
 export function splitStreetAddress(address, normalize = false) {
+    if (typeof address !== 'string') {
+        return address;
+    }
     if (normalize) {
         address = normalizeAddress(address);
     }
