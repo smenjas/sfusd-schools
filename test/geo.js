@@ -7,7 +7,9 @@ import { azimuthToDirection,
          degreesToRadians,
          expandCoords,
          findAzimuth,
+         findAddressProjection,
          findDirection,
+         findProjectionPoint,
          getAddressCoords,
          getCoordsURL,
          getDirectionsURL,
@@ -90,6 +92,22 @@ export default class GeoTest {
         return Test.run(findAzimuth, tests);
     }
 
+    static findAddressProjection() {
+        const addr = '100 John F Kennedy Dr';
+        const addrs = { 'JOHN F KENNEDY DR': { 100: [7725, 4602] } };
+        const jcts = {
+            27187: { ll: [77178,46205] },
+            27188: { ll: [77131,45916] },
+        };
+        const lat = 37.771520592913014;
+        const lon = -122.46045492238001;
+        const t = 0.55192997231347;
+        const tests = [
+            [[addrs, jcts, 27187, 27188, addr], [lat, lon, t]],
+        ];
+        return Test.run(findAddressProjection, tests);
+    }
+
     static findDirection() {
         const tests = [
             [[[0, 0], [1, 0]], 'N'],
@@ -102,6 +120,21 @@ export default class GeoTest {
             [[[0, 0], [1, -1]], 'NW'],
         ];
         return Test.run(findDirection, tests);
+    }
+
+    static findProjectionPoint() {
+        const a = ['37.73247', '-122.40127']; // Junction 27187
+        const b = ['37.73407', '-122.40286']; // Junction 27188
+        const c = ['37.7332', '-122.4016']; // 100 John F Kennedy Dr
+        const lat = 37.73304806030979;
+        const lon = -122.40184444743285;
+        const t = 0.3612876936211874;
+        const tests = [
+            [[a, b, c], [lat, lon, t]],
+            [[[0, 0], [0, 1], [1, 0.5]], [0, 0.5, 0.5]],
+            [[[0, 0], [0, 1], [1, 0.25]], [0, 0.25, 0.25]],
+        ];
+        return Test.run(findProjectionPoint, tests);
     }
 
     static getAddressCoords() {
