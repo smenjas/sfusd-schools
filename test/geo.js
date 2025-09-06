@@ -8,6 +8,7 @@ import { expandCoords,
          getMapURL,
          howFar,
          latToMiles,
+         latToMilesFactor,
          lonToMiles,
          lonToMilesFactor } from '../public/geo.js';
 import Test from '../scripts/test.js';
@@ -48,6 +49,13 @@ export default class GeoTest {
             [[1], 69],
         ];
         return Test.run(latToMiles, tests);
+    }
+
+    static latToMilesFactor() {
+        const tests = [
+            [[], 69],
+        ];
+        return Test.run(latToMilesFactor, tests);
     }
 
     static lonToMiles() {
