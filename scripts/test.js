@@ -205,6 +205,7 @@ export default class Test {
             GeoTest.getMapURL,
             GeoTest.howFar,
             GeoTest.latToMiles,
+            GeoTest.latToMilesFactor,
             GeoTest.lonToMiles,
             GeoTest.lonToMilesFactor,
             SortTest.sortSchools,
