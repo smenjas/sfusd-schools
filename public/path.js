@@ -554,7 +554,7 @@ function addTurn(jcts, turns, here, street, lastStreet, a, b) {
  * @returns {?CNNPrefix} An intersection
  */
 function findAdjacentJunction(addressData, jcts, here, address) {
-    if (!address || !(here in jcts)) {
+    if (typeof address !== 'string' || !(here in jcts)) {
         return null;
     }
     const [num, street] = splitStreetAddress(address);
