@@ -6,6 +6,16 @@
 import { encodeURLParam } from './string.js';
 
 /**
+ * Convert degrees to radians.
+ *
+ * @param {number} degrees
+ * @returns {number} Radians
+ */
+export function degreesToRadians(degrees) {
+    return degrees * (Math.PI / 180);
+}
+
+/**
  * Expand the decimal portion of geographic coordinates to include the whole
  * numbers for San Francisco, California: 37°N, 122°W.
  *
@@ -122,6 +132,6 @@ export function lonToMiles(lonDiff, lat) {
  * @returns {number} Distance in miles
  */
 export function lonToMilesFactor(lat) {
-    const radians = lat * (Math.PI / 180);
+    const radians = degreesToRadians(lat);
     return 69 * Math.cos(radians);
 }
