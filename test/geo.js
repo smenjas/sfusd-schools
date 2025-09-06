@@ -3,7 +3,8 @@
  * @module test/geo
  */
 
-import { expandCoords,
+import { degreesToRadians,
+         expandCoords,
          getDirectionsURL,
          getMapURL,
          howFar,
@@ -13,6 +14,16 @@ import { expandCoords,
 import Test from '../scripts/test.js';
 
 export default class GeoTest {
+    static degreesToRadians() {
+        const tests = [
+            [[], NaN],
+            [[''], 0],
+            [[0], 0],
+            [[180], Math.PI],
+        ];
+        return Test.run(degreesToRadians, tests);
+    }
+
     static expandCoords() {
         const tests = [
             [[[7783, 5142]], ['37.7783', '-122.5142']],
