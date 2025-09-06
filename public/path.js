@@ -28,6 +28,9 @@ import { azimuthToDirection,
  * @returns {?LatLon} Decimal degrees latitude and longitude
  */
 export function getAddressCoords(addressData, address, normalize = false) {
+    if (typeof address !== 'string') {
+        return address;
+    }
     const [num, street] = splitStreetAddress(address, normalize);
     if (!(street in addressData)) {
         console.log('Cannot find street:', street);
