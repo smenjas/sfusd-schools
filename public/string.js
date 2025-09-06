@@ -11,6 +11,9 @@
  * @returns {string} A capitalized string
  */
 export function capitalize(str, lower = false) {
+    if (typeof str !== 'string') {
+        return str;
+    }
     if (lower) {
         str = str.toLowerCase();
     }
@@ -25,6 +28,9 @@ export function capitalize(str, lower = false) {
  * @returns {string} A capitalized string
  */
 export function capitalizeWords(str, lower = false) {
+    if (typeof str !== 'string') {
+        return str;
+    }
     const no = new Set(['a', 'an', 'and', 'as', 'at', 'but', 'by', 'for', 'in', 'nor',
         'of', 'on', 'or', 'the', 'to', 'with']);
     const words = str.split(' ');
@@ -50,6 +56,9 @@ export function capitalizeWords(str, lower = false) {
  * @returns {string} A string without redundant whitespace
  */
 export function compressWhitespace(str) {
+    if (typeof str !== 'string') {
+        return str;
+    }
     return str.trim().replace(/\s+/g, ' ');
 }
 
@@ -77,7 +86,7 @@ export function encode(str) {
  * @returns {string} The input string with unsafe characters encoded
  */
 export function encodeURLParam(value, allowCommas = false, maxLength = 255) {
-    value = value.substring(0, maxLength);
+    value = value.toString().substring(0, maxLength);
     value = encodeURIComponent(value).replaceAll('%20', '+');
     if (allowCommas) {
         value = value.replaceAll('%2C', ',');
@@ -92,7 +101,10 @@ export function encodeURLParam(value, allowCommas = false, maxLength = 255) {
  * @returns {string} A string without accents
  */
 export function removeAccents(str) {
-  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (typeof str !== 'string') {
+        return str;
+    }
+    return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
 /**
@@ -102,5 +114,8 @@ export function removeAccents(str) {
  * @returns {string} A string without punctuation
  */
 export function removePunctuation(str) {
+    if (typeof str !== 'string') {
+        return str;
+    }
     return str.replace(/[^A-Za-z0-9\s]/g, '');
 }
