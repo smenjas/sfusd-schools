@@ -768,26 +768,39 @@ async function startPathfinding() {
         );
 
         if (currentNode === selectedEnd) {
-            // Reconstruct path with safety check
+            // Reconstruct path with cycle recovery
             let current = selectedEnd;
-            const pathSet = new Set(); // Track visited nodes to detect cycles
-            const maxPathLength = Object.keys(junctions).length; // Safety limit
+            const pathSet = new Set();
+            const maxPathLength = Object.keys(junctions).length;
 
-            while (current && !pathSet.has(current) && finalPath.length < maxPathLength) {
+            while (current && finalPath.length < maxPathLength) {
+                if (pathSet.has(current)) {
+                    // Cycle detected - use the path we have so far
+                    console.warn(`Circular reference detected at node ${current}. Using partial path.`);
+                    break;
+                }
+
                 pathSet.add(current);
                 finalPath.unshift(current);
                 current = cameFrom[current];
             }
 
-            if (pathSet.has(current)) {
-                console.error("Circular reference detected in path reconstruction!");
-                finalPath = []; // Clear the path
-            } else if (finalPath.length >= maxPathLength) {
-                console.error("Path too long - possible infinite loop!");
-                finalPath = []; // Clear the path
+            if (finalPath.length >= maxPathLength) {
+                console.error("Path reconstruction hit length limit - using partial path");
             }
 
-            console.log(`Path reconstructed: ${finalPath.join(' -> ')}`);
+            // Validate the path we have
+            if (finalPath.length > 0) {
+                console.log(`Path reconstructed: ${finalPath.join(' -> ')} (${finalPath.length} nodes)`);
+
+                // Optional: Check if we actually reached the start
+                if (finalPath[0] !== selectedStart) {
+                    console.warn(`Path doesn't reach start node. Got to ${finalPath[0]}, wanted ${selectedStart}`);
+                }
+            } else {
+                console.error("No valid path could be reconstructed");
+            }
+
             break;
         }
 
@@ -802,14 +815,21 @@ async function startPathfinding() {
             const tentativeGScore = gScore[currentNode] + distance(currentNode, neighbor);
 
             if (!openSet.has(neighbor)) {
+                // First time visiting this neighbor
                 openSet.add(neighbor);
-            } else if (tentativeGScore >= (gScore[neighbor] || Infinity)) {
-                continue;
+                cameFrom[neighbor] = currentNode;
+                gScore[neighbor] = tentativeGScore;
+                fScore[neighbor] = gScore[neighbor] + distance(neighbor, selectedEnd);
+            } else if (tentativeGScore < (gScore[neighbor] || Infinity)) {
+                // Found a better path to this neighbor
+                if (cameFrom[neighbor] && cameFrom[neighbor] !== currentNode) {
+                    console.log(`Updating parent of ${neighbor} from ${cameFrom[neighbor]} to ${currentNode} (score: ${tentativeGScore} vs ${gScore[neighbor]})`);
+                }
+                cameFrom[neighbor] = currentNode;
+                gScore[neighbor] = tentativeGScore;
+                fScore[neighbor] = gScore[neighbor] + distance(neighbor, selectedEnd);
             }
-
-            cameFrom[neighbor] = currentNode;
-            gScore[neighbor] = tentativeGScore;
-            fScore[neighbor] = gScore[neighbor] + distance(neighbor, selectedEnd);
+            // If tentativeGScore >= existing gScore, don't update anything
         }
 
         // Update display
