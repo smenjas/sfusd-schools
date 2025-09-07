@@ -1,5 +1,6 @@
 import addressData from './address-data.js';
 import junctions from './junctions.js';
+import schoolData from './school-data.js';
 
 // Map state
 let canvas, ctx;
@@ -15,6 +16,7 @@ let selectedEnd = null;
 let isPathfinding = false;
 let theme = 'light';
 let addresses = {};
+let schools = [];
 
 const colorThemes = {
     light: {
@@ -204,6 +206,67 @@ function drawAddresses() {
     }
 }
 
+function drawSchools() {
+    // Show schools at lower zoom levels than addresses
+    if (zoom < 1.5) return;
+
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 3;
+    ctx.miterLimit = 3;
+
+    let schoolCount = 0;
+
+    schools.forEach(school => {
+        const [lat, lon] = school.coords;
+        const [x, y] = coordsToScreen(lat, lon);
+
+        // Only draw if visible
+        const margin = 50;
+        if (x >= -margin && x <= canvas.width + margin && y >= -margin && y <= canvas.height + margin) {
+            // Draw school marker - distinctive shape and color
+            const size = Math.max(12, zoom * 2);
+
+            // School marker as a house-like shape
+            ctx.fillStyle = '#ff4444'; // Bright red for schools
+            ctx.strokeStyle = getColor('background');
+
+            // Draw a square with triangle roof
+            ctx.beginPath();
+            ctx.rect(x - size/2, y - size/4, size, size/2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Triangle roof
+            ctx.beginPath();
+            ctx.moveTo(x - size/2, y - size/4);
+            ctx.lineTo(x, y - size);
+            ctx.lineTo(x + size/2, y - size/4);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Draw school name when zoomed in enough
+            if (zoom > 4) {
+                ctx.fillStyle = getColor('text');
+                ctx.strokeStyle = getColor('background');
+                ctx.font = `${Math.max(10, zoom / 2)}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+
+                const schoolName = `${school.prefix} ${school.name} ${school.suffix}`.trim();
+                ctx.strokeText(schoolName, x, y + size/2 + 2);
+                ctx.fillText(schoolName, x, y + size/2 + 2);
+            }
+
+            schoolCount++;
+        }
+    });
+
+    if (schoolCount > 0) {
+        console.log(`Drew ${schoolCount} schools at zoom ${zoom.toFixed(2)}x`);
+    }
+}
+
 function drawStreetNames() {
     if (zoom < 4) return;
 
@@ -372,6 +435,7 @@ function drawMap() {
     }
 
     drawStreetNames();
+    drawSchools();
 
     // Draw junctions in layers (gray first, then colored on top)
     const junctionRadius = Math.max(2, 1.5 / zoom);
@@ -549,6 +613,16 @@ function preprocessJunctions(rawJunctions) {
     return processed;
 }
 
+function preprocessSchools(rawSchools) {
+    return rawSchools.map(school => ({
+        ...school,
+        coords: [
+            padCoord(Math.round((school.ll[0] - 37) * 100000)),        // latitude
+            padCoord(Math.round(Math.abs(school.ll[1] + 122) * 100000)) // longitude
+        ]
+    }));
+}
+
 function resizeCanvas() {
     const container = document.querySelector('.map-container');
     const rect = container.getBoundingClientRect();
@@ -581,9 +655,10 @@ function loadMap() {
     Object.assign(junctions, processedJunctions);
 
     addresses = preprocessAddresses(addressData);
+    schools = preprocessSchools(schoolData);
 
     bounds = calculateBounds();
-    log(`Map bounds: lat ${bounds.minLat.toFixed(0)}-${bounds.maxLat.toFixed(0)}, lon ${bounds.minLon.toFixed(0)}-${bounds.maxLon.toFixed(0)}`);
+    console.log(`Map bounds: lat 37.${bounds.minLat.toFixed(0)} - 37.${bounds.maxLat.toFixed(0)}, lon -122.${bounds.minLon.toFixed(0)} - -122.${bounds.maxLon.toFixed(0)}`);
 
     setupEventListeners();
     fitToView();
@@ -677,6 +752,27 @@ function handleClick(e) {
 
     if (closestCNN) {
         selectJunction(closestCNN);
+        return;
+    }
+
+    // Check if user clicked on a school
+    let closestSchool = null;
+    let closestSchoolDistance = Infinity;
+
+    schools.forEach((school, index) => {
+        const [lat, lon] = school.coords;
+        const [x, y] = coordsToScreen(lat, lon);
+        const distance = Math.sqrt(Math.pow(mouseX - x, 2) + Math.pow(mouseY - y, 2));
+
+        if (distance < 20 && distance < closestSchoolDistance) {
+            closestSchoolDistance = distance;
+            closestSchool = school;
+        }
+    });
+
+    if (closestSchool) {
+        document.getElementById('infoPanel').textContent =
+            `School: ${closestSchool.prefix} ${closestSchool.name} ${closestSchool.suffix} - ${closestSchool.address}`;
     }
 }
 
