@@ -1,3 +1,4 @@
+import { formatStreet } from './address.js';
 import addressData from './address-data.js';
 import junctions from './junctions.js';
 import schoolData from './school-data.js';
@@ -28,7 +29,7 @@ const colors = {
         background: '#fff', // White
         schools: '#f44', // Red
         streets: '#bbb', // Light Gray
-        oneWays: '#444', // Dark Gray
+        oneWays: '#666', // Dark Gray
         junctions: '#ccc', // Light Gray
         start: '#28a745', // Green
         end: '#dc3545', // Red
@@ -42,7 +43,7 @@ const colors = {
         background: '#000', // Black
         schools: '#f44', // Red
         streets: '#444', // Dark Gray
-        oneWays: '#bbb', // Light Gray
+        oneWays: '#aaa', // Light Gray
         junctions: '#333', // Dark Gray
         start: '#4ade80', // Green
         end: '#f87171', // Salmon
@@ -340,6 +341,100 @@ function drawSchools() {
     return schoolCount;
 }
 
+function drawStreetNames() {
+    if (zoom < 4) return;
+
+    //console.time('drawStreetNames()');
+    ctx.fillStyle = getColor('text');
+    ctx.strokeStyle = getColor('background');
+    ctx.font = `${Math.max(10, zoom / 2)}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.lineWidth = 3;
+    ctx.lineJoin = 'round';
+
+    const drawnStreets = new Set();
+    const streetSegments = new Map(); // street name -> array of segments
+
+    // Collect street segments
+    for (const [cnn, junction] of Object.entries(junctions)) {
+        const [x1, y1] = junction.screen;
+
+        for (const adjCNN of junction.adj) {
+            if (!junctions[adjCNN]) continue;
+            const connectionKey = [cnn, adjCNN].sort().join('-');
+            if (drawnStreets.has(connectionKey)) continue;
+
+            drawnStreets.add(connectionKey);
+
+            // Find common street names between the two junctions
+            const commonStreets = junction.streets.filter(street =>
+                junctions[adjCNN].streets.includes(street)
+            );
+
+            if (!commonStreets.length) continue;
+
+            const [x2, y2] = junctions[adjCNN].screen;
+
+            if (!segmentIsVisible(x1, y1, x2, y2)) {
+                continue;
+            }
+
+            const street = commonStreets[0]; // Use first common street
+            if (!streetSegments.has(street)) {
+                streetSegments.set(street, []);
+            }
+            streetSegments.get(street).push({
+                x1, y1, x2, y2,
+                length: coordsDistance([y1, x1], [y2, x2])
+            });
+        }
+    }
+
+    // Draw street names on longest segments
+    streetSegments.forEach((segments, street) => {
+        // Find the longest segment for this street
+        const longestSegment = segments.reduce((longest, segment) =>
+            segment.length > longest.length ? segment : longest
+        );
+
+        // Only draw if segment is long enough for text
+        const textWidth = ctx.measureText(street).width;
+        if (longestSegment.length > textWidth + 20) {
+            drawStreetNameOnSegment(street, longestSegment);
+        }
+    });
+    //console.timeEnd('drawStreetNames()');
+}
+
+function drawStreetNameOnSegment(street, segment) {
+    const { x1, y1, x2, y2 } = segment;
+
+    // Calculate midpoint
+    const midX = (x1 + x2) / 2;
+    const midY = (y1 + y2) / 2;
+
+    // Calculate angle for text rotation
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+
+    // Ensure text is never upside down
+    let displayAngle = angle;
+    if (Math.abs(angle) > Math.PI / 2) {
+        displayAngle = angle + Math.PI;
+    }
+
+    ctx.save();
+    ctx.translate(midX, midY);
+    ctx.rotate(displayAngle);
+
+    // Draw text with outline for visibility
+    street = formatStreet(street);
+    ctx.strokeText(street, 0, 0);
+    ctx.fillText(street, 0, 0);
+
+    ctx.restore();
+}
+
 function lineIntersectsLine(x1, y1, x2, y2, x3, y3, x4, y4) {
     // Check if two line segments intersect using the cross product method
     const denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
@@ -569,6 +664,7 @@ function drawDetails() {
     drawJunctionStart();
     drawJunctionEnd();
     drawJunctionLabels();
+    drawStreetNames();
     const addressCount = drawAddresses();
     const schoolCount = drawSchools();
     return { addressCount, schoolCount };
