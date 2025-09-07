@@ -1,4 +1,5 @@
 import junctions from './junctions.js';
+import schoolData from './school-data.js';
 
 // Map state
 let bounds;
@@ -18,10 +19,12 @@ let initialPinchDistance = 0;
 let initialPinchCenter = { x: 0, y: 0 };
 let initialZoom = 1;
 let theme = 'light';
+let schools = [];
 
 const colors = {
     light: {
         background: '#fff', // White
+        schools: '#f44', // Red
         streets: '#bbb', // Light Gray
         oneWays: '#444', // Dark Gray
         junctions: '#ccc', // Light Gray
@@ -35,6 +38,7 @@ const colors = {
     },
     dark: {
         background: '#000', // Black
+        schools: '#f44', // Red
         streets: '#444', // Dark Gray
         oneWays: '#bbb', // Light Gray
         junctions: '#333', // Dark Gray
@@ -235,6 +239,62 @@ function drawArrow(x1, y1, x2, y2, color) {
     );
     ctx.lineTo(arrowX, arrowY);
     ctx.fill();
+}
+
+function drawSchool(ctx, size, school) {
+    const [x, y] = school.screen;
+    if (invisible(x, y)) return false;
+
+    // School marker as a house-like shape
+    ctx.fillStyle = getColor('schools');
+    ctx.strokeStyle = getColor('schools');
+
+    // Draw a square with triangle roof
+    ctx.beginPath();
+    ctx.rect(x - size/2, y - size/4, size, size/2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Triangle roof
+    ctx.beginPath();
+    ctx.moveTo(x - size/2, y - size/4);
+    ctx.lineTo(x, y - size/1.5);
+    ctx.lineTo(x + size/2, y - size/4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    if (zoom < 3) return true;
+
+    // Draw school name when zoomed in enough
+    ctx.fillStyle = getColor('text');
+    ctx.strokeStyle = getColor('background');
+    ctx.font = `${Math.max(10, zoom / 2)}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+
+    const schoolName = `${school.prefix} ${school.name} ${school.suffix}`.trim();
+    ctx.strokeText(schoolName, x, y + size/2 + 2);
+    ctx.fillText(schoolName, x, y + size/2 + 2);
+
+    return true;
+}
+
+function drawSchools() {
+    // Show schools at lower zoom levels than addresses
+    if (zoom < 2) return 0;
+
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = Math.max(1, zoom / 5);
+
+    const size = Math.max(8, zoom * 1.25, Math.min(20, zoom * 4));
+    let schoolCount = 0;
+
+    schools.forEach(school => {
+        schoolCount += drawSchool(ctx, size, school);
+    });
+
+    return schoolCount;
 }
 
 function lineIntersectsLine(x1, y1, x2, y2, x3, y3, x4, y4) {
@@ -466,6 +526,7 @@ function drawDetails() {
     drawJunctionStart();
     drawJunctionEnd();
     drawJunctionLabels();
+    return drawSchools();
 }
 
 function drawMap() {
@@ -481,14 +542,16 @@ function drawMap() {
 
     // Update screen coordinates.
     postprocessJunctions();
+    postprocessSchools();
 
     const streetCount = drawStreets();
     const junctionCount = drawJunctions();
-    drawDetails();
+    const schoolCount = drawDetails();
 
     const counts = [
         `${junctionCount} junctions`,
         `${streetCount} streets`,
+        `${schoolCount} schools`,
     ].join(', ');
     const stats = [
         `Canvas: ${canvas.width}x${canvas.height}`,
@@ -535,6 +598,16 @@ function postprocessJunctions() {
     //console.timeEnd('postprocessJunctions()');
 }
 
+function postprocessSchools() {
+    // Calculate the screen coordinates for each school.
+    //console.time('postprocessSchools()');
+    for (let i = 0; i < schools.length; i++) {
+        const [lat, lon] = schools[i].coords;
+        schools[i].screen = coordsToScreen(lat, lon);
+    }
+    //console.timeEnd('postprocessSchools()');
+}
+
 function preprocessJunctions(rawJunctions) {
     const processed = {};
 
@@ -547,6 +620,16 @@ function preprocessJunctions(rawJunctions) {
     });
 
     return processed;
+}
+
+function preprocessSchools(rawSchools) {
+    return rawSchools.map(school => ({
+        ...school,
+        coords: [
+            padCoord(Math.round((school.ll[0] - 37) * 100000)),        // latitude
+            padCoord(Math.round(Math.abs(school.ll[1] + 122) * 100000)) // longitude
+        ]
+    }));
 }
 
 function resizeCanvas() {
@@ -616,6 +699,8 @@ function loadMap() {
     Object.keys(junctions).forEach(key => delete junctions[key]);
     Object.assign(junctions, processedJunctions);
 
+    schools = preprocessSchools(schoolData);
+
     // Must calculate map boundaries before calling resizeCanvas().
     bounds = calculateBounds();
     console.log(`Map bounds: lat 37.${bounds.minLat.toFixed(0)} - 37.${bounds.maxLat.toFixed(0)}, lon -122.${bounds.minLon.toFixed(0)} - -122.${bounds.maxLon.toFixed(0)}`);
@@ -644,6 +729,23 @@ function findClosestJunction(baseX, baseY, threshold = 15) {
     });
 
     return closestCNN;
+}
+
+function findClosestSchool(baseX, baseY, threshold = 20) {
+    let closestSchool = null;
+    let closestDistance = Infinity;
+
+    schools.forEach((school, index) => {
+        const [x, y] = school.screen;
+        const distance = coordsDistance([y, x], [baseY, baseX]);
+
+        if (distance < threshold / zoom && distance < closestDistance) {
+            closestDistance = distance;
+            closestSchool = school;
+        }
+    });
+
+    return closestSchool;
 }
 
 function setupEventListeners() {
@@ -733,6 +835,11 @@ function handleClick(e) {
     const closestCNN = findClosestJunction(mouseX, mouseY);
     if (closestCNN) {
         selectJunction(closestCNN);
+    }
+
+    const school = findClosestSchool(mouseX, mouseY);
+    if (school) {
+        info(`School: ${school.prefix} ${school.name} ${school.suffix} - ${school.address}`);
     }
 }
 
