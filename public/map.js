@@ -226,6 +226,101 @@ function drawAddresses() {
     return addressCount;
 }
 
+function drawStreetNames() {
+    if (zoom < 4) return;
+
+    ctx.fillStyle = getColor('text');
+    ctx.strokeStyle = getColor('background');
+    ctx.font = `${Math.max(10, zoom / 2)}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.lineWidth = 3;
+    ctx.lineJoin = 'round';
+
+    const drawnStreets = new Set();
+    const streetSegments = new Map(); // street name -> array of segments
+
+    // Collect street segments
+    for (const [cnn, junction] of Object.entries(junctions)) {
+        const [lat1, lon1] = junction.ll;
+        const [x1, y1] = coordsToScreen(lat1, lon1);
+
+        for (const adjCNN of junction.adj) {
+            if (!junctions[adjCNN]) continue;
+            const connectionKey = [cnn, adjCNN].sort().join('-');
+            if (drawnStreets.has(connectionKey)) continue;
+
+            drawnStreets.add(connectionKey);
+
+            // Find common street names between the two junctions
+            const commonStreets = junction.streets.filter(street =>
+                junctions[adjCNN].streets.includes(street)
+            );
+
+            if (!commonStreets.length) continue;
+
+            const [lat2, lon2] = junctions[adjCNN].ll;
+            const [x2, y2] = coordsToScreen(lat2, lon2);
+
+            // Only process visible segments
+            const margin = 100;
+            if (invisible(x1, y1, margin) && invisible(x2, y2, margin)) {
+                continue;
+            }
+
+            const streetName = commonStreets[0]; // Use first common street
+            if (!streetSegments.has(streetName)) {
+                streetSegments.set(streetName, []);
+            }
+            streetSegments.get(streetName).push({
+                x1, y1, x2, y2,
+                length: coordsDistance([y1, x1], [y2, x2])
+            });
+        }
+    }
+
+    // Draw street names on longest segments
+    streetSegments.forEach((segments, streetName) => {
+        // Find the longest segment for this street
+        const longestSegment = segments.reduce((longest, segment) =>
+            segment.length > longest.length ? segment : longest
+        );
+
+        // Only draw if segment is long enough for text
+        const textWidth = ctx.measureText(streetName).width;
+        if (longestSegment.length > textWidth + 20) {
+            drawStreetNameOnSegment(streetName, longestSegment);
+        }
+    });
+}
+
+function drawStreetNameOnSegment(streetName, segment) {
+    const { x1, y1, x2, y2 } = segment;
+
+    // Calculate midpoint
+    const midX = (x1 + x2) / 2;
+    const midY = (y1 + y2) / 2;
+
+    // Calculate angle for text rotation
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+
+    // Ensure text is never upside down
+    let displayAngle = angle;
+    if (Math.abs(angle) > Math.PI / 2) {
+        displayAngle = angle + Math.PI;
+    }
+
+    ctx.save();
+    ctx.translate(midX, midY);
+    ctx.rotate(displayAngle);
+
+    // Draw text with outline for visibility
+    ctx.strokeText(streetName, 0, 0);
+    ctx.fillText(streetName, 0, 0);
+
+    ctx.restore();
+}
+
 function drawStreets() {
     let visibleStreets = 0;
     ctx.strokeStyle = getColor('streets');
@@ -424,6 +519,7 @@ function drawMap() {
     drawJunctionTerminals();
     drawJunctionLabels();
     const addressCount = drawAddresses();
+    drawStreetNames();
 
     const stats = [
         `Canvas: ${canvas.width}x${canvas.height}`,
