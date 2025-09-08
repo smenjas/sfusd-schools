@@ -23,6 +23,7 @@ const colors = {
         background: '#fff', // White
         schools: '#f44', // Red
         streets: '#bbb', // Light Gray
+        oneWayStreets: '#444', // Dark Gray
         junctions: '#ccc', // Light Gray
         start: '#28a745', // Green
         end: '#dc3545', // Red
@@ -36,6 +37,7 @@ const colors = {
         background: '#000', // Black
         schools: '#f44', // Red
         streets: '#444', // Dark Gray
+        oneWayStreets: '#bbb', // Light Gray
         junctions: '#333', // Dark Gray
         start: '#4ade80', // Green
         end: '#f87171', // Salmon
@@ -199,6 +201,56 @@ function invisible(x, y, margin) {
 
 function visible(x, y, margin) {
     return !invisible(x, y, margin);
+}
+
+function isOneWayStreet(fromCNN, toCNN) {
+    // Check if fromCNN connects to toCNN but toCNN doesn't connect back to fromCNN
+    if (!junctions[fromCNN] || !junctions[toCNN]) return false;
+
+    const fromHasTo = junctions[fromCNN].adj.includes(parseInt(toCNN));
+    const toHasFrom = junctions[toCNN].adj.includes(parseInt(fromCNN));
+
+    return fromHasTo && !toHasFrom;
+}
+
+function drawArrow(x1, y1, x2, y2, color) {
+    const arrowLength = Math.max(8, 3 / zoom);
+    const arrowAngle = Math.PI / 6; // 30 degrees
+
+    // Calculate arrow position (closer to the end point)
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const length = Math.sqrt(dx * dx + dy * dy);
+
+    if (length < arrowLength * 2) return; // Don't draw arrow if segment is too short
+
+    // Position arrow at 75% along the segment
+    const arrowX = x1 + dx * 0.75;
+    const arrowY = y1 + dy * 0.75;
+
+    // Calculate arrow direction
+    const angle = Math.atan2(dy, dx);
+
+    // Draw arrow head
+    ctx.strokeStyle = color;
+    ctx.lineWidth = Math.max(2, 1.5 / zoom);
+    ctx.lineCap = 'round';
+
+    ctx.beginPath();
+    // Arrow point
+    ctx.moveTo(arrowX, arrowY);
+    // Left wing
+    ctx.lineTo(
+        arrowX - arrowLength * Math.cos(angle - arrowAngle),
+        arrowY - arrowLength * Math.sin(angle - arrowAngle)
+    );
+    ctx.moveTo(arrowX, arrowY);
+    // Right wing
+    ctx.lineTo(
+        arrowX - arrowLength * Math.cos(angle + arrowAngle),
+        arrowY - arrowLength * Math.sin(angle + arrowAngle)
+    );
+    ctx.stroke();
 }
 
 function drawAddresses() {
@@ -432,11 +484,16 @@ function segmentIsVisible(x1, y1, x2, y2, margin = 100) {
 
 function drawStreets() {
     let visibleStreets = 0;
+    let oneWayStreets = 0;
+
+    // First pass: Draw regular two-way streets
     ctx.strokeStyle = getColor('streets');
     ctx.lineWidth = Math.max(1.5, zoom / 3);
     ctx.beginPath();
 
     const drawnConnections = new Set();
+    const oneWaySegments = [];
+
     Object.entries(junctions).forEach(([cnn, junction]) => {
         const [lat1, lon1] = junction.ll;
         const [x1, y1] = coordsToScreen(lat1, lon1);
@@ -456,14 +513,61 @@ function drawStreets() {
                 continue;
             }
 
-            ctx.moveTo(x1, y1);
-            ctx.lineTo(x2, y2);
-            visibleStreets++;
+            // Check if this is a one-way street
+            const isOneWayFromTo = isOneWayStreet(cnn, adjCNN);
+            const isOneWayToFrom = isOneWayStreet(adjCNN, cnn);
+
+            if (isOneWayFromTo || isOneWayToFrom) {
+                // Store one-way segment for later drawing
+                oneWaySegments.push({
+                    x1, y1, x2, y2,
+                    fromCNN: isOneWayFromTo ? cnn : adjCNN,
+                    toCNN: isOneWayFromTo ? adjCNN : cnn
+                });
+                oneWayStreets++;
+            } else {
+                // Regular two-way street
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                visibleStreets++;
+            }
         }
     });
 
     ctx.stroke();
-    return visibleStreets;
+
+    // Second pass: Draw one-way streets with different color and arrows
+    if (oneWaySegments.length > 0) {
+        ctx.strokeStyle = getColor('oneWayStreets');
+        ctx.lineWidth = Math.max(1.5, zoom / 3);
+        ctx.beginPath();
+
+        oneWaySegments.forEach(segment => {
+            ctx.moveTo(segment.x1, segment.y1);
+            ctx.lineTo(segment.x2, segment.y2);
+        });
+
+        ctx.stroke();
+
+        // Draw arrows on one-way streets (only when zoomed in enough)
+        if (zoom > 2) {
+            oneWaySegments.forEach(segment => {
+                // Determine arrow direction based on which junction points to which
+                const fromJunction = junctions[segment.fromCNN];
+                const toJunction = junctions[segment.toCNN];
+
+                const [fromLat, fromLon] = fromJunction.ll;
+                const [fromX, fromY] = coordsToScreen(fromLat, fromLon);
+
+                const [toLat, toLon] = toJunction.ll;
+                const [toX, toY] = coordsToScreen(toLat, toLon);
+
+                drawArrow(fromX, fromY, toX, toY, getColor('oneWayStreets'));
+            });
+        }
+    }
+
+    return { regular: visibleStreets, oneWay: oneWayStreets };
 }
 
 function drawJunctions() {
@@ -616,7 +720,7 @@ function drawMap() {
     ctx.fillStyle = getColor('background');
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    const visibleStreets = drawStreets();
+    const streetInfo = drawStreets();
     const visibleJunctions = drawJunctions();
     drawFinalPath();
     drawJunctionTerminals();
@@ -627,7 +731,7 @@ function drawMap() {
 
     const stats = [
         `Canvas: ${canvas.width}x${canvas.height}`,
-        `Rendered ${visibleJunctions} junctions, ${visibleStreets} streets, ${schoolCount} schools, ${addressCount} addresses`,
+        `Rendered ${visibleJunctions} junctions, ${streetInfo.regular} two-way streets, ${streetInfo.oneWay} one-way streets, ${schoolCount} schools, ${addressCount} addresses`,
         `Zoom: ${zoom.toFixed(3)}x, Pan: [${panX.toFixed(1)}, ${panY.toFixed(1)}]`,
     ].join(' | ');
 
