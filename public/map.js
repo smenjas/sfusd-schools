@@ -26,7 +26,7 @@ const colors = {
         junctions: '#ccc', // Light Gray
         start: '#28a745', // Green
         end: '#dc3545', // Red
-        current: '#ff6b35', // Orange
+        current: '#000', // Black
         openSet: '#ffc107', // Yellow
         closedSet: '#db1', // Gold
         path: '#06c', // Blue
@@ -39,7 +39,7 @@ const colors = {
         junctions: '#333', // Dark Gray
         start: '#4ade80', // Green
         end: '#f87171', // Salmon
-        current: '#fb923c', // Orange
+        current: '#fff', // White
         openSet: '#da3', // Ochre
         closedSet: '#860', // Gold
         path: '#60a5fa', // Blue
@@ -388,11 +388,19 @@ function drawJunctions() {
         drawJunction(x, y, radius, getColor('junctions'));
     }
 
+    //console.timeEnd('drawJunctions()');
+    return visibleJunctions;
+}
+
+function drawPathSearch() {
+    const radius = Math.max(0.5, zoom / 2.5) * 2.5;
+    const margin = 50;
+
     // 2nd pass: Draw current node
     if (here && junctions[here]) {
         const [x, y] = junctions[here].screen;
         if (visible(x, y, margin)) {
-            drawJunction(x, y, radius * 7, getColor('current'));
+            drawJunction(x, y, radius, getColor('current'));
         }
     }
 
@@ -401,7 +409,7 @@ function drawJunctions() {
         if (!junctions[cnn]) return;
         const [x, y] = junctions[cnn].screen;
         if (invisible(x, y, margin)) return;
-        drawJunction(x, y, radius * 2, getColor('closedSet'));
+        drawJunction(x, y, radius, getColor('closedSet'));
     });
 
     // 4th pass: Draw open set
@@ -409,11 +417,8 @@ function drawJunctions() {
         if (!junctions[cnn]) return;
         const [x, y] = junctions[cnn].screen;
         if (invisible(x, y, margin)) return;
-        drawJunction(x, y, radius * 2.5, getColor('openSet'));
+        drawJunction(x, y, radius, getColor('openSet'));
     });
-
-    //console.timeEnd('drawJunctions()');
-    return visibleJunctions;
 }
 
 function drawJunctionStart() {
@@ -458,6 +463,14 @@ function drawJunctionLabels() {
     }
 }
 
+function drawDetails() {
+    drawPathSearch();
+    drawPath();
+    drawJunctionStart();
+    drawJunctionEnd();
+    drawJunctionLabels();
+}
+
 function drawMap() {
     //console.time('drawMap()');
     if (!canvas || !ctx || !bounds) return;
@@ -474,10 +487,7 @@ function drawMap() {
 
     const streetInfo = drawStreets();
     const visibleJunctions = drawJunctions();
-    drawPath();
-    drawJunctionStart();
-    drawJunctionEnd();
-    drawJunctionLabels();
+    drawDetails();
 
     const stats = [
         `Canvas: ${canvas.width}x${canvas.height}`,
@@ -832,20 +842,26 @@ function selectJunction(cnn) {
         start = parseInt(cnn);
         document.getElementById('infoPanel').textContent =
             `Start point: Junction ${cnn}. Click another junction for the destination.`;
-    } else if (!end && cnn !== start) {
+        drawDetails();
+        return;
+    }
+
+    if (!end && cnn !== start) {
         end = parseInt(cnn);
         document.getElementById('findPathBtn').disabled = false;
         document.getElementById('infoPanel').textContent =
             `Route set: ${start} → ${end}. Ready for A* pathfinding!`;
-    } else {
-        // Reset selection
-        start = parseInt(cnn);
-        end = null;
-        document.getElementById('findPathBtn').disabled = true;
-        document.getElementById('infoPanel').textContent =
-            `Start point: Junction ${start}. Click another junction for the destination.`;
+        drawDetails();
+        return;
     }
 
+    // Reset selection
+    resetSelection(true);
+    start = parseInt(cnn);
+    end = null;
+    document.getElementById('findPathBtn').disabled = true;
+    document.getElementById('infoPanel').textContent =
+        `Start point: Junction ${start}. Click another junction for the destination.`;
     drawMap();
 }
 
@@ -889,7 +905,7 @@ function fitToView() {
     drawMap();
 }
 
-function resetSelection() {
+function resetSelection(doNotDraw = false) {
     start = null;
     end = null;
     isPathfinding = false;
@@ -901,6 +917,8 @@ function resetSelection() {
     document.getElementById('findPathBtn').disabled = true;
     document.getElementById('infoPanel').textContent =
         'Selection reset. Click two junctions to set new start/end points.';
+
+    if (doNotDraw) return;
 
     drawMap();
 }
@@ -999,7 +1017,7 @@ async function findPath() {
         checkNeighbors(gScore, fScore, cameFrom);
 
         // Update display
-        drawMap();
+        drawDetails();
         document.getElementById('infoPanel').textContent =
             `A* running... Current: ${here} | Open: ${openSet.size} | Closed: ${closedSet.size}`;
 
