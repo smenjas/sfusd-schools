@@ -771,6 +771,14 @@ function preprocessSchools(rawSchools) {
 function resizeCanvas() {
     if (!canvas) return;
 
+    // Store the geographic center point before resizing
+    let centerLat, centerLon;
+    if (bounds) {
+        const centerScreenX = canvas.width / 2;
+        const centerScreenY = canvas.height / 2;
+        [centerLat, centerLon] = screenToCoords(centerScreenX, centerScreenY);
+    }
+
     const container = document.querySelector('.map-container');
     const rect = container.getBoundingClientRect();
 
@@ -796,8 +804,19 @@ function resizeCanvas() {
         mapOffsetY = 0;
     }
 
+    // Adjust pan to keep the same geographic center point centered
+    if (bounds && centerLat !== undefined && centerLon !== undefined) {
+        const [newCenterX, newCenterY] = coordsToScreen(centerLat, centerLon);
+        const newCenterScreenX = canvas.width / 2;
+        const newCenterScreenY = canvas.height / 2;
+
+        // Adjust pan so the center point appears at the center of the new viewport
+        panX += (newCenterX - newCenterScreenX) / zoom;
+        panY += (newCenterY - newCenterScreenY) / zoom;
+    }
+
     // Redraw the map with new dimensions
-    fitToView();
+    drawMap();
 }
 
 function loadMap() {
@@ -826,7 +845,7 @@ function loadMap() {
     setupEventListeners();
 
     // Resize canvas to fill container
-    // resizeCanvas() calls fitToView(), which calls drawMap().
+    // resizeCanvas() calls drawMap().
     resizeCanvas();
 
     document.getElementById('infoPanel').textContent =
