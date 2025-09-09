@@ -237,6 +237,7 @@ function drawAddresses() {
     // Only show addresses when zoomed in enough to be readable
     if (zoom < 40) return 0;
 
+    console.time('drawAddresses()');
     ctx.lineJoin = 'round';
     ctx.lineWidth = 5;
     ctx.miterLimit = 3;
@@ -270,6 +271,7 @@ function drawAddresses() {
         });
     });
 
+    console.timeEnd('drawAddresses()');
     return addressCount;
 }
 
@@ -333,6 +335,7 @@ function drawSchools() {
 function drawStreetNames() {
     if (zoom < 4) return;
 
+    console.time('drawStreetNames()');
     ctx.fillStyle = getColor('text');
     ctx.strokeStyle = getColor('background');
     ctx.font = `${Math.max(10, zoom / 2)}px Arial`;
@@ -394,6 +397,7 @@ function drawStreetNames() {
             drawStreetNameOnSegment(streetName, longestSegment);
         }
     });
+    console.timeEnd('drawStreetNames()');
 }
 
 function drawStreetNameOnSegment(streetName, segment) {
@@ -461,6 +465,7 @@ function segmentIsVisible(x1, y1, x2, y2, margin = 100) {
 }
 
 function drawStreets() {
+    console.time('drawStreets()');
     let visibleStreets = 0;
     let oneWayStreets = 0;
 
@@ -535,6 +540,7 @@ function drawStreets() {
         }
     }
 
+    console.timeEnd('drawStreets()');
     return { regular: visibleStreets, oneWay: oneWayStreets };
 }
 
@@ -555,6 +561,7 @@ function drawJunctionOutline(x, y, radius, color) {
 
 function drawJunctions() {
     // Draw junctions in layers (gray first, then colors on top)
+    console.time('drawJunctions()');
     let visibleJunctions = 0;
     const radius = Math.max(0.5, zoom / 2.5);
     const margin = 50;
@@ -600,6 +607,7 @@ function drawJunctions() {
         }
     }
 
+    console.timeEnd('drawJunctions()');
     return visibleJunctions;
 }
 
@@ -646,6 +654,7 @@ function drawJunctionLabels() {
 }
 
 function drawMap() {
+    console.time('drawMap()');
     if (!canvas || !ctx || !bounds) return;
 
     // Clear canvas
@@ -675,6 +684,8 @@ function drawMap() {
     ].join(' | ');
 
     log(stats);
+    console.timeEnd('drawMap()');
+    console.log(' ');
 }
 
 function drawPath() {
