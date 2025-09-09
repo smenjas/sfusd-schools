@@ -27,7 +27,7 @@ const colors = {
         junctions: '#ccc', // Light Gray
         start: '#28a745', // Green
         end: '#dc3545', // Red
-        current: '#ff6b35', // Orange
+        current: '#000', // Black
         openSet: '#ffc107', // Yellow
         closedSet: '#db1', // Gold
         path: '#06c', // Blue
@@ -40,7 +40,7 @@ const colors = {
         junctions: '#333', // Dark Gray
         start: '#4ade80', // Green
         end: '#f87171', // Salmon
-        current: '#fb923c', // Orange
+        current: '#fff', // White
         openSet: '#da3', // Ochre
         closedSet: '#860', // Gold
         path: '#60a5fa', // Blue
@@ -387,11 +387,18 @@ function drawJunctions() {
         drawJunction(x, y, radius, getColor('junctions'));
     }
 
+    //console.timeEnd('drawJunctions()');
+    return junctionCount;
+}
+
+function drawPathSearch() {
+    const radius = Math.max(1.25, zoom);
+
     // 2nd pass: Draw current node
     if (here && junctions[here]) {
         const [x, y] = junctions[here].screen;
         if (visible(x, y)) {
-            drawJunction(x, y, radius * 7, getColor('current'));
+            drawJunction(x, y, radius, getColor('current'));
         }
     }
 
@@ -400,7 +407,7 @@ function drawJunctions() {
         if (!junctions[cnn]) return;
         const [x, y] = junctions[cnn].screen;
         if (invisible(x, y)) return;
-        drawJunction(x, y, radius * 2, getColor('closedSet'));
+        drawJunction(x, y, radius, getColor('closedSet'));
     });
 
     // 4th pass: Draw open set
@@ -408,11 +415,8 @@ function drawJunctions() {
         if (!junctions[cnn]) return;
         const [x, y] = junctions[cnn].screen;
         if (invisible(x, y)) return;
-        drawJunction(x, y, radius * 2.5, getColor('openSet'));
+        drawJunction(x, y, radius, getColor('openSet'));
     });
-
-    //console.timeEnd('drawJunctions()');
-    return junctionCount;
 }
 
 function drawJunctionStart() {
@@ -456,6 +460,14 @@ function drawJunctionLabels() {
     }
 }
 
+function drawDetails() {
+    drawPathSearch();
+    drawPath();
+    drawJunctionStart();
+    drawJunctionEnd();
+    drawJunctionLabels();
+}
+
 function drawMap() {
     //console.time('drawMap()');
     if (!canvas || !ctx || !bounds) return;
@@ -472,10 +484,7 @@ function drawMap() {
 
     const streetCount = drawStreets();
     const junctionCount = drawJunctions();
-    drawPath();
-    drawJunctionStart();
-    drawJunctionEnd();
-    drawJunctionLabels();
+    drawDetails();
 
     const counts = [
         `${junctionCount} junctions`,
@@ -840,7 +849,7 @@ function selectJunction(cnn) {
     if (!start) {
         start = parseInt(cnn);
         info(`Start point: Junction ${cnn}. Click another junction for the destination.`);
-        drawMap();
+        drawDetails();
         return;
     }
 
@@ -848,11 +857,12 @@ function selectJunction(cnn) {
         end = parseInt(cnn);
         document.getElementById('findPathBtn').disabled = false;
         info(`Route set: ${start} → ${end}. Ready for A* pathfinding!`);
-        drawMap();
+        drawDetails();
         return;
     }
 
     // Reset selection
+    resetSelection();
     start = parseInt(cnn);
     end = null;
     document.getElementById('findPathBtn').disabled = true;
@@ -911,7 +921,10 @@ function resetSelection() {
 
     document.getElementById('findPathBtn').disabled = true;
     info('Selection reset. Click two junctions to set new start/end points.');
+}
 
+function resetAndRedraw() {
+    resetSelection();
     drawMap();
 }
 
@@ -1009,7 +1022,7 @@ async function findPath() {
         checkNeighbors(gScore, fScore, cameFrom);
 
         // Update display
-        drawMap();
+        drawDetails();
         info(`A* running... Current: ${here} | Open: ${openSet.size} | Closed: ${closedSet.size}`);
 
         // Brief pause for visualization
@@ -1036,7 +1049,7 @@ window.addEventListener('load', () => {
 window.addEventListener('load', () => {
     detectColorScheme();
     document.getElementById('findPathBtn').addEventListener('click', findPath);
-    document.getElementById('resetBtn').addEventListener('click', resetSelection);
+    document.getElementById('resetBtn').addEventListener('click', resetAndRedraw);
     document.getElementById('zoomInBtn').addEventListener('click', zoomIn);
     document.getElementById('zoomOutBtn').addEventListener('click', zoomOut);
     document.getElementById('fitViewBtn').addEventListener('click', fitToView);
