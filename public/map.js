@@ -231,7 +231,7 @@ function isOneWayStreet(fromCNN, toCNN) {
 }
 
 function drawArrow(x1, y1, x2, y2, color) {
-    const arrowLength = 8 / zoom;
+    const arrowLength = 3;
     const arrowAngle = Math.PI / 6;
 
     const dx = x2 - x1;
@@ -244,9 +244,8 @@ function drawArrow(x1, y1, x2, y2, color) {
     const arrowY = y1 + dy * 0.75;
     const angle = Math.atan2(dy, dx);
 
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2 / zoom;
-    ctx.lineCap = 'round';
+    ctx.fillStyle = color;
+    ctx.lineWidth = 0.75;
 
     ctx.beginPath();
     ctx.moveTo(arrowX, arrowY);
@@ -254,12 +253,12 @@ function drawArrow(x1, y1, x2, y2, color) {
         arrowX - arrowLength * Math.cos(angle - arrowAngle),
         arrowY - arrowLength * Math.sin(angle - arrowAngle)
     );
-    ctx.moveTo(arrowX, arrowY);
     ctx.lineTo(
         arrowX - arrowLength * Math.cos(angle + arrowAngle),
         arrowY - arrowLength * Math.sin(angle + arrowAngle)
     );
-    ctx.stroke();
+    ctx.lineTo(arrowX, arrowY);
+    ctx.fill();
 }
 
 function drawAddresses() {
@@ -267,11 +266,11 @@ function drawAddresses() {
 
     console.time('drawAddresses()');
     ctx.lineJoin = 'round';
-    ctx.lineWidth = 3 / zoom;
+    ctx.lineWidth = 0.02;
     ctx.miterLimit = 3;
     ctx.fillStyle = getColor('text');
     ctx.strokeStyle = getColor('background');
-    ctx.font = `${12 / zoom}px Arial`;
+    ctx.font = `0.25px Arial`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
@@ -287,11 +286,11 @@ function drawAddresses() {
             // Draw a small dot for the address location
             ctx.fillStyle = getColor('text');
             ctx.beginPath();
-            ctx.arc(x, y, 2 / zoom, 0, 2 * Math.PI);
+            ctx.arc(x, y, 0.05, 0, 2 * Math.PI);
             ctx.fill();
 
             // Draw address number slightly offset
-            const offsetY = 8 / zoom;
+            const offsetY = 0.2;
             ctx.fillStyle = getColor('text');
             ctx.strokeText(number, x, y - offsetY);
             ctx.fillText(number, x, y - offsetY);
@@ -305,10 +304,8 @@ function drawAddresses() {
 }
 
 function drawSchools() {
-    if (zoom < 2) return 0;
-
     ctx.lineJoin = 'round';
-    ctx.lineWidth = 1 / zoom;
+    ctx.lineWidth = 0.25;
 
     let schoolCount = 0;
 
@@ -318,7 +315,7 @@ function drawSchools() {
 
         if (invisible(x, y)) return;
 
-        const size = 15 / zoom;
+        const size = 4;
 
         // School marker as a house-like shape
         ctx.fillStyle = getColor('schools');
@@ -343,12 +340,12 @@ function drawSchools() {
         if (zoom > 3) {
             ctx.fillStyle = getColor('text');
             ctx.strokeStyle = getColor('background');
-            ctx.font = `${20 / zoom}px Arial`;
+            ctx.font = '2.5px Arial';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
 
             const schoolName = `${school.prefix} ${school.name} ${school.suffix}`.trim();
-            const textY = y + size/2 + (2 / zoom);
+            const textY = y + size/2;
             ctx.strokeText(schoolName, x, textY);
             ctx.fillText(schoolName, x, textY);
         }
@@ -360,21 +357,21 @@ function drawSchools() {
 }
 
 function drawStreetNames() {
-    if (zoom < 4) return;
+    if (zoom < 6) return;
 
     console.time('drawStreetNames()');
     ctx.fillStyle = getColor('text');
     ctx.strokeStyle = getColor('background');
-    ctx.font = `${14 / zoom}px Arial`;
+    ctx.font = '1.5px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.lineWidth = 3 / zoom;
+    ctx.lineWidth = 0.25;
     ctx.lineJoin = 'round';
 
     const drawnStreets = new Set();
-    const streetSegments = new Map(); // street name -> array of segments
+    const streetSegments = new Map();
 
-    // Collect street segments
+    // Collect street segments (same logic as before)
     for (const [cnn, junction] of Object.entries(junctions)) {
         const [x1, y1] = junction.screen;
 
@@ -394,7 +391,7 @@ function drawStreetNames() {
 
             const [x2, y2] = junctions[adjCNN].screen;
 
-            if (!segmentIsVisible(x1, y1, x2, y2)) {
+            if (!segmentIsVisible(x1, y1, x2, y2, 100)) {
                 continue;
             }
 
@@ -418,7 +415,7 @@ function drawStreetNames() {
 
         // Only draw if segment is long enough for text
         const textWidth = ctx.measureText(street).width;
-        if (longestSegment.length > (textWidth + 20) / zoom) {
+        if (longestSegment.length > textWidth / 2) {
             drawStreetNameOnSegment(street, longestSegment);
         }
     });
@@ -496,7 +493,7 @@ function drawStreets() {
     let oneWays = 0;
 
     ctx.strokeStyle = getColor('streets');
-    ctx.lineWidth = 1.5 / zoom;
+    ctx.lineWidth = 1;
     ctx.beginPath();
 
     const drawnConnections = new Set();
@@ -541,7 +538,7 @@ function drawStreets() {
     // Draw one-way streets
     if (oneWaySegments.length > 0) {
         ctx.strokeStyle = getColor('oneWays');
-        ctx.lineWidth = 1.5 / zoom;
+        ctx.lineWidth = 1;
         ctx.beginPath();
 
         oneWaySegments.forEach(segment => {
@@ -568,24 +565,24 @@ function drawStreets() {
 function drawJunction(x, y, radius, color) {
     ctx.fillStyle = color;
     ctx.beginPath();
-    ctx.arc(x, y, radius / zoom, 0, 2 * Math.PI);
+    ctx.arc(x, y, radius, 0, 2 * Math.PI);
     ctx.fill();
 }
 
 function drawJunctionOutline(x, y, radius, color) {
     ctx.strokeStyle = color;
-    ctx.lineWidth = 2 / zoom;
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(x, y, radius / zoom, 0, 2 * Math.PI);
+    ctx.arc(x, y, radius, 0, 2 * Math.PI);
     ctx.stroke();
 }
 
 function drawJunctions() {
     console.time('drawJunctions()');
     let visibleJunctions = 0;
-    const radius = 1 / zoom;
+    const radius = 0.75;
 
-    // Batch all gray junctions into single path
+    // Batch all gray junctions into a single path
     ctx.fillStyle = getColor('junctions');
     ctx.beginPath();
 
@@ -601,9 +598,8 @@ function drawJunctions() {
             continue;
         }
 
-        // Proper arc batching - each arc needs its own subpath
-        ctx.moveTo(x + radius / zoom, y);
-        ctx.arc(x, y, radius / zoom, 0, 2 * Math.PI);
+        ctx.moveTo(x + radius, y);
+        ctx.arc(x, y, radius, 0, 2 * Math.PI);
     }
 
     ctx.fill();
@@ -612,9 +608,9 @@ function drawJunctions() {
 }
 
 function drawPathSearch() {
-    const radius = 6;
+    const radius = 2;
 
-    // 2nd pass: Draw current node
+    // Draw current node
     if (here && junctions[here]) {
         const [x, y] = junctions[here].screen;
         if (visible(x, y)) {
@@ -622,7 +618,7 @@ function drawPathSearch() {
         }
     }
 
-    // 3rd pass: Draw closed set
+    // Draw closed set
     closedSet.forEach(cnn => {
         if (!junctions[cnn]) return;
         const [x, y] = junctions[cnn].screen;
@@ -630,7 +626,7 @@ function drawPathSearch() {
         drawJunction(x, y, radius, getColor('closedSet'));
     });
 
-    // 4th pass: Draw open set
+    // Draw open set
     openSet.forEach(cnn => {
         if (!junctions[cnn]) return;
         const [x, y] = junctions[cnn].screen;
@@ -643,7 +639,7 @@ function drawJunctionStart() {
     if (!start || !junctions[start]) return;
     const [x, y] = junctions[start].screen;
     if (invisible(x, y)) return;
-    const radius = 8;
+    const radius = 4;
     drawJunction(x, y, radius, getColor('start'));
     drawJunctionOutline(x, y, radius, getColor('text'));
 }
@@ -652,7 +648,7 @@ function drawJunctionEnd() {
     if (!end || !junctions[end]) return;
     const [x, y] = junctions[end].screen;
     if (invisible(x, y)) return;
-    const radius = 8;
+    const radius = 4;
     drawJunction(x, y, radius, getColor('end'));
     drawJunctionOutline(x, y, radius, getColor('text'));
 }
@@ -660,18 +656,17 @@ function drawJunctionEnd() {
 function drawJunctionLabels() {
     if (zoom < 20) return;
 
-    const radius = 2 / zoom;
     for (const cnn in junctions) {
         const [x, y] = junctions[cnn].screen;
 
         if (invisible(x, y)) continue;
 
         ctx.lineJoin = 'round';
-        ctx.lineWidth = 5 / zoom;
+        ctx.lineWidth = 0.1;
         ctx.miterLimit = 3;
         ctx.fillStyle = getColor('text');
         ctx.strokeStyle = getColor('background');
-        ctx.font = `${15 / zoom}px Arial`;
+        ctx.font = '0.6px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.strokeText(cnn, x, y);
@@ -730,7 +725,7 @@ function drawPath() {
     if (path.length < 2) return;
 
     ctx.strokeStyle = getColor('path');
-    ctx.lineWidth = 12 / zoom;
+    ctx.lineWidth = 4;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.beginPath();
