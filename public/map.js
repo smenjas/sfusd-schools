@@ -1034,14 +1034,31 @@ function selectJunction(cnn) {
     drawMap();
 }
 
-function zoomIn() {
-    zoom = Math.min(maxZoom, zoom * 1.5);
+function zoomTowardCenter(zoomFactor) {
+    const newZoom = Math.max(minZoom, Math.min(maxZoom, zoom * zoomFactor));
+    if (newZoom === zoom) return; // No change needed
+
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+
+    // Find what base coordinates the center currently shows
+    const baseCenterX = centerX / zoom + panX;
+    const baseCenterY = centerY / zoom + panY;
+
+    // After zoom, adjust pan so that same base point appears at center
+    panX = baseCenterX - centerX / newZoom;
+    panY = baseCenterY - centerY / newZoom;
+
+    zoom = newZoom;
     drawMap();
 }
 
+function zoomIn() {
+    zoomTowardCenter(1.5);
+}
+
 function zoomOut() {
-    zoom = Math.max(minZoom, zoom / 1.5);
-    drawMap();
+    zoomTowardCenter(1 / 1.5);
 }
 
 function fitToView() {
