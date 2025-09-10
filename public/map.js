@@ -13,6 +13,10 @@ const maxZoom = 100;
 let panX = 0, panY = 0;
 let isDragging = false;
 let lastMouseX = 0, lastMouseY = 0;
+let isPinching = false;
+let initialPinchDistance = 0;
+let initialPinchCenter = { x: 0, y: 0 };
+let initialZoom = 1;
 let theme = 'light';
 let addresses = {};
 let schools = [];
@@ -972,38 +976,104 @@ function getTouchCoordinates(e, canvas) {
     };
 }
 
+// Helper function to calculate distance between two touches
+function getTouchDistance(touch1, touch2) {
+    const dx = touch1.clientX - touch2.clientX;
+    const dy = touch1.clientY - touch2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+}
+
+// Helper function to get center point between two touches
+function getTouchCenter(touch1, touch2, canvas) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+        x: (touch1.clientX + touch2.clientX) / 2 - rect.left,
+        y: (touch1.clientY + touch2.clientY) / 2 - rect.top
+    };
+}
+
 function handleTouchStart(e) {
     e.preventDefault(); // Prevent scrolling
 
     if (e.touches.length === 1) {
+        // Single touch - start panning
         isDragging = true;
+        isPinching = false;
         const coords = getTouchCoordinates(e, canvas);
         lastMouseX = coords.x;
         lastMouseY = coords.y;
+    } else if (e.touches.length === 2) {
+        // Two touches - start pinching
+        isDragging = false;
+        isPinching = true;
+
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
+
+        initialPinchDistance = getTouchDistance(touch1, touch2);
+        initialPinchCenter = getTouchCenter(touch1, touch2, canvas);
+        initialZoom = zoom;
     }
 }
 
 function handleTouchMove(e) {
     e.preventDefault(); // Prevent scrolling
 
-    if (!isDragging || e.touches.length !== 1) return;
+    if (e.touches.length === 1 && isDragging && !isPinching) {
+        // Single touch panning
+        const coords = getTouchCoordinates(e, canvas);
+        const deltaX = coords.x - lastMouseX;
+        const deltaY = coords.y - lastMouseY;
 
-    const coords = getTouchCoordinates(e, canvas);
-    const deltaX = coords.x - lastMouseX;
-    const deltaY = coords.y - lastMouseY;
+        panX -= deltaX / zoom;
+        panY -= deltaY / zoom;
 
-    panX -= deltaX / zoom;
-    panY -= deltaY / zoom;
+        lastMouseX = coords.x;
+        lastMouseY = coords.y;
 
-    lastMouseX = coords.x;
-    lastMouseY = coords.y;
+        drawMap();
+    } else if (e.touches.length === 2 && isPinching) {
+        // Two touch pinch-to-zoom
+        const touch1 = e.touches[0];
+        const touch2 = e.touches[1];
 
-    drawMap();
+        const currentDistance = getTouchDistance(touch1, touch2);
+        const currentCenter = getTouchCenter(touch1, touch2, canvas);
+
+        // Calculate zoom factor based on distance change
+        const zoomFactor = currentDistance / initialPinchDistance;
+        const newZoom = Math.max(minZoom, Math.min(maxZoom, initialZoom * zoomFactor));
+
+        if (newZoom !== zoom) {
+            // Calculate the point in "base" coordinate space for the pinch center
+            const baseCenterX = initialPinchCenter.x / zoom + panX;
+            const baseCenterY = initialPinchCenter.y / zoom + panY;
+
+            // Adjust pan so the pinch center stays under the fingers
+            panX = baseCenterX - currentCenter.x / newZoom;
+            panY = baseCenterY - currentCenter.y / newZoom;
+
+            zoom = newZoom;
+            drawMap();
+        }
+    }
 }
 
 function handleTouchEnd(e) {
     e.preventDefault(); // Prevent scrolling
-    isDragging = false;
+
+    if (e.touches.length === 0) {
+        // No more touches
+        isDragging = false;
+        isPinching = false;
+    } else if (e.touches.length === 1 && isPinching) {
+        // Went from pinch to single touch - switch to panning
+        isPinching = false;
+        isDragging = true;
+        const coords = getTouchCoordinates(e, canvas);
+        lastMouseX = coords.x;
+        lastMouseY = coords.y;
+    }
 }
 
 function selectJunction(cnn) {
