@@ -193,7 +193,7 @@ function isOneWayStreet(fromCNN, toCNN) {
 }
 
 function drawArrow(x1, y1, x2, y2, color) {
-    const arrowLength = Math.max(3, zoom + 1);
+    const arrowLength = Math.max(6, zoom + 1);
     const arrowAngle = Math.PI / 6; // 30 degrees
 
     // Calculate arrow position (closer to the end point)
@@ -211,7 +211,7 @@ function drawArrow(x1, y1, x2, y2, color) {
     const angle = Math.atan2(dy, dx);
 
     // Draw arrow head
-    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
     ctx.lineWidth = Math.max(2, zoom / 4);
     ctx.lineCap = 'round';
 
@@ -223,13 +223,13 @@ function drawArrow(x1, y1, x2, y2, color) {
         arrowX - arrowLength * Math.cos(angle - arrowAngle),
         arrowY - arrowLength * Math.sin(angle - arrowAngle)
     );
-    ctx.moveTo(arrowX, arrowY);
     // Right wing
     ctx.lineTo(
         arrowX - arrowLength * Math.cos(angle + arrowAngle),
         arrowY - arrowLength * Math.sin(angle + arrowAngle)
     );
-    ctx.stroke();
+    ctx.lineTo(arrowX, arrowY);
+    ctx.fill();
 }
 
 function lineIntersectsLine(x1, y1, x2, y2, x3, y3, x4, y4) {
