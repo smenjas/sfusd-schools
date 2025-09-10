@@ -12,6 +12,7 @@ const minZoom = 1.0;
 const maxZoom = 100;
 let panX = 0, panY = 0;
 let isDragging = false;
+let hasSignificantlyDragged = false;
 let lastMouseX = 0, lastMouseY = 0;
 let isPinching = false;
 let initialPinchDistance = 0;
@@ -872,6 +873,7 @@ function setupEventListeners() {
 
 function handleMouseDown(e) {
     isDragging = true;
+    hasSignificantlyDragged = false; // Reset drag tracking
     lastMouseX = e.offsetX;
     lastMouseY = e.offsetY;
 }
@@ -881,6 +883,11 @@ function handleMouseMove(e) {
 
     const deltaX = e.offsetX - lastMouseX;
     const deltaY = e.offsetY - lastMouseY;
+
+    // Track if significant movement occurred (more than 3 pixels)
+    if (Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3) {
+        hasSignificantlyDragged = true;
+    }
 
     panX -= deltaX / zoom;
     panY -= deltaY / zoom;
@@ -893,6 +900,7 @@ function handleMouseMove(e) {
 
 function handleMouseUp(e) {
     isDragging = false;
+    // Don't reset hasSignificantlyDragged here - let handleClick check it
 }
 
 function handleWheel(e) {
@@ -922,7 +930,11 @@ function handleWheel(e) {
 }
 
 function handleClick(e) {
-    if (isDragging || isPathfinding) return;
+    // Ignore clicks that happen immediately after dragging
+    if (isDragging || isPathfinding || hasSignificantlyDragged) {
+        hasSignificantlyDragged = false; // Reset for next interaction
+        return;
+    }
 
     const rect = canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
