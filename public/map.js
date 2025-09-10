@@ -11,8 +11,6 @@ let zoom = 1;
 const minZoom = 1.0;
 const maxZoom = 100;
 let panX = 0, panY = 0;
-let lastPanX = 0, lastPanY = 0, lastZoom = 1;
-let coordinatesCached = false;
 let animationFrameId = null;
 let needsRedraw = false;
 let isDragging = false;
@@ -140,29 +138,25 @@ function coordsToScreen(lat, lon) {
     const normalizedX = (bounds.maxLon - lon) / (bounds.maxLon - bounds.minLon);
     const normalizedY = (bounds.maxLat - lat) / (bounds.maxLat - bounds.minLat);
 
-    // Convert to screen coordinates within the map display area
-    // We must call resizeCanvas() first to populate these values.
+    // Convert to base screen coordinates (before zoom/pan transform)
     const baseX = normalizedX * mapDisplayWidth + mapOffsetX;
     const baseY = normalizedY * mapDisplayHeight + mapOffsetY;
 
-    // Apply zoom and pan
-    const screenX = (baseX - panX) * zoom;
-    const screenY = (baseY - panY) * zoom;
-
-    return [screenX, screenY];
+    return [baseX, baseY];
 }
 
 function screenToCoords(screenX, screenY) {
     if (!bounds) return [0, 0];
 
-    // Reverse zoom and pan
+    // Reverse the canvas transform
     const baseX = screenX / zoom + panX;
     const baseY = screenY / zoom + panY;
 
-    const normalizedX = baseX / canvas.width;
-    const normalizedY = baseY / canvas.height;
+    // Convert to normalized coordinates
+    const normalizedX = (baseX - mapOffsetX) / mapDisplayWidth;
+    const normalizedY = (baseY - mapOffsetY) / mapDisplayHeight;
 
-    // Reverse the coordinate mapping
+    // Convert to lat/lon
     const lon = bounds.maxLon - normalizedX * (bounds.maxLon - bounds.minLon);
     const lat = bounds.maxLat - normalizedY * (bounds.maxLat - bounds.minLat);
 
@@ -183,10 +177,15 @@ function junctionDistance(cnn1, cnn2) {
     return coordsDistance(coords1, coords2);
 }
 
-// More efficient visibility checking with expanded margins
 function isElementVisible(x, y, margin = 100) {
-    return x >= -margin && x <= canvas.width + margin &&
-           y >= -margin && y <= canvas.height + margin;
+    // Transform margin to account for zoom
+    const transformedMargin = margin / zoom;
+    const viewLeft = panX - transformedMargin;
+    const viewTop = panY - transformedMargin;
+    const viewRight = panX + canvas.width / zoom + transformedMargin;
+    const viewBottom = panY + canvas.height / zoom + transformedMargin;
+
+    return x >= viewLeft && x <= viewRight && y >= viewTop && y <= viewBottom;
 }
 
 function invisible(x, y, margin = 100) {
@@ -209,43 +208,35 @@ function isOneWayStreet(fromCNN, toCNN) {
 }
 
 function drawArrow(x1, y1, x2, y2, color) {
-    const arrowLength = Math.max(6, zoom + 1);
-    const arrowAngle = Math.PI / 6; // 30 degrees
+    const arrowLength = Math.max(8, 3) / zoom; // Scale arrow size
+    const arrowAngle = Math.PI / 6;
 
-    // Calculate arrow position (closer to the end point)
     const dx = x2 - x1;
     const dy = y2 - y1;
     const length = Math.sqrt(dx * dx + dy * dy);
 
-    if (length < arrowLength * 2) return; // Don't draw arrow if segment is too short
+    if (length < arrowLength * 2) return;
 
-    // Position arrow at 75% along the segment
     const arrowX = x1 + dx * 0.75;
     const arrowY = y1 + dy * 0.75;
-
-    // Calculate arrow direction
     const angle = Math.atan2(dy, dx);
 
-    // Draw arrow head
-    ctx.fillStyle = color;
-    ctx.lineWidth = Math.max(2, zoom / 4);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = Math.max(2, 1.5) / zoom; // Scale line width
     ctx.lineCap = 'round';
 
     ctx.beginPath();
-    // Arrow point
     ctx.moveTo(arrowX, arrowY);
-    // Left wing
     ctx.lineTo(
         arrowX - arrowLength * Math.cos(angle - arrowAngle),
         arrowY - arrowLength * Math.sin(angle - arrowAngle)
     );
-    // Right wing
+    ctx.moveTo(arrowX, arrowY);
     ctx.lineTo(
         arrowX - arrowLength * Math.cos(angle + arrowAngle),
         arrowY - arrowLength * Math.sin(angle + arrowAngle)
     );
-    ctx.lineTo(arrowX, arrowY);
-    ctx.fill();
+    ctx.stroke();
 }
 
 function drawAddresses() {
@@ -254,11 +245,11 @@ function drawAddresses() {
 
     console.time('drawAddresses()');
     ctx.lineJoin = 'round';
-    ctx.lineWidth = 5;
+    ctx.lineWidth = 5 / zoom; // Scale for transform
     ctx.miterLimit = 3;
     ctx.fillStyle = getColor('text');
     ctx.strokeStyle = getColor('background');
-    ctx.font = `${Math.max(10, zoom / 5)}px Arial`;
+    ctx.font = `${Math.max(10, 20) / zoom}px Arial`; // Base font size scaled
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
@@ -269,18 +260,19 @@ function drawAddresses() {
             const [lat, lon] = coords;
             const [x, y] = coordsToScreen(lat, lon);
 
-            if (invisible(x, y, 30)) return;
+            if (!isElementVisible(x, y, 30)) return;
 
             // Draw a small dot for the address location
             ctx.fillStyle = getColor('text');
             ctx.beginPath();
-            ctx.arc(x, y, Math.max(1, 1.5/zoom), 0, 2 * Math.PI);
+            ctx.arc(x, y, Math.max(1, 1.5) / zoom, 0, 2 * Math.PI); // Scale radius
             ctx.fill();
 
             // Draw address number slightly offset so it doesn't overlap the dot
+            const offsetY = Math.max(8, 10) / zoom; // Scale offset
             ctx.fillStyle = getColor('text');
-            ctx.strokeText(number, x, y - Math.max(8, 10/zoom));
-            ctx.fillText(number, x, y - Math.max(8, 10/zoom));
+            ctx.strokeText(number, x, y - offsetY);
+            ctx.fillText(number, x, y - offsetY);
 
             addressCount++;
         });
@@ -295,7 +287,7 @@ function drawSchools() {
     if (zoom < 2) return 0;
 
     ctx.lineJoin = 'round';
-    ctx.lineWidth = Math.max(1, zoom / 5);
+    ctx.lineWidth = Math.max(1, 1) / zoom; // Scale line width
 
     let schoolCount = 0;
 
@@ -304,10 +296,10 @@ function drawSchools() {
         const [x, y] = coordsToScreen(lat, lon);
 
         // Only draw if visible
-        if (invisible(x, y, 50)) return;
+        if (!isElementVisible(x, y, 50)) return;
 
-        // Draw school marker - distinctive shape and color
-        const size = Math.max(8, zoom * 1.25, Math.min(20, zoom * 4));
+        // Base size (not zoom-dependent since transform handles scaling)
+        const size = Math.max(8, 15) / zoom; // Scale size for transform
 
         // School marker as a house-like shape
         ctx.fillStyle = getColor('schools');
@@ -332,13 +324,14 @@ function drawSchools() {
         if (zoom > 3) {
             ctx.fillStyle = getColor('text');
             ctx.strokeStyle = getColor('background');
-            ctx.font = `${Math.max(10, zoom / 2)}px Arial`;
+            ctx.font = `${Math.max(10, 20) / zoom}px Arial`; // Scale font
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
 
             const schoolName = `${school.prefix} ${school.name} ${school.suffix}`.trim();
-            ctx.strokeText(schoolName, x, y + size/2 + 2);
-            ctx.fillText(schoolName, x, y + size/2 + 2);
+            const textY = y + size/2 + (2 / zoom); // Scale offset
+            ctx.strokeText(schoolName, x, textY);
+            ctx.fillText(schoolName, x, textY);
         }
 
         schoolCount++;
@@ -353,10 +346,10 @@ function drawStreetNames() {
     console.time('drawStreetNames()');
     ctx.fillStyle = getColor('text');
     ctx.strokeStyle = getColor('background');
-    ctx.font = `${Math.max(10, zoom / 2)}px Arial`;
+    ctx.font = `${Math.max(10, 20) / zoom}px Arial`; // Scale font
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 3 / zoom; // Scale line width
     ctx.lineJoin = 'round';
 
     const drawnStreets = new Set();
@@ -407,7 +400,7 @@ function drawStreetNames() {
 
         // Only draw if segment is long enough for text
         const textWidth = ctx.measureText(streetName).width;
-        if (longestSegment.length > textWidth + 20) {
+        if (longestSegment.length > (textWidth + 20) / zoom) { // Scale threshold
             drawStreetNameOnSegment(streetName, longestSegment);
         }
     });
@@ -469,11 +462,11 @@ function lineIntersectsRect(x1, y1, x2, y2, rectLeft, rectTop, rectRight, rectBo
 }
 
 function segmentIsVisible(x1, y1, x2, y2, margin = 100) {
-    // Check if line segment intersects with viewport (including margin)
-    const rectLeft = -margin;
-    const rectTop = -margin;
-    const rectRight = canvas.width + margin;
-    const rectBottom = canvas.height + margin;
+    const transformedMargin = margin / zoom;
+    const rectLeft = panX - transformedMargin;
+    const rectTop = panY - transformedMargin;
+    const rectRight = panX + canvas.width / zoom + transformedMargin;
+    const rectBottom = panY + canvas.height / zoom + transformedMargin;
 
     return lineIntersectsRect(x1, y1, x2, y2, rectLeft, rectTop, rectRight, rectBottom);
 }
@@ -485,7 +478,7 @@ function drawStreets() {
     const margin = 200;
 
     ctx.strokeStyle = getColor('streets');
-    ctx.lineWidth = Math.max(1.5, zoom / 3);
+    ctx.lineWidth = Math.max(1.5, 1) / zoom; // Scale line width
     ctx.beginPath();
 
     const drawnConnections = new Set();
@@ -494,7 +487,6 @@ function drawStreets() {
     Object.entries(junctions).forEach(([cnn, junction]) => {
         const [x1, y1] = junction.screen;
 
-        // Early culling - skip if junction is far off-screen
         if (!isElementVisible(x1, y1, margin * 2)) return;
 
         for (const adjCNN of junction.adj) {
@@ -506,7 +498,6 @@ function drawStreets() {
 
             const [x2, y2] = junctions[adjCNN].screen;
 
-            // More efficient visibility check
             if (!segmentIsVisible(x1, y1, x2, y2, margin)) {
                 continue;
             }
@@ -534,7 +525,7 @@ function drawStreets() {
     // Draw one-way streets
     if (oneWaySegments.length > 0) {
         ctx.strokeStyle = getColor('oneWayStreets');
-        ctx.lineWidth = Math.max(1.5, zoom / 3);
+        ctx.lineWidth = Math.max(1.5, 1) / zoom;
         ctx.beginPath();
 
         oneWaySegments.forEach(segment => {
@@ -559,17 +550,19 @@ function drawStreets() {
 }
 
 function drawJunction(x, y, radius, color) {
+    const scaledRadius = radius / zoom;
     ctx.fillStyle = color;
     ctx.beginPath();
-    ctx.arc(x, y, radius, 0, 2 * Math.PI);
+    ctx.arc(x, y, scaledRadius, 0, 2 * Math.PI);
     ctx.fill();
 }
 
 function drawJunctionOutline(x, y, radius, color) {
+    const scaledRadius = radius / zoom;
     ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2 / zoom;
     ctx.beginPath();
-    ctx.arc(x, y, radius, 0, 2 * Math.PI);
+    ctx.arc(x, y, scaledRadius, 0, 2 * Math.PI);
     ctx.stroke();
 }
 
@@ -611,7 +604,7 @@ function drawPathSearch() {
     // 2nd pass: Draw current node
     if (here && junctions[here]) {
         const [x, y] = junctions[here].screen;
-        if (visible(x, y, margin)) {
+        if (isElementVisible(x, y, margin)) { // Use consistent visibility check
             drawJunction(x, y, radius, getColor('current'));
         }
     }
@@ -620,7 +613,7 @@ function drawPathSearch() {
     closedSet.forEach(cnn => {
         if (!junctions[cnn]) return;
         const [x, y] = junctions[cnn].screen;
-        if (invisible(x, y, margin)) return;
+        if (!isElementVisible(x, y, margin)) return; // Use consistent visibility check
         drawJunction(x, y, radius, getColor('closedSet'));
     });
 
@@ -628,7 +621,7 @@ function drawPathSearch() {
     openSet.forEach(cnn => {
         if (!junctions[cnn]) return;
         const [x, y] = junctions[cnn].screen;
-        if (invisible(x, y, margin)) return;
+        if (!isElementVisible(x, y, margin)) return; // Use consistent visibility check
         drawJunction(x, y, radius, getColor('openSet'));
     });
 }
@@ -637,7 +630,7 @@ function drawJunctionStart() {
     // 5th pass: Draw starting point
     if (!start || !junctions[start]) return;
     const [x, y] = junctions[start].screen;
-    if (invisible(x, y, 50)) return;
+    if (!isElementVisible(x, y, 50)) return; // Use consistent visibility check
     const radius = Math.max(2, zoom / 2);
     drawJunction(x, y, radius * 3, getColor('start'));
     drawJunctionOutline(x, y, radius * 3, getColor('text'));
@@ -647,7 +640,7 @@ function drawJunctionEnd() {
     // 6th pass: Draw end point
     if (!end || !junctions[end]) return;
     const [x, y] = junctions[end].screen;
-    if (invisible(x, y, 50)) return;
+    if (!isElementVisible(x, y, 50)) return; // Use consistent visibility check
     const radius = Math.max(2, zoom / 2);
     drawJunction(x, y, radius * 3, getColor('end'));
     drawJunctionOutline(x, y, radius * 3, getColor('text'));
@@ -656,22 +649,23 @@ function drawJunctionEnd() {
 function drawJunctionLabels() {
     if (zoom < 20) return;
 
-    const radius = Math.max(2, 1 / zoom);
+    const radius = Math.max(2, 1) / zoom; // Scale radius
     for (const cnn in junctions) {
         const [x, y] = junctions[cnn].screen;
 
         // Skip if not visible
-        if (invisible(x, y, 50)) continue;
+        if (!isElementVisible(x, y, 50)) continue;
 
         ctx.lineJoin = 'round';
-        ctx.lineWidth = 5;
+        ctx.lineWidth = 5 / zoom; // Scale line width
         ctx.miterLimit = 3;
         ctx.fillStyle = getColor('text');
         ctx.strokeStyle = getColor('background');
-        ctx.font = `${Math.max(12, zoom / 4)}px Arial`;
+        ctx.font = `${Math.max(12, 25) / zoom}px Arial`; // Scale font
         ctx.textAlign = 'center';
-        ctx.strokeText(cnn, x, y - radius - 3);
-        ctx.fillText(cnn, x, y - radius - 3);
+        const offsetY = radius + (3 / zoom); // Scale offset
+        ctx.strokeText(cnn, x, y - offsetY);
+        ctx.fillText(cnn, x, y - offsetY);
     }
 }
 
@@ -698,12 +692,18 @@ function drawMap() {
     ctx.fillStyle = getColor('background');
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Update junction screen coordinates.
+    // Calculate base screen coordinates (only if not already calculated)
     postprocessJunctions();
+
+    // Apply transform for all map drawing
+    applyCanvasTransform();
 
     const streetInfo = drawStreets();
     const visibleJunctions = drawJunctions();
     const { addressCount, schoolCount } = drawDetails();
+
+    // Reset transform
+    resetCanvasTransform();
 
     const stats = [
         `Canvas: ${canvas.width}x${canvas.height}`,
@@ -720,7 +720,7 @@ function drawPath() {
     if (path.length < 2) return;
 
     ctx.strokeStyle = getColor('path');
-    ctx.lineWidth = Math.max(3, zoom / 1.25);
+    ctx.lineWidth = Math.max(3, 1) / zoom; // Scale line width for transform
     ctx.lineCap = 'round';
     ctx.beginPath();
 
@@ -732,6 +732,18 @@ function drawPath() {
         ctx.lineTo(x, y);
     }
     ctx.stroke();
+}
+
+// Apply canvas transform before drawing
+function applyCanvasTransform() {
+    ctx.save();
+    ctx.scale(zoom, zoom);
+    ctx.translate(-panX, -panY);
+}
+
+// Reset canvas transform after drawing
+function resetCanvasTransform() {
+    ctx.restore();
 }
 
 // Throttled redraw using requestAnimationFrame
@@ -765,28 +777,13 @@ function preprocessAddresses(rawAddresses) {
 }
 
 function postprocessJunctions() {
-    // Only recalculate if pan/zoom changed significantly
-    const panThreshold = 0.5;
-    const zoomThreshold = 0.001;
-
-    if (coordinatesCached &&
-        Math.abs(panX - lastPanX) < panThreshold &&
-        Math.abs(panY - lastPanY) < panThreshold &&
-        Math.abs(zoom - lastZoom) < zoomThreshold) {
-        return; // Use cached coordinates
-    }
-
-    // Calculate screen coordinates for each junction
+    // Only recalculate base coordinates when bounds change, not on every pan/zoom
     for (const cnn in junctions) {
-        const [lat, lon] = junctions[cnn].ll;
-        junctions[cnn].screen = coordsToScreen(lat, lon);
+        if (!junctions[cnn].screen) {
+            const [lat, lon] = junctions[cnn].ll;
+            junctions[cnn].screen = coordsToScreen(lat, lon);
+        }
     }
-
-    // Cache current transform state
-    lastPanX = panX;
-    lastPanY = panY;
-    lastZoom = zoom;
-    coordinatesCached = true;
 }
 
 function preprocessJunctions(rawJunctions) {
@@ -980,15 +977,19 @@ function handleClick(e) {
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
+    // Convert mouse coordinates to base coordinates for comparison
+    const baseMouseX = mouseX / zoom + panX;
+    const baseMouseY = mouseY / zoom + panY;
+
     // Find closest junction
     let closestCNN = null;
     let closestDistance = Infinity;
 
     Object.entries(junctions).forEach(([cnn, junction]) => {
-        const [x, y] = junctions[cnn].screen;
-        const distance = coordsDistance([y, x], [mouseY, mouseX]);
+        const [x, y] = junction.screen;
+        const distance = coordsDistance([y, x], [baseMouseY, baseMouseX]);
 
-        if (distance < 15 && distance < closestDistance) {
+        if (distance < 15 / zoom && distance < closestDistance) { // Scale click threshold
             closestDistance = distance;
             closestCNN = cnn;
         }
@@ -996,6 +997,7 @@ function handleClick(e) {
 
     if (closestCNN) {
         selectJunction(closestCNN);
+        return; // Don't check schools if we found a junction
     }
 
     // Check if user clicked on a school
@@ -1005,9 +1007,9 @@ function handleClick(e) {
     schools.forEach((school, index) => {
         const [lat, lon] = school.coords;
         const [x, y] = coordsToScreen(lat, lon);
-        const distance = coordsDistance([y, x], [mouseY, mouseX]);
+        const distance = coordsDistance([y, x], [baseMouseY, baseMouseX]);
 
-        if (distance < 20 && distance < closestSchoolDistance) {
+        if (distance < 20 / zoom && distance < closestSchoolDistance) { // Scale click threshold
             closestSchoolDistance = distance;
             closestSchool = school;
         }
@@ -1155,7 +1157,7 @@ function selectJunction(cnn) {
 
 function zoomTowardCenter(zoomFactor) {
     const newZoom = Math.max(minZoom, Math.min(maxZoom, zoom * zoomFactor));
-    if (newZoom === zoom) return; // No change needed
+    if (newZoom === zoom) return;
 
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
@@ -1169,7 +1171,7 @@ function zoomTowardCenter(zoomFactor) {
     panY = baseCenterY - centerY / newZoom;
 
     zoom = newZoom;
-    drawMap();
+    requestRedraw(); // Use requestRedraw for consistency
 }
 
 function zoomIn() {
