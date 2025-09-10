@@ -480,7 +480,6 @@ function drawStreets() {
     console.time('drawStreets()');
     let streetCount = 0;
 
-    // First pass: Draw regular two-way streets
     ctx.strokeStyle = getColor('streets');
     ctx.lineWidth = Math.max(1.5, zoom / 3);
     ctx.beginPath();
@@ -503,19 +502,16 @@ function drawStreets() {
             if (!segmentIsVisible(x1, y1, x2, y2, 200)) continue;
             streetCount++;
 
-            // Check if this is a one-way street
             const isOneWayFromTo = isOneWayStreet(cnn, adjCNN);
             const isOneWayToFrom = isOneWayStreet(adjCNN, cnn);
 
             if (isOneWayFromTo || isOneWayToFrom) {
-                // Store one-way segment for later drawing
                 oneWaySegments.push({
                     x1, y1, x2, y2,
                     fromCNN: isOneWayFromTo ? cnn : adjCNN,
                     toCNN: isOneWayFromTo ? adjCNN : cnn
                 });
             } else {
-                // Regular two-way street
                 ctx.moveTo(x1, y1);
                 ctx.lineTo(x2, y2);
             }
@@ -524,7 +520,7 @@ function drawStreets() {
 
     ctx.stroke();
 
-    // Second pass: Draw one-way streets with different color and arrows
+    // Draw one-way streets
     if (oneWaySegments.length > 0) {
         ctx.strokeStyle = getColor('oneWays');
         ctx.lineWidth = Math.max(1.5, zoom / 3);
@@ -537,10 +533,9 @@ function drawStreets() {
 
         ctx.stroke();
 
-        // Draw arrows on one-way streets (only when zoomed in enough)
+        // Draw arrows only when zoomed in enough
         if (zoom > 2) {
             oneWaySegments.forEach(segment => {
-                // Determine arrow direction based on which junction points to which
                 const [fromX, fromY] = junctions[segment.fromCNN].screen;
                 const [toX, toY] = junctions[segment.toCNN].screen;
                 drawArrow(fromX, fromY, toX, toY, getColor('oneWays'));
@@ -568,26 +563,32 @@ function drawJunctionOutline(x, y, radius, color) {
 }
 
 function drawJunctions() {
-    // Draw junctions in layers (gray first, then colors on top)
     console.time('drawJunctions()');
     let junctionCount = 0;
     const radius = Math.max(0.5, zoom / 2.5);
 
     // 1st pass: Draw all gray/default junctions
+    // Batch all gray junctions into a single path
+    ctx.fillStyle = getColor('junctions');
+    ctx.beginPath();
+
     for (const cnn in junctions) {
         const [x, y] = junctions[cnn].screen;
 
         if (invisible(x, y)) continue;
         junctionCount++;
 
-        // Only draw if it's a default/gray junction
+        // Skip special junctions for later
         if (cnn === start || cnn === end || here === cnn ||
             openSet.has(cnn) || closedSet.has(cnn)) {
             continue;
         }
 
-        drawJunction(x, y, radius, getColor('junctions'));
+        ctx.moveTo(x + radius, y);
+        ctx.arc(x, y, radius, 0, 2 * Math.PI);
     }
+
+    ctx.fill();
 
     // 2nd pass: Draw current node
     if (here && junctions[here]) {
