@@ -12,6 +12,10 @@ let zoom = 1;
 const minZoom = 1.0;
 const maxZoom = 100;
 let panX = 0, panY = 0;
+let lastPanX = 0, lastPanY = 0, lastZoom = 1;
+let coordinatesCached = false;
+let animationFrameId = null;
+let needsRedraw = false;
 let isDragging = false;
 let hasSignificantlyDragged = false;
 let lastMouseX = 0, lastMouseY = 0;
@@ -474,7 +478,6 @@ function drawStreets() {
     let twoWays = 0;
     let oneWays = 0;
 
-    // First pass: Draw regular two-way streets
     ctx.strokeStyle = getColor('streets');
     ctx.lineWidth = Math.max(1.5, zoom / 3);
     ctx.beginPath();
@@ -494,16 +497,14 @@ function drawStreets() {
 
             const [x2, y2] = junctions[adjCNN].screen;
 
-            if (!segmentIsVisible(x1, y1, x2, y2)) {
+            if (!segmentIsVisible(x1, y1, x2, y2, 200)) {
                 continue;
             }
 
-            // Check if this is a one-way street
             const isOneWayFromTo = isOneWayStreet(cnn, adjCNN);
             const isOneWayToFrom = isOneWayStreet(adjCNN, cnn);
 
             if (isOneWayFromTo || isOneWayToFrom) {
-                // Store one-way segment for later drawing
                 oneWaySegments.push({
                     x1, y1, x2, y2,
                     fromCNN: isOneWayFromTo ? cnn : adjCNN,
@@ -511,7 +512,6 @@ function drawStreets() {
                 });
                 oneWays++;
             } else {
-                // Regular two-way street
                 ctx.moveTo(x1, y1);
                 ctx.lineTo(x2, y2);
                 twoWays++;
@@ -521,7 +521,7 @@ function drawStreets() {
 
     ctx.stroke();
 
-    // Second pass: Draw one-way streets with different color and arrows
+    // Draw one-way streets
     if (oneWaySegments.length > 0) {
         ctx.strokeStyle = getColor('oneWays');
         ctx.lineWidth = Math.max(1.5, zoom / 3);
@@ -534,10 +534,9 @@ function drawStreets() {
 
         ctx.stroke();
 
-        // Draw arrows on one-way streets (only when zoomed in enough)
+        // Draw arrows only when zoomed in enough
         if (zoom > 2) {
             oneWaySegments.forEach(segment => {
-                // Determine arrow direction based on which junction points to which
                 const [fromX, fromY] = junctions[segment.fromCNN].screen;
                 const [toX, toY] = junctions[segment.toCNN].screen;
                 drawArrow(fromX, fromY, toX, toY, getColor('oneWays'));
@@ -565,27 +564,31 @@ function drawJunctionOutline(x, y, radius, color) {
 }
 
 function drawJunctions() {
-    // Draw junctions in layers (gray first, then colors on top)
     console.time('drawJunctions()');
     let visibleJunctions = 0;
     const radius = Math.max(0.5, zoom / 2.5);
 
-    // 1st pass: Draw all gray/default junctions
+    // Batch all gray junctions into single path
+    ctx.fillStyle = getColor('junctions');
+    ctx.beginPath();
+
     for (const cnn in junctions) {
         const [x, y] = junctions[cnn].screen;
 
         if (invisible(x, y)) continue;
         visibleJunctions++;
 
-        // Only draw if it's a default/gray junction
+        // Skip special junctions for later
         if (cnn === start || cnn === end || here === cnn ||
             openSet.has(cnn) || closedSet.has(cnn)) {
             continue;
         }
 
-        drawJunction(x, y, radius, getColor('junctions'));
+        ctx.moveTo(x + radius, y);
+        ctx.arc(x, y, radius, 0, 2 * Math.PI);
     }
 
+    ctx.fill();
     console.timeEnd('drawJunctions()');
     return visibleJunctions;
 }
@@ -720,6 +723,17 @@ function drawPath() {
     ctx.stroke();
 }
 
+// Throttled redraw using requestAnimationFrame
+function requestRedraw() {
+    if (!needsRedraw) {
+        needsRedraw = true;
+        animationFrameId = requestAnimationFrame(() => {
+            drawMap();
+            needsRedraw = false;
+        });
+    }
+}
+
 function padCoord(coord) {
     // Pad coordinates to 5 digits with trailing zeros
     return parseInt(coord.toString().padEnd(5, '0'));
@@ -740,11 +754,28 @@ function preprocessAddresses(rawAddresses) {
 }
 
 function postprocessJunctions() {
-    // Calculate the screen coordinates for each junction.
+    // Only recalculate if pan/zoom changed significantly
+    const panThreshold = 0.5;
+    const zoomThreshold = 0.001;
+
+    if (coordinatesCached &&
+        Math.abs(panX - lastPanX) < panThreshold &&
+        Math.abs(panY - lastPanY) < panThreshold &&
+        Math.abs(zoom - lastZoom) < zoomThreshold) {
+        return; // Use cached coordinates
+    }
+
+    // Calculate screen coordinates for each junction
     for (const cnn in junctions) {
         const [lat, lon] = junctions[cnn].ll;
         junctions[cnn].screen = coordsToScreen(lat, lon);
     }
+
+    // Cache current transform state
+    lastPanX = panX;
+    lastPanY = panY;
+    lastZoom = zoom;
+    coordinatesCached = true;
 }
 
 function preprocessJunctions(rawJunctions) {
@@ -819,7 +850,7 @@ function resizeCanvas() {
     }
 
     // Redraw the map with new dimensions
-    drawMap();
+    requestRedraw();
 }
 
 function loadMap() {
@@ -893,7 +924,7 @@ function handleMouseMove(e) {
     lastMouseX = e.offsetX;
     lastMouseY = e.offsetY;
 
-    drawMap();
+    requestRedraw();
 }
 
 function handleMouseUp(e) {
@@ -924,7 +955,7 @@ function handleWheel(e) {
     panY = mouseY / zoom - baseMouseY;
 
     zoom = newZoom;
-    drawMap();
+    requestRedraw();
 }
 
 function handleClick(e) {
@@ -1041,7 +1072,7 @@ function handleTouchMove(e) {
         lastMouseX = coords.x;
         lastMouseY = coords.y;
 
-        drawMap();
+        requestRedraw();
     } else if (e.touches.length === 2 && isPinching) {
         // Two touch pinch-to-zoom
         const touch1 = e.touches[0];
@@ -1064,7 +1095,7 @@ function handleTouchMove(e) {
             panY = baseCenterY - currentCenter.y / newZoom;
 
             zoom = newZoom;
-            drawMap();
+            requestRedraw();
         }
     }
 }
