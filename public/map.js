@@ -859,6 +859,11 @@ function setupEventListeners() {
     canvas.addEventListener('mouseup', handleMouseUp);
     canvas.addEventListener('wheel', handleWheel);
     canvas.addEventListener('click', handleClick);
+
+    // Touch events for mobile panning
+    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
 }
 
 function handleMouseDown(e) {
@@ -956,6 +961,49 @@ function handleClick(e) {
         document.getElementById('infoPanel').textContent =
             `School: ${closestSchool.prefix} ${closestSchool.name} ${closestSchool.suffix} - ${closestSchool.address}`;
     }
+}
+
+function getTouchCoordinates(e, canvas) {
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0] || e.changedTouches[0];
+    return {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
+    };
+}
+
+function handleTouchStart(e) {
+    e.preventDefault(); // Prevent scrolling
+
+    if (e.touches.length === 1) {
+        isDragging = true;
+        const coords = getTouchCoordinates(e, canvas);
+        lastMouseX = coords.x;
+        lastMouseY = coords.y;
+    }
+}
+
+function handleTouchMove(e) {
+    e.preventDefault(); // Prevent scrolling
+
+    if (!isDragging || e.touches.length !== 1) return;
+
+    const coords = getTouchCoordinates(e, canvas);
+    const deltaX = coords.x - lastMouseX;
+    const deltaY = coords.y - lastMouseY;
+
+    panX -= deltaX / zoom;
+    panY -= deltaY / zoom;
+
+    lastMouseX = coords.x;
+    lastMouseY = coords.y;
+
+    drawMap();
+}
+
+function handleTouchEnd(e) {
+    e.preventDefault(); // Prevent scrolling
+    isDragging = false;
 }
 
 function selectJunction(cnn) {
