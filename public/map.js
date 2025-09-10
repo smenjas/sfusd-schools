@@ -236,7 +236,7 @@ function isOneWayStreet(fromCNN, toCNN) {
 }
 
 function drawArrow(x1, y1, x2, y2, color) {
-    const arrowLength = 8 / zoom; // Base arrow length scaled for transform
+    const arrowLength = 8; // Base arrow length, no /zoom scaling
     const arrowAngle = Math.PI / 6;
 
     const dx = x2 - x1;
@@ -250,7 +250,7 @@ function drawArrow(x1, y1, x2, y2, color) {
     const angle = Math.atan2(dy, dx);
 
     ctx.strokeStyle = color;
-    ctx.lineWidth = 2 / zoom; // Base line width scaled for transform
+    ctx.lineWidth = 2; // Base line width, no /zoom scaling
     ctx.lineCap = 'round';
 
     ctx.beginPath();
@@ -272,11 +272,11 @@ function drawAddresses() {
 
     console.time('drawAddresses()');
     ctx.lineJoin = 'round';
-    ctx.lineWidth = 3 / zoom;
+    ctx.lineWidth = 3; // Base line width, no /zoom scaling
     ctx.miterLimit = 3;
     ctx.fillStyle = getColor('text');
     ctx.strokeStyle = getColor('background');
-    ctx.font = `${14 / zoom}px Arial`;
+    ctx.font = `12px Arial`; // Base font size, no /zoom scaling
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
@@ -292,11 +292,11 @@ function drawAddresses() {
             // Draw a small dot for the address location
             ctx.fillStyle = getColor('text');
             ctx.beginPath();
-            ctx.arc(x, y, 2 / zoom, 0, 2 * Math.PI);
+            ctx.arc(x, y, 2, 0, 2 * Math.PI); // Base radius, no /zoom scaling
             ctx.fill();
 
             // Draw address number slightly offset
-            const offsetY = 8 / zoom;
+            const offsetY = 8; // Base offset, no /zoom scaling
             ctx.fillStyle = getColor('text');
             ctx.strokeText(number, x, y - offsetY);
             ctx.fillText(number, x, y - offsetY);
@@ -313,7 +313,7 @@ function drawSchools() {
     if (zoom < 2) return 0;
 
     ctx.lineJoin = 'round';
-    ctx.lineWidth = 1 / zoom;
+    ctx.lineWidth = 1; // Base line width, no /zoom scaling
 
     let schoolCount = 0;
 
@@ -323,7 +323,7 @@ function drawSchools() {
 
         if (!isElementVisible(x, y, 50)) return;
 
-        const size = 15 / zoom; // Base size scaled for transform
+        const size = 15; // Base size, no /zoom scaling
 
         // School marker as a house-like shape
         ctx.fillStyle = getColor('schools');
@@ -348,12 +348,12 @@ function drawSchools() {
         if (zoom > 3) {
             ctx.fillStyle = getColor('text');
             ctx.strokeStyle = getColor('background');
-            ctx.font = `${14 / zoom}px Arial`;
+            ctx.font = `14px Arial`; // Base font size, no /zoom scaling
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
 
             const schoolName = `${school.prefix} ${school.name} ${school.suffix}`.trim();
-            const textY = y + size/2 + (2 / zoom);
+            const textY = y + size/2 + 2; // Base offset, no /zoom scaling
             ctx.strokeText(schoolName, x, textY);
             ctx.fillText(schoolName, x, textY);
         }
@@ -370,16 +370,16 @@ function drawStreetNames() {
     console.time('drawStreetNames()');
     ctx.fillStyle = getColor('text');
     ctx.strokeStyle = getColor('background');
-    ctx.font = `${Math.max(10, 20) / zoom}px Arial`; // Scale font
+    ctx.font = `12px Arial`; // Base font size, no /zoom scaling
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.lineWidth = 3 / zoom; // Scale line width
+    ctx.lineWidth = 3; // Base line width, no /zoom scaling
     ctx.lineJoin = 'round';
 
     const drawnStreets = new Set();
-    const streetSegments = new Map(); // street name -> array of segments
+    const streetSegments = new Map();
 
-    // Collect street segments
+    // Collect street segments (same logic as before)
     for (const [cnn, junction] of Object.entries(junctions)) {
         const [x1, y1] = junction.screen;
 
@@ -390,7 +390,6 @@ function drawStreetNames() {
 
             drawnStreets.add(connectionKey);
 
-            // Find common street names between the two junctions
             const commonStreets = junction.streets.filter(street =>
                 junctions[adjCNN].streets.includes(street)
             );
@@ -399,12 +398,11 @@ function drawStreetNames() {
 
             const [x2, y2] = junctions[adjCNN].screen;
 
-            // Only process visible segments
             if (!segmentIsVisible(x1, y1, x2, y2, 100)) {
                 continue;
             }
 
-            const streetName = commonStreets[0]; // Use first common street
+            const streetName = commonStreets[0];
             if (!streetSegments.has(streetName)) {
                 streetSegments.set(streetName, []);
             }
@@ -417,14 +415,12 @@ function drawStreetNames() {
 
     // Draw street names on longest segments
     streetSegments.forEach((segments, streetName) => {
-        // Find the longest segment for this street
         const longestSegment = segments.reduce((longest, segment) =>
             segment.length > longest.length ? segment : longest
         );
 
-        // Only draw if segment is long enough for text
         const textWidth = ctx.measureText(streetName).width;
-        if (longestSegment.length > (textWidth + 20) / zoom) { // Scale threshold
+        if (longestSegment.length > textWidth + 20) { // Base threshold, no /zoom scaling
             drawStreetNameOnSegment(streetName, longestSegment);
         }
     });
@@ -502,7 +498,7 @@ function drawStreets() {
     const margin = 200;
 
     ctx.strokeStyle = getColor('streets');
-    ctx.lineWidth = 1.5 / zoom; // Base line width scaled for transform
+    ctx.lineWidth = 1.5; // Base line width, no /zoom scaling
     ctx.beginPath();
 
     const drawnConnections = new Set();
@@ -549,7 +545,7 @@ function drawStreets() {
     // Draw one-way streets
     if (oneWaySegments.length > 0) {
         ctx.strokeStyle = getColor('oneWayStreets');
-        ctx.lineWidth = 1.5 / zoom; // Base line width scaled for transform
+        ctx.lineWidth = 1.5; // Base line width, no /zoom scaling
         ctx.beginPath();
 
         oneWaySegments.forEach(segment => {
@@ -576,22 +572,22 @@ function drawStreets() {
 function drawJunction(x, y, radius, color) {
     ctx.fillStyle = color;
     ctx.beginPath();
-    ctx.arc(x, y, radius / zoom, 0, 2 * Math.PI); // Only scale once here
+    ctx.arc(x, y, radius, 0, 2 * Math.PI); // No /zoom scaling
     ctx.fill();
 }
 
 function drawJunctionOutline(x, y, radius, color) {
     ctx.strokeStyle = color;
-    ctx.lineWidth = 2 / zoom; // Scale line width
+    ctx.lineWidth = 2; // No /zoom scaling
     ctx.beginPath();
-    ctx.arc(x, y, radius / zoom, 0, 2 * Math.PI); // Only scale once here
+    ctx.arc(x, y, radius, 0, 2 * Math.PI); // No /zoom scaling
     ctx.stroke();
 }
 
 function drawJunctions() {
     console.time('drawJunctions()');
     let visibleJunctions = 0;
-    const radius = 3; // Base radius in pixels (not zoom-dependent)
+    const radius = 3; // Base radius in pixels
     const margin = 100;
 
     // Batch all gray junctions into single path
@@ -610,9 +606,8 @@ function drawJunctions() {
             continue;
         }
 
-        // Proper arc batching - each arc needs its own subpath
-        ctx.moveTo(x + radius / zoom, y);
-        ctx.arc(x, y, radius / zoom, 0, 2 * Math.PI);
+        ctx.moveTo(x + radius, y);
+        ctx.arc(x, y, radius, 0, 2 * Math.PI); // No /zoom scaling
     }
 
     ctx.fill();
@@ -624,7 +619,7 @@ function drawPathSearch() {
     const radius = 6; // Base radius in pixels
     const margin = 50;
 
-    // 2nd pass: Draw current node
+    // Draw current node
     if (here && junctions[here]) {
         const [x, y] = junctions[here].screen;
         if (isElementVisible(x, y, margin)) {
@@ -632,7 +627,7 @@ function drawPathSearch() {
         }
     }
 
-    // 3rd pass: Draw closed set
+    // Draw closed set
     closedSet.forEach(cnn => {
         if (!junctions[cnn]) return;
         const [x, y] = junctions[cnn].screen;
@@ -640,7 +635,7 @@ function drawPathSearch() {
         drawJunction(x, y, radius, getColor('closedSet'));
     });
 
-    // 4th pass: Draw open set
+    // Draw open set
     openSet.forEach(cnn => {
         if (!junctions[cnn]) return;
         const [x, y] = junctions[cnn].screen;
@@ -670,21 +665,19 @@ function drawJunctionEnd() {
 function drawJunctionLabels() {
     if (zoom < 20) return;
 
-    const radius = Math.max(2, 1) / zoom; // Scale radius
     for (const cnn in junctions) {
         const [x, y] = junctions[cnn].screen;
 
-        // Skip if not visible
         if (!isElementVisible(x, y, 50)) continue;
 
         ctx.lineJoin = 'round';
-        ctx.lineWidth = 5 / zoom; // Scale line width
+        ctx.lineWidth = 3; // Base line width, no /zoom scaling
         ctx.miterLimit = 3;
         ctx.fillStyle = getColor('text');
         ctx.strokeStyle = getColor('background');
-        ctx.font = `${Math.max(12, 25) / zoom}px Arial`; // Scale font
+        ctx.font = `12px Arial`; // Base font size, no /zoom scaling
         ctx.textAlign = 'center';
-        const offsetY = radius + (3 / zoom); // Scale offset
+        const offsetY = 10; // Base offset, no /zoom scaling
         ctx.strokeText(cnn, x, y - offsetY);
         ctx.fillText(cnn, x, y - offsetY);
     }
@@ -741,7 +734,7 @@ function drawPath() {
     if (path.length < 2) return;
 
     ctx.strokeStyle = getColor('path');
-    ctx.lineWidth = 4 / zoom; // Base line width scaled for transform
+    ctx.lineWidth = 4; // Base line width, no /zoom scaling
     ctx.lineCap = 'round';
     ctx.beginPath();
 
