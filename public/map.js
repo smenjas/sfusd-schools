@@ -98,6 +98,34 @@ function getColor(colorName) {
     return colors[theme][colorName];
 }
 
+function initializeMapView() {
+    if (!canvas || !bounds) return;
+
+    // Calculate the center of the map data in base coordinates
+    const mapCenterX = mapDisplayWidth / 2 + mapOffsetX;
+    const mapCenterY = mapDisplayHeight / 2 + mapOffsetY;
+
+    // Calculate where we want the center to appear (center of canvas)
+    const viewportCenterX = canvas.width / 2;
+    const viewportCenterY = canvas.height / 2;
+
+    // Set pan so that map center appears at viewport center
+    panX = mapCenterX - viewportCenterX / zoom;
+    panY = mapCenterY - viewportCenterY / zoom;
+
+    // Initial zoom that fits the map nicely in the viewport
+    const scaleX = canvas.width / mapDisplayWidth;
+    const scaleY = canvas.height / mapDisplayHeight;
+    zoom = Math.min(scaleX, scaleY) * 0.9; // 0.9 for a bit of padding
+
+    // Recalculate pan with the new zoom level
+    panX = mapCenterX - viewportCenterX / zoom;
+    panY = mapCenterY - viewportCenterY / zoom;
+
+    // Draw the map with proper initial view
+    drawMap();
+}
+
 function calculateBounds(junctionData = junctions) {
     let minLat = Infinity, maxLat = -Infinity;
     let minLon = Infinity, maxLon = -Infinity;
@@ -208,7 +236,7 @@ function isOneWayStreet(fromCNN, toCNN) {
 }
 
 function drawArrow(x1, y1, x2, y2, color) {
-    const arrowLength = Math.max(8, 3) / zoom; // Scale arrow size
+    const arrowLength = 8 / zoom; // Base arrow length scaled for transform
     const arrowAngle = Math.PI / 6;
 
     const dx = x2 - x1;
@@ -222,7 +250,7 @@ function drawArrow(x1, y1, x2, y2, color) {
     const angle = Math.atan2(dy, dx);
 
     ctx.strokeStyle = color;
-    ctx.lineWidth = Math.max(2, 1.5) / zoom; // Scale line width
+    ctx.lineWidth = 2 / zoom; // Base line width scaled for transform
     ctx.lineCap = 'round';
 
     ctx.beginPath();
@@ -240,16 +268,15 @@ function drawArrow(x1, y1, x2, y2, color) {
 }
 
 function drawAddresses() {
-    // Only show addresses when zoomed in enough to be readable
     if (zoom < 40) return 0;
 
     console.time('drawAddresses()');
     ctx.lineJoin = 'round';
-    ctx.lineWidth = 5 / zoom; // Scale for transform
+    ctx.lineWidth = 3 / zoom;
     ctx.miterLimit = 3;
     ctx.fillStyle = getColor('text');
     ctx.strokeStyle = getColor('background');
-    ctx.font = `${Math.max(10, 20) / zoom}px Arial`; // Base font size scaled
+    ctx.font = `${14 / zoom}px Arial`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
@@ -265,11 +292,11 @@ function drawAddresses() {
             // Draw a small dot for the address location
             ctx.fillStyle = getColor('text');
             ctx.beginPath();
-            ctx.arc(x, y, Math.max(1, 1.5) / zoom, 0, 2 * Math.PI); // Scale radius
+            ctx.arc(x, y, 2 / zoom, 0, 2 * Math.PI);
             ctx.fill();
 
-            // Draw address number slightly offset so it doesn't overlap the dot
-            const offsetY = Math.max(8, 10) / zoom; // Scale offset
+            // Draw address number slightly offset
+            const offsetY = 8 / zoom;
             ctx.fillStyle = getColor('text');
             ctx.strokeText(number, x, y - offsetY);
             ctx.fillText(number, x, y - offsetY);
@@ -283,11 +310,10 @@ function drawAddresses() {
 }
 
 function drawSchools() {
-    // Show schools at lower zoom levels than addresses
     if (zoom < 2) return 0;
 
     ctx.lineJoin = 'round';
-    ctx.lineWidth = Math.max(1, 1) / zoom; // Scale line width
+    ctx.lineWidth = 1 / zoom;
 
     let schoolCount = 0;
 
@@ -295,11 +321,9 @@ function drawSchools() {
         const [lat, lon] = school.coords;
         const [x, y] = coordsToScreen(lat, lon);
 
-        // Only draw if visible
         if (!isElementVisible(x, y, 50)) return;
 
-        // Base size (not zoom-dependent since transform handles scaling)
-        const size = Math.max(8, 15) / zoom; // Scale size for transform
+        const size = 15 / zoom; // Base size scaled for transform
 
         // School marker as a house-like shape
         ctx.fillStyle = getColor('schools');
@@ -324,12 +348,12 @@ function drawSchools() {
         if (zoom > 3) {
             ctx.fillStyle = getColor('text');
             ctx.strokeStyle = getColor('background');
-            ctx.font = `${Math.max(10, 20) / zoom}px Arial`; // Scale font
+            ctx.font = `${14 / zoom}px Arial`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
 
             const schoolName = `${school.prefix} ${school.name} ${school.suffix}`.trim();
-            const textY = y + size/2 + (2 / zoom); // Scale offset
+            const textY = y + size/2 + (2 / zoom);
             ctx.strokeText(schoolName, x, textY);
             ctx.fillText(schoolName, x, textY);
         }
@@ -478,7 +502,7 @@ function drawStreets() {
     const margin = 200;
 
     ctx.strokeStyle = getColor('streets');
-    ctx.lineWidth = Math.max(1.5, 1) / zoom; // Scale line width
+    ctx.lineWidth = 1.5 / zoom; // Base line width scaled for transform
     ctx.beginPath();
 
     const drawnConnections = new Set();
@@ -525,7 +549,7 @@ function drawStreets() {
     // Draw one-way streets
     if (oneWaySegments.length > 0) {
         ctx.strokeStyle = getColor('oneWayStreets');
-        ctx.lineWidth = Math.max(1.5, 1) / zoom;
+        ctx.lineWidth = 1.5 / zoom; // Base line width scaled for transform
         ctx.beginPath();
 
         oneWaySegments.forEach(segment => {
@@ -550,26 +574,24 @@ function drawStreets() {
 }
 
 function drawJunction(x, y, radius, color) {
-    const scaledRadius = radius / zoom;
     ctx.fillStyle = color;
     ctx.beginPath();
-    ctx.arc(x, y, scaledRadius, 0, 2 * Math.PI);
+    ctx.arc(x, y, radius / zoom, 0, 2 * Math.PI); // Only scale once here
     ctx.fill();
 }
 
 function drawJunctionOutline(x, y, radius, color) {
-    const scaledRadius = radius / zoom;
     ctx.strokeStyle = color;
-    ctx.lineWidth = 2 / zoom;
+    ctx.lineWidth = 2 / zoom; // Scale line width
     ctx.beginPath();
-    ctx.arc(x, y, scaledRadius, 0, 2 * Math.PI);
+    ctx.arc(x, y, radius / zoom, 0, 2 * Math.PI); // Only scale once here
     ctx.stroke();
 }
 
 function drawJunctions() {
     console.time('drawJunctions()');
     let visibleJunctions = 0;
-    const radius = Math.max(0.5, zoom / 2.5);
+    const radius = 3; // Base radius in pixels (not zoom-dependent)
     const margin = 100;
 
     // Batch all gray junctions into single path
@@ -588,8 +610,9 @@ function drawJunctions() {
             continue;
         }
 
-        ctx.moveTo(x + radius, y);
-        ctx.arc(x, y, radius, 0, 2 * Math.PI);
+        // Proper arc batching - each arc needs its own subpath
+        ctx.moveTo(x + radius / zoom, y);
+        ctx.arc(x, y, radius / zoom, 0, 2 * Math.PI);
     }
 
     ctx.fill();
@@ -598,13 +621,13 @@ function drawJunctions() {
 }
 
 function drawPathSearch() {
-    const radius = Math.max(0.5, zoom / 2.5) * 2.5;
+    const radius = 6; // Base radius in pixels
     const margin = 50;
 
     // 2nd pass: Draw current node
     if (here && junctions[here]) {
         const [x, y] = junctions[here].screen;
-        if (isElementVisible(x, y, margin)) { // Use consistent visibility check
+        if (isElementVisible(x, y, margin)) {
             drawJunction(x, y, radius, getColor('current'));
         }
     }
@@ -613,7 +636,7 @@ function drawPathSearch() {
     closedSet.forEach(cnn => {
         if (!junctions[cnn]) return;
         const [x, y] = junctions[cnn].screen;
-        if (!isElementVisible(x, y, margin)) return; // Use consistent visibility check
+        if (!isElementVisible(x, y, margin)) return;
         drawJunction(x, y, radius, getColor('closedSet'));
     });
 
@@ -621,29 +644,27 @@ function drawPathSearch() {
     openSet.forEach(cnn => {
         if (!junctions[cnn]) return;
         const [x, y] = junctions[cnn].screen;
-        if (!isElementVisible(x, y, margin)) return; // Use consistent visibility check
+        if (!isElementVisible(x, y, margin)) return;
         drawJunction(x, y, radius, getColor('openSet'));
     });
 }
 
 function drawJunctionStart() {
-    // 5th pass: Draw starting point
     if (!start || !junctions[start]) return;
     const [x, y] = junctions[start].screen;
-    if (!isElementVisible(x, y, 50)) return; // Use consistent visibility check
-    const radius = Math.max(2, zoom / 2);
-    drawJunction(x, y, radius * 3, getColor('start'));
-    drawJunctionOutline(x, y, radius * 3, getColor('text'));
+    if (!isElementVisible(x, y, 50)) return;
+    const radius = 8; // Base radius in pixels
+    drawJunction(x, y, radius, getColor('start'));
+    drawJunctionOutline(x, y, radius, getColor('text'));
 }
 
 function drawJunctionEnd() {
-    // 6th pass: Draw end point
     if (!end || !junctions[end]) return;
     const [x, y] = junctions[end].screen;
-    if (!isElementVisible(x, y, 50)) return; // Use consistent visibility check
-    const radius = Math.max(2, zoom / 2);
-    drawJunction(x, y, radius * 3, getColor('end'));
-    drawJunctionOutline(x, y, radius * 3, getColor('text'));
+    if (!isElementVisible(x, y, 50)) return;
+    const radius = 8; // Base radius in pixels
+    drawJunction(x, y, radius, getColor('end'));
+    drawJunctionOutline(x, y, radius, getColor('text'));
 }
 
 function drawJunctionLabels() {
@@ -720,7 +741,7 @@ function drawPath() {
     if (path.length < 2) return;
 
     ctx.strokeStyle = getColor('path');
-    ctx.lineWidth = Math.max(3, 1) / zoom; // Scale line width for transform
+    ctx.lineWidth = 4 / zoom; // Base line width scaled for transform
     ctx.lineCap = 'round';
     ctx.beginPath();
 
@@ -887,8 +908,10 @@ function loadMap() {
     setupEventListeners();
 
     // Resize canvas to fill container
-    // resizeCanvas() calls drawMap().
     resizeCanvas();
+
+    // Calculate proper initial pan values to center the map
+    initializeMapView();
 
     document.getElementById('infoPanel').textContent =
         `Street network loaded! ${Object.keys(junctions).length} junctions shown. Click two junctions to set start/end points.`;
@@ -1132,7 +1155,7 @@ function selectJunction(cnn) {
         start = parseInt(cnn);
         document.getElementById('infoPanel').textContent =
             `Start point: Junction ${cnn}. Click another junction for the destination.`;
-        drawDetails();
+        requestRedraw(); // Use proper redraw instead of drawDetails()
         return;
     }
 
@@ -1141,7 +1164,7 @@ function selectJunction(cnn) {
         document.getElementById('findPathBtn').disabled = false;
         document.getElementById('infoPanel').textContent =
             `Route set: ${start} → ${end}. Ready for A* pathfinding!`;
-        drawDetails();
+        requestRedraw(); // Use proper redraw instead of drawDetails()
         return;
     }
 
@@ -1152,7 +1175,7 @@ function selectJunction(cnn) {
     document.getElementById('findPathBtn').disabled = true;
     document.getElementById('infoPanel').textContent =
         `Start point: Junction ${start}. Click another junction for the destination.`;
-    drawMap();
+    requestRedraw(); // Use proper redraw instead of drawMap()
 }
 
 function zoomTowardCenter(zoomFactor) {
@@ -1185,14 +1208,7 @@ function zoomOut() {
 function fitToView() {
     if (!bounds) return;
 
-    // Set a reasonable zoom level
-    zoom = 1.0;
-
-    // Center the map
-    panX = 0;
-    panY = 0;
-
-    drawMap();
+    initializeMapView();
 }
 
 function resetSelection(doNotDraw = false) {
@@ -1306,8 +1322,8 @@ async function findPath() {
 
         checkNeighbors(gScore, fScore, cameFrom);
 
-        // Update display
-        drawDetails();
+        // Update display using proper redraw
+        requestRedraw(); // Instead of drawDetails()
         document.getElementById('infoPanel').textContent =
             `A* running... Current: ${here} | Open: ${openSet.size} | Closed: ${closedSet.size}`;
 
@@ -1325,7 +1341,7 @@ async function findPath() {
     isPathfinding = false;
     document.getElementById('findPathBtn').disabled = false;
     console.timeEnd('findPath()');
-    drawMap();
+    requestRedraw(); // Use proper redraw instead of drawMap()
 }
 
 // Initialize
