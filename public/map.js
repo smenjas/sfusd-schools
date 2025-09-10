@@ -13,8 +13,6 @@ let zoom = 1;
 const minZoom = 1.0;
 const maxZoom = 100;
 let panX = 0, panY = 0;
-let lastPanX = 0, lastPanY = 0, lastZoom = 1;
-let coordinatesCached = false;
 let animationFrameId = null;
 let needsRedraw = false;
 let isDragging = false;
@@ -159,11 +157,7 @@ function coordsToScreen(lat, lon) {
     const baseX = normalizedX * mapDisplayWidth + mapOffsetX;
     const baseY = normalizedY * mapDisplayHeight + mapOffsetY;
 
-    // Apply zoom and pan
-    const screenX = (baseX - panX) * zoom;
-    const screenY = (baseY - panY) * zoom;
-
-    return [screenX, screenY];
+    return [baseX, baseY];
 }
 
 function screenToCoords(screenX, screenY) {
@@ -174,8 +168,8 @@ function screenToCoords(screenX, screenY) {
     const baseY = screenY / zoom + panY;
 
     // Convert to normalized coordinates
-    const normalizedX = baseX / canvas.width;
-    const normalizedY = baseY / canvas.height;
+    const normalizedX = (baseX - mapOffsetX) / mapDisplayWidth;
+    const normalizedY = (baseY - mapOffsetY) / mapDisplayHeight;
 
     // Reverse the coordinate mapping
     const lon = bounds.maxLon - normalizedX * (bounds.maxLon - bounds.minLon);
@@ -199,8 +193,14 @@ function junctionDistance(cnn1, cnn2) {
 }
 
 function invisible(x, y, margin = 50) {
-    return x < -margin || x > canvas.width + margin
-        || y < -margin || y > canvas.height + margin;
+    // Transform margin to account for zoom
+    margin /= zoom;
+    const viewLeft = panX - margin;
+    const viewTop = panY - margin;
+    const viewRight = panX + canvas.width / zoom + margin;
+    const viewBottom = panY + canvas.height / zoom + margin;
+
+    return x < viewLeft || x > viewRight || y < viewTop || y > viewBottom;
 }
 
 function visible(x, y, margin) {
@@ -224,7 +224,7 @@ function isOneWaySegment(cnn1, cnn2) {
 }
 
 function drawArrow(x1, y1, x2, y2, color) {
-    const arrowLength = Math.max(6, zoom + 1);
+    const arrowLength = 8 / zoom;
     const arrowAngle = Math.PI / 7;
 
     const dx = x2 - x1;
@@ -243,7 +243,7 @@ function drawArrow(x1, y1, x2, y2, color) {
 
     // Draw arrow head
     ctx.fillStyle = color;
-    ctx.lineWidth = Math.max(2, zoom / 4);
+    ctx.lineWidth = 2 / zoom;
 
     ctx.beginPath();
     // Arrow point
@@ -268,16 +268,16 @@ function drawAddresses() {
 
     //console.time('  drawAddresses()');
     ctx.lineJoin = 'round';
-    ctx.lineWidth = 5;
+    ctx.lineWidth = 3 / zoom;
     ctx.miterLimit = 3;
     ctx.fillStyle = getColor('text');
     ctx.strokeStyle = getColor('background');
-    ctx.font = `${Math.max(10, zoom / 5)}px Arial`;
+    ctx.font = `${12 / zoom}px Arial`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
     let addressCount = 0;
-    const radius = Math.max(1, 0.025 * zoom);
+    const radius = 2 / zoom;
 
     Object.entries(addresses).forEach(([street, numbers]) => {
         Object.entries(numbers).forEach(([number, coords]) => {
@@ -292,7 +292,7 @@ function drawAddresses() {
             ctx.fill();
 
             // Draw address number slightly offset so it doesn't overlap the dot
-            const offsetY = Math.max(8, 10/zoom);
+            const offsetY = 8 / zoom;
             ctx.fillStyle = getColor('text');
             ctx.strokeText(number, x, y - offsetY);
             ctx.fillText(number, x, y - offsetY);
@@ -333,12 +333,12 @@ function drawSchool(size, school) {
     // Draw school name when zoomed in enough
     ctx.fillStyle = getColor('text');
     ctx.strokeStyle = getColor('background');
-    ctx.font = `${Math.max(10, zoom / 2)}px Arial`;
+    ctx.font = `${20 / zoom}px Arial`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
 
     const schoolName = `${school.prefix} ${school.name} ${school.suffix}`.trim();
-    const textY = y + size/2 + 2;
+    const textY = y + size/2 + (2 / zoom);
     ctx.strokeText(schoolName, x, textY);
     ctx.fillText(schoolName, x, textY);
 
@@ -347,8 +347,7 @@ function drawSchool(size, school) {
 
 function drawSchools() {
     //console.time('  drawSchools()');
-    //const size = Math.max(8, zoom * 1.25, Math.min(20, zoom * 4));
-    const size = Math.max(1, zoom * 1.25);
+    const size = 15 / zoom;
     let schoolCount = 0;
 
     schools.forEach(school => {
@@ -365,10 +364,10 @@ function drawStreetNames() {
     //console.time('  drawStreetNames()');
     ctx.fillStyle = getColor('text');
     ctx.strokeStyle = getColor('background');
-    ctx.font = `${Math.max(10, zoom / 2)}px Arial`;
+    ctx.font = `${14 / zoom}px Arial`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 3 / zoom;
     ctx.lineJoin = 'round';
 
     const drawnStreets = new Set();
@@ -410,7 +409,7 @@ function drawStreetNames() {
 
         // Only draw if segment is long enough for text
         const textWidth = ctx.measureText(street).width;
-        if (longestSegment.length > textWidth + 20) {
+        if (longestSegment.length > (textWidth + 20) / zoom) {
             drawStreetNameOnSegment(street, longestSegment);
         }
     });
@@ -474,10 +473,11 @@ function lineIntersectsRect(x1, y1, x2, y2, rectLeft, rectTop, rectRight, rectBo
 
 function segmentIsVisible(x1, y1, x2, y2, margin = 100) {
     // Check if line segment intersects with viewport (including margin)
-    const rectLeft = -margin;
-    const rectTop = -margin;
-    const rectRight = canvas.width + margin;
-    const rectBottom = canvas.height + margin;
+    margin /= zoom;
+    const rectLeft = panX - margin;
+    const rectTop = panY - margin;
+    const rectRight = panX + canvas.width / zoom + margin;
+    const rectBottom = panY + canvas.height / zoom + margin;
 
     return lineIntersectsRect(x1, y1, x2, y2, rectLeft, rectTop, rectRight, rectBottom);
 }
@@ -489,7 +489,7 @@ function drawStreets() {
     // 1st pass: Draw regular two-way streets
     //console.time('    drawStreets(): 2-way');
     ctx.strokeStyle = getColor('streets');
-    ctx.lineWidth = Math.max(1.5, zoom / 3);
+    ctx.lineWidth = 1.5 / zoom;
     ctx.beginPath();
 
     const drawnConnections = new Set();
@@ -533,7 +533,7 @@ function drawStreets() {
     if (oneWaySegments.length > 0) {
         //console.time('    drawStreets(): 1-way');
         ctx.strokeStyle = getColor('oneWays');
-        ctx.lineWidth = Math.max(1.5, zoom / 3);
+        ctx.lineWidth = 1.5 / zoom;
         ctx.beginPath();
 
         oneWaySegments.forEach(segment => {
@@ -564,15 +564,15 @@ function drawStreets() {
 function drawJunction(x, y, radius, color) {
     ctx.fillStyle = color;
     ctx.beginPath();
-    ctx.arc(x, y, radius, 0, 2 * Math.PI);
+    ctx.arc(x, y, radius / zoom, 0, 2 * Math.PI);
     ctx.fill();
 }
 
 function drawJunctionOutline(x, y, radius, color) {
     ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2 / zoom;
     ctx.beginPath();
-    ctx.arc(x, y, radius, 0, 2 * Math.PI);
+    ctx.arc(x, y, radius / zoom, 0, 2 * Math.PI);
     ctx.stroke();
 }
 
@@ -580,7 +580,7 @@ function drawJunctions() {
     // Draw junctions in layers (gray first, then colors on top)
     //console.time('  drawJunctions()');
     let junctionCount = 0;
-    const radius = Math.max(0.5, zoom / 2.5);
+    const radius = 1 / zoom;
 
     // 1st pass: Draw all gray/default junctions
     // Batch all gray junctions into a single path
@@ -599,8 +599,8 @@ function drawJunctions() {
             continue;
         }
 
-        ctx.moveTo(x + radius, y);
-        ctx.arc(x, y, radius, 0, 2 * Math.PI);
+        ctx.moveTo(x + radius / zoom, y);
+        ctx.arc(x, y, radius / zoom, 0, 2 * Math.PI);
     }
 
     ctx.fill();
@@ -638,9 +638,9 @@ function drawJunctionStart() {
     if (!start || !junctions[start]) return;
     const [x, y] = junctions[start].screen;
     if (invisible(x, y)) return;
-    const radius = Math.max(2, zoom / 2);
-    drawJunction(x, y, radius * 3, getColor('start'));
-    drawJunctionOutline(x, y, radius * 3, getColor('text'));
+    const radius = 8;
+    drawJunction(x, y, radius, getColor('start'));
+    drawJunctionOutline(x, y, radius, getColor('text'));
 }
 
 function drawJunctionEnd() {
@@ -648,9 +648,9 @@ function drawJunctionEnd() {
     if (!end || !junctions[end]) return;
     const [x, y] = junctions[end].screen;
     if (invisible(x, y)) return;
-    const radius = Math.max(2, zoom / 2);
-    drawJunction(x, y, radius * 3, getColor('end'));
-    drawJunctionOutline(x, y, radius * 3, getColor('text'));
+    const radius = 8;
+    drawJunction(x, y, radius, getColor('end'));
+    drawJunctionOutline(x, y, radius, getColor('text'));
 }
 
 function drawJunctionLabels() {
@@ -662,11 +662,11 @@ function drawJunctionLabels() {
         if (invisible(x, y)) continue;
 
         ctx.lineJoin = 'round';
-        ctx.lineWidth = 5;
+        ctx.lineWidth = 5 / zoom;
         ctx.miterLimit = 3;
         ctx.fillStyle = getColor('text');
         ctx.strokeStyle = getColor('background');
-        ctx.font = `${Math.max(12, zoom / 4)}px Arial`;
+        ctx.font = `${15 / zoom}px Arial`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.strokeText(cnn, x, y);
@@ -685,10 +685,7 @@ function drawMap() {
     ctx.fillStyle = getColor('background');
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Update screen coordinates.
-    if (zoom >= 30) postprocessAddresses();
-    postprocessJunctions();
-    postprocessSchools();
+    applyCanvasTransform();
 
     const streetCount = drawStreets();
     const junctionCount = drawJunctions();
@@ -699,6 +696,8 @@ function drawMap() {
     const schoolCount = drawSchools();
     drawJunctionLabels();
     const addressCount = drawAddresses();
+
+    resetCanvasTransform();
 
     const counts = [
         //`${junctionCount} junctions`,
@@ -722,7 +721,7 @@ function drawPath() {
     if (path.length < 2) return;
 
     ctx.strokeStyle = getColor('path');
-    ctx.lineWidth = Math.max(3, zoom / 1.25);
+    ctx.lineWidth = 12 / zoom;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.beginPath();
@@ -735,6 +734,18 @@ function drawPath() {
         ctx.lineTo(x, y);
     }
     ctx.stroke();
+}
+
+// Apply canvas transform before drawing
+function applyCanvasTransform() {
+    ctx.save();
+    ctx.scale(zoom, zoom);
+    ctx.translate(-panX, -panY);
+}
+
+// Reset canvas transform after drawing
+function resetCanvasTransform() {
+    ctx.restore();
 }
 
 // Throttled redraw using requestAnimationFrame
@@ -773,29 +784,11 @@ function postprocessAddresses() {
 
 function postprocessJunctions() {
     // Calculate the screen coordinates for each junction.
-    // Only recalculate if pan/zoom changed significantly
     //console.time('postprocessJunctions()');
-    const panThreshold = 0.5;
-    const zoomThreshold = 0.001;
-
-    if (coordinatesCached &&
-        Math.abs(panX - lastPanX) < panThreshold &&
-        Math.abs(panY - lastPanY) < panThreshold &&
-        Math.abs(zoom - lastZoom) < zoomThreshold) {
-        //console.timeEnd('postprocessJunctions()');
-        return; // Use cached coordinates
-    }
-
     for (const cnn in junctions) {
         const [lat, lon] = junctions[cnn].ll;
         junctions[cnn].screen = coordsToScreen(lat, lon);
     }
-
-    // Cache current transform state
-    lastPanX = panX;
-    lastPanY = panY;
-    lastZoom = zoom;
-    coordinatesCached = true;
     //console.timeEnd('postprocessJunctions()');
 }
 
@@ -900,18 +893,21 @@ function resizeCanvas() {
         mapOffsetY = 0;
     }
 
-    // Step 4: Adjust pan to keep the same geographic center point centered
+    // Step 4: Update screen coordinates when bounds change (not on every pan/zoom).
+    postprocessAddresses();
+    postprocessJunctions();
+    postprocessSchools();
+
+    // Step 5: Adjust pan to keep the same geographic center point centered
     if (bounds && centerLat !== undefined && centerLon !== undefined) {
         const [newCenterX, newCenterY] = coordsToScreen(centerLat, centerLon);
         const newCenterScreenX = canvas.width / 2;
         const newCenterScreenY = canvas.height / 2;
 
-        // Adjust pan so the center point appears at the center of the new viewport
-        panX += (newCenterX - newCenterScreenX) / zoom;
-        panY += (newCenterY - newCenterScreenY) / zoom;
+        panX = newCenterX - newCenterScreenX / zoom;
+        panY = newCenterY - newCenterScreenY / zoom;
     }
 
-    requestRedraw();
     //console.timeEnd('resizeCanvas()');
 }
 
@@ -938,8 +934,10 @@ function loadMap() {
     addEventListeners();
 
     // Resize canvas to fill container
-    // resizeCanvas() calls drawMap().
     resizeCanvas();
+
+    // Calculate proper initial pan values to center the map
+    fitToView();
 
     info('Select start and end points to find a path.');
     console.timeEnd('loadMap()');
@@ -1147,12 +1145,16 @@ function handleTouchStart(e) {
 }
 
 function handleTouchTap(tapX, tapY) {
-    const closestCNN = findClosestJunction(tapX, tapY);
+    // Convert tap coordinates to base coordinates for comparison
+    const baseTapX = tapX / zoom + panX;
+    const baseTapY = tapY / zoom + panY;
+
+    const closestCNN = findClosestJunction(baseTapX, baseTapY);
     if (closestCNN) {
         selectJunction(closestCNN);
     }
 
-    const school = findClosestSchool(tapX, tapY);
+    const school = findClosestSchool(baseTapX, baseTapY);
     if (school) {
         info(`School: ${school.prefix} ${school.name} ${school.suffix} - ${school.address}`);
     }
@@ -1271,12 +1273,28 @@ function zoomOut() {
 }
 
 function fitToView() {
-    // Set a reasonable zoom level
-    zoom = 1.0;
+    if (!canvas || !bounds) return;
 
-    // Center the map
-    panX = 0;
-    panY = 0;
+    // Calculate the center of the map data in base coordinates
+    const mapCenterX = mapDisplayWidth / 2 + mapOffsetX;
+    const mapCenterY = mapDisplayHeight / 2 + mapOffsetY;
+
+    // Calculate where we want the center to appear (center of canvas)
+    const viewportCenterX = canvas.width / 2;
+    const viewportCenterY = canvas.height / 2;
+
+    // Set pan so that map center appears at viewport center
+    panX = mapCenterX - viewportCenterX / zoom;
+    panY = mapCenterY - viewportCenterY / zoom;
+
+    // Initial zoom that fits the map nicely in the viewport
+    const scaleX = canvas.width / mapDisplayWidth;
+    const scaleY = canvas.height / mapDisplayHeight;
+    zoom = Math.min(scaleX, scaleY) * 0.99; // A little padding
+
+    // Recalculate pan with the new zoom level
+    panX = mapCenterX - viewportCenterX / zoom;
+    panY = mapCenterY - viewportCenterY / zoom;
 
     drawMap();
 }
@@ -1390,7 +1408,7 @@ async function findPath() {
         checkNeighbors(gScore, fScore, cameFrom);
 
         // Update display
-        drawMap();
+        requestRedraw();
         info(`A* running... Current: ${here} | Open: ${openSet.size} | Closed: ${closedSet.size}`);
 
         // Brief pause for visualization
@@ -1406,7 +1424,7 @@ async function findPath() {
     isPathfinding = false;
     document.getElementById('findPathBtn').disabled = false;
     console.timeEnd('findPath()');
-    drawMap();
+    requestRedraw();
 }
 
 // Initialize
@@ -1426,4 +1444,5 @@ window.addEventListener('load', () => {
 
 window.addEventListener('resize', () => {
     resizeCanvas();
+    requestRedraw();
 });
