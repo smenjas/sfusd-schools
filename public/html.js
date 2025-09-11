@@ -110,3 +110,16 @@ export function renderOptions(options, selected) {
     }
     return html;
 }
+
+/**
+ * Remove HTML tags from a string.
+ *
+ * @param {string} html - HTML
+ * @returns {string} Plain text
+ */
+export function stripTags(html) {
+    if (typeof html !== 'string') {
+        return html;
+    }
+    return html.replace(/<[^>]*?>/g, '');
+}
