@@ -31,16 +31,23 @@ body {
     flex: 1;
     display: flex;
     min-height: 0; /* Important for flex children */
+    position: relative; /* Important for layer positioning */
 }
 
-canvas {
+#bgCanvas {
     background: white;
+}
+
+.canvas-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
     display: block;
     height: 100%;
     width: 100%;
 }
 
-canvas:active {
+.canvas-layer:active {
     cursor: grabbing;
 }
 
@@ -103,6 +110,12 @@ select {
     margin: 0 10px 10px;
 }
 
+.layer-controls label {
+    display: block;
+    flex-direction: column;
+    white-space: nowrap;
+}
+
 .zoom-controls {
     gap: 5px;
 }
@@ -156,10 +169,20 @@ select {
     }
 }
 
+@media (width < 572px) {
+    .layer-controls {
+        display: none;
+    }
+}
+
 @media only screen and (prefers-color-scheme: dark) {
-    body, canvas {
+    body {
         background: black;
         color: white;
+    }
+
+    #bgCanvas {
+        background: black;
     }
 
     a {
