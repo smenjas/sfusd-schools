@@ -141,6 +141,9 @@ export function fixNumberedStreets(address) {
  * @returns {string} A presentable street name
  */
 export function formatStreet(street) {
+    if (typeof street !== 'string') {
+        return street;
+    }
     let name = prettifyAddress(street);
     if (street.endsWith(' RAMP')) {
         name = name.replace(' On ', ' on ');
