@@ -26,6 +26,12 @@ let isPinching = false;
 let initialPinchDistance = 0;
 let initialPinchCenter = { x: 0, y: 0 };
 let initialZoom = 1;
+let touchStartTime = 0;
+let touchStartX = 0;
+let touchStartY = 0;
+let touchMoved = false;
+const tapThreshold = 10; // pixels
+const tapMaxDuration = 300; // milliseconds
 let theme = 'light';
 let addresses = {};
 let schools = [];
@@ -1056,19 +1062,7 @@ function handleClick(e) {
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
-    // Convert mouse coordinates to base coordinates for comparison
-    const baseMouseX = mouseX / zoom + panX;
-    const baseMouseY = mouseY / zoom + panY;
-
-    const closestCNN = findClosestJunction(baseMouseX, baseMouseY);
-    if (closestCNN) {
-        selectJunction(closestCNN);
-    }
-
-    const school = findClosestSchool(baseMouseX, baseMouseY);
-    if (school) {
-        info(`School: ${school.prefix} ${school.name} ${school.suffix} - ${school.address}`);
-    }
+    handleTouchTap(mouseX, mouseY);
 }
 
 function getTouchCoordinates(e) {
@@ -1100,16 +1094,26 @@ function handleTouchStart(e) {
     e.preventDefault(); // Prevent scrolling
 
     if (e.touches.length === 1) {
-        // Single touch - start panning
+        // Single touch - start panning or potential tap
         isDragging = true;
         isPinching = false;
+        hasSignificantlyDragged = false; // Reset drag tracking
+
         const coords = getTouchCoordinates(e);
         lastMouseX = coords.x;
         lastMouseY = coords.y;
+
+        // Track touch start for tap detection
+        touchStartTime = Date.now();
+        touchStartX = coords.x;
+        touchStartY = coords.y;
+        touchMoved = false;
+
     } else if (e.touches.length === 2) {
         // Two touches - start pinching
         isDragging = false;
         isPinching = true;
+        touchMoved = true; // Pinch gestures are not taps
 
         const touch1 = e.touches[0];
         const touch2 = e.touches[1];
@@ -1117,6 +1121,22 @@ function handleTouchStart(e) {
         initialPinchDistance = getTouchDistance(touch1, touch2);
         initialPinchCenter = getTouchCenter(touch1, touch2);
         initialZoom = zoom;
+    }
+}
+
+function handleTouchTap(tapX, tapY) {
+    // Convert tap coordinates to base coordinates for comparison
+    const baseTapX = tapX / zoom + panX;
+    const baseTapY = tapY / zoom + panY;
+
+    const closestCNN = findClosestJunction(baseTapX, baseTapY);
+    if (closestCNN) {
+        selectJunction(closestCNN);
+    }
+
+    const school = findClosestSchool(baseTapX, baseTapY);
+    if (school) {
+        info(`School: ${school.prefix} ${school.name} ${school.suffix} - ${school.address}`);
     }
 }
 
@@ -1128,6 +1148,15 @@ function handleTouchMove(e) {
         const coords = getTouchCoordinates(e);
         const deltaX = coords.x - lastMouseX;
         const deltaY = coords.y - lastMouseY;
+
+        // Check if movement exceeds tap threshold
+        const totalDeltaX = Math.abs(coords.x - touchStartX);
+        const totalDeltaY = Math.abs(coords.y - touchStartY);
+
+        if (totalDeltaX > tapThreshold || totalDeltaY > tapThreshold) {
+            touchMoved = true;
+            hasSignificantlyDragged = true;
+        }
 
         panX -= deltaX / zoom;
         panY -= deltaY / zoom;
@@ -1142,6 +1171,8 @@ function handleTouchMove(e) {
         requestRedraw();
     } else if (e.touches.length === 2 && isPinching) {
         // Two touch pinch-to-zoom
+        touchMoved = true; // Pinch gestures are not taps
+
         const touch1 = e.touches[0];
         const touch2 = e.touches[1];
 
@@ -1158,13 +1189,29 @@ function handleTouchEnd(e) {
     e.preventDefault(); // Prevent scrolling
 
     if (e.touches.length === 0) {
-        // No more touches
+        // No more touches - check if this was a tap
+        const touchDuration = Date.now() - touchStartTime;
+
+        if (!touchMoved && !isPathfinding &&
+            touchDuration < tapMaxDuration &&
+            isDragging && !isPinching) {
+
+            // This was a tap - treat it like a click for junction selection
+            handleTouchTap(touchStartX, touchStartY);
+        }
+
+        // Reset touch state
         isDragging = false;
         isPinching = false;
+        hasSignificantlyDragged = false;
+        touchMoved = false;
+
     } else if (e.touches.length === 1 && isPinching) {
         // Went from pinch to single touch - switch to panning
         isPinching = false;
         isDragging = true;
+        touchMoved = true; // Prevent this from being considered a tap
+
         const coords = getTouchCoordinates(e);
         lastMouseX = coords.x;
         lastMouseY = coords.y;
