@@ -997,6 +997,10 @@ function zoomCanvas(x, y, zoomFactor) {
     const newZoom = Math.max(minZoom, Math.min(maxZoom, zoom * zoomFactor));
     if (newZoom === zoom) return;
 
+    if (newZoom === zoom) {
+        return;
+    }
+
     // Reverse the coordinate transformation to find where the mouse points in
     // the "base" coordinate space (before zoom/pan).
 
@@ -1130,22 +1134,7 @@ function handleTouchMove(e) {
 
         // Calculate zoom factor based on distance change
         const zoomFactor = currentDistance / initialPinchDistance;
-        const newZoom = Math.max(minZoom, Math.min(maxZoom, initialZoom * zoomFactor));
-
-        if (newZoom !== zoom) {
-            // Calculate the point in "base" coordinate space for the pinch center
-            const baseCenterX = initialPinchCenter.x / zoom + panX;
-            const baseCenterY = initialPinchCenter.y / zoom + panY;
-
-            // Adjust pan so the pinch center stays under the fingers
-            panX = baseCenterX - currentCenter.x / newZoom;
-            panY = baseCenterY - currentCenter.y / newZoom;
-
-            zoom = newZoom;
-
-            markAllLayersDirty();
-            requestRedraw();
-        }
+        zoomCanvas(currentCenter.x, currentCenter.y, zoomFactor);
     }
 }
 
