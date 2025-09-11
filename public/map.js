@@ -1,7 +1,8 @@
 import { formatStreet } from './address.js';
 import { expandCoords, howFar } from './geo.js';
+import { describePathText } from './path.js';
 import addressData from './address-data.js';
-import junctions from './junctions.js';
+import jcts from './junctions.js';
 import schools from './school-data.js';
 import segments from './segments.js';
 
@@ -34,6 +35,7 @@ const tapThreshold = 10; // pixels
 const tapMaxDuration = 300; // milliseconds
 let theme = 'light';
 let addresses = {};
+let junctions = {};
 let segmentJunctions = {};
 
 const colors = {
@@ -967,9 +969,11 @@ function preprocessAddresses() {
 
 function preprocessJunctions() {
     //console.time('preprocessJunctions()');
-    Object.entries(junctions).forEach(([cnn, junction]) => {
+    Object.entries(jcts).forEach(([cnn, jct]) => {
         // Convert decimals to full geographic coordinates.
-        junctions[cnn].ll = expandCoords(junction.ll);
+        junctions[cnn] = {};
+        Object.assign(junctions[cnn], jct);
+        junctions[cnn].ll = expandCoords(jct.ll);
     });
     //console.timeEnd('preprocessJunctions()');
 }
@@ -1562,6 +1566,8 @@ function reconstructPath(cameFrom) {
     }
 
     console.log(`Path reconstructed: ${path.join(' -> ')} (${path.length} nodes)`);
+    const description = describePathText(addressData, jcts, path);
+    console.log(description);
 
     // Optional: Check if we actually reached the start
     if (path[0] !== start) {
