@@ -35,17 +35,30 @@ input, button, textarea, select {
     flex: 1;
     display: flex;
     min-height: 0; /* Important for flex children */
+    position: relative; /* Important for layer positioning */
 }
 
-canvas {
+#bgCanvas {
     background: #fff;
+}
+
+.canvas-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
     display: block;
     height: 100%;
     width: 100%;
 }
 
-canvas:active {
+.canvas-layer:active {
     cursor: grabbing;
+}
+
+.layer-controls label {
+    display: block;
+    flex-direction: column;
+    white-space: nowrap;
 }
 
 button {
@@ -151,10 +164,20 @@ button:disabled:hover {
     }
 }
 
+@media (width < 572px) {
+    .layer-controls {
+        display: none;
+    }
+}
+
 @media only screen and (prefers-color-scheme: dark) {
-    body, canvas {
+    body {
         background: black;
         color: white;
+    }
+
+    #bgCanvas {
+        background: #000;
     }
 
     a {
