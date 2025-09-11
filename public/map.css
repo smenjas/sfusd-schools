@@ -24,16 +24,23 @@ input, button, textarea, select {
     flex: 1;
     display: flex;
     min-height: 0; /* Important for flex children */
+    position: relative; /* Important for layer positioning */
 }
 
-canvas {
+#bgCanvas {
     background: #fff;
+}
+
+.canvas-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
     display: block;
     height: 100%;
     width: 100%;
 }
 
-canvas:active {
+.canvas-layer:active {
     cursor: grabbing;
 }
 
@@ -112,9 +119,13 @@ button:disabled {
 }
 
 @media only screen and (prefers-color-scheme: dark) {
-    body, canvas {
+    body {
         background: black;
         color: white;
+    }
+
+    #bgCanvas {
+        background: #000;
     }
 
     a {

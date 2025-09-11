@@ -4,7 +4,10 @@ import junctions from './junctions.js';
 import schoolData from './school-data.js';
 
 // Map state
-let bounds, canvas, ctx;
+let bounds;
+let canvas = { bg: null, pf: null, ui: null };
+let context = { bg: null, pf: null, ui: null };
+const dirty = { bg: true, pf: true, ui: true };
 let canvasAspectRatio, mapAspectRatio;
 let mapDisplayWidth, mapDisplayHeight, mapOffsetX, mapOffsetY;
 let start, end, isPathfinding = false;
@@ -99,29 +102,46 @@ function getColor(colorName) {
     return colors[theme][colorName];
 }
 
+function markLayersDirty(background = false, pathfinding = false, ui = false) {
+    if (background) dirty.bg = true;
+    if (pathfinding) dirty.pf = true;
+    if (ui) dirty.ui = true;
+}
+
+function markAllLayersDirty() {
+    dirty.bg = true;
+    dirty.pf = true;
+    dirty.ui = true;
+}
+
 function initializeMapView() {
-    if (!canvas || !bounds) return;
+    if (!canvas.bg || !bounds) return;
 
     // Calculate the center of the map data in base coordinates
     const mapCenterX = mapDisplayWidth / 2 + mapOffsetX;
     const mapCenterY = mapDisplayHeight / 2 + mapOffsetY;
 
     // Calculate where we want the center to appear (center of canvas)
-    const viewportCenterX = canvas.width / 2;
-    const viewportCenterY = canvas.height / 2;
+    const viewportCenterX = canvas.bg.width / 2;
+    const viewportCenterY = canvas.bg.height / 2;
 
     // Set pan so that map center appears at viewport center
     panX = mapCenterX - viewportCenterX / zoom;
     panY = mapCenterY - viewportCenterY / zoom;
 
     // Initial zoom that fits the map nicely in the viewport
-    const scaleX = canvas.width / mapDisplayWidth;
-    const scaleY = canvas.height / mapDisplayHeight;
+    const scaleX = canvas.bg.width / mapDisplayWidth;
+    const scaleY = canvas.bg.height / mapDisplayHeight;
     zoom = Math.min(scaleX, scaleY) * 0.99; // A little padding
 
     // Recalculate pan with the new zoom level
     panX = mapCenterX - viewportCenterX / zoom;
     panY = mapCenterY - viewportCenterY / zoom;
+
+    // Mark all layers dirty since zoom/pan changed
+    dirty.bg = true;
+    dirty.pf = true;
+    dirty.ui = true;
 
     drawMap();
 }
@@ -143,7 +163,7 @@ function calculateBounds(junctionData = junctions) {
 
     // Calculate the actual geographic aspect ratio of SF.
     // At SF's latitude, 1° longitude ≈ 0.79 × 1° latitude in distance.
-    // We must set mapAspectRatio before we calling resizeCanvas().
+    // We must set mapAspectRatio before we calling resizeCanvases().
     mapAspectRatio = (lonRange * 0.79) / latRange;
 
     // Add padding
@@ -163,7 +183,7 @@ function coordsToScreen(lat, lon) {
     if (!bounds) return [0, 0];
 
     // Calculate normalized coordinates (0-1)
-    const normalizedX = (bounds.maxLon - lon) / (bounds.maxLon - bounds.minLon);
+    const normalizedX = (lon - bounds.minLon) / (bounds.maxLon - bounds.minLon);
     const normalizedY = (bounds.maxLat - lat) / (bounds.maxLat - bounds.minLat);
 
     // Convert to base screen coordinates (before zoom/pan transform)
@@ -210,8 +230,8 @@ function invisible(x, y, margin = 50) {
     const transformedMargin = margin / zoom;
     const viewLeft = panX - transformedMargin;
     const viewTop = panY - transformedMargin;
-    const viewRight = panX + canvas.width / zoom + transformedMargin;
-    const viewBottom = panY + canvas.height / zoom + transformedMargin;
+    const viewRight = panX + canvas.bg.width / zoom + transformedMargin;
+    const viewBottom = panY + canvas.bg.height / zoom + transformedMargin;
 
     return x < viewLeft || x > viewRight || y < viewTop || y > viewBottom;
 }
@@ -230,7 +250,7 @@ function isOneWayStreet(fromCNN, toCNN) {
     return fromHasTo && !toHasFrom;
 }
 
-function drawArrow(x1, y1, x2, y2, color) {
+function drawArrow(ctx, x1, y1, x2, y2, color) {
     const arrowLength = 3;
     const arrowAngle = Math.PI / 6;
 
@@ -261,7 +281,7 @@ function drawArrow(x1, y1, x2, y2, color) {
     ctx.fill();
 }
 
-function drawAddresses() {
+function drawAddresses(ctx) {
     if (zoom < 40) return 0;
 
     console.time('drawAddresses()');
@@ -303,14 +323,14 @@ function drawAddresses() {
     return addressCount;
 }
 
-function drawSchools() {
+function drawSchools(ctx) {
     ctx.lineJoin = 'round';
     ctx.lineWidth = 0.25;
 
     let schoolCount = 0;
 
     schools.forEach(school => {
-        const [lat, lon] = school.coords;
+        const [lat, lon] = school.ll;
         const [x, y] = coordsToScreen(lat, lon);
 
         if (invisible(x, y)) return;
@@ -356,7 +376,7 @@ function drawSchools() {
     return schoolCount;
 }
 
-function drawStreetNames() {
+function drawStreetNames(ctx) {
     if (zoom < 6) return;
 
     console.time('drawStreetNames()');
@@ -416,13 +436,13 @@ function drawStreetNames() {
         // Only draw if segment is long enough for text
         const textWidth = ctx.measureText(street).width;
         if (longestSegment.length > textWidth / 2) {
-            drawStreetNameOnSegment(street, longestSegment);
+            drawStreetNameOnSegment(ctx, street, longestSegment);
         }
     });
     console.timeEnd('drawStreetNames()');
 }
 
-function drawStreetNameOnSegment(street, segment) {
+function drawStreetNameOnSegment(ctx, street, segment) {
     const { x1, y1, x2, y2 } = segment;
 
     // Calculate midpoint
@@ -481,13 +501,13 @@ function segmentIsVisible(x1, y1, x2, y2, margin = 100) {
     const transformedMargin = margin / zoom;
     const rectLeft = panX - transformedMargin;
     const rectTop = panY - transformedMargin;
-    const rectRight = panX + canvas.width / zoom + transformedMargin;
-    const rectBottom = panY + canvas.height / zoom + transformedMargin;
+    const rectRight = panX + canvas.bg.width / zoom + transformedMargin;
+    const rectBottom = panY + canvas.bg.height / zoom + transformedMargin;
 
     return lineIntersectsRect(x1, y1, x2, y2, rectLeft, rectTop, rectRight, rectBottom);
 }
 
-function drawStreets() {
+function drawStreets(ctx) {
     console.time('drawStreets()');
     let twoWays = 0;
     let oneWays = 0;
@@ -553,7 +573,7 @@ function drawStreets() {
             oneWaySegments.forEach(segment => {
                 const [fromX, fromY] = junctions[segment.fromCNN].screen;
                 const [toX, toY] = junctions[segment.toCNN].screen;
-                drawArrow(fromX, fromY, toX, toY, getColor('oneWays'));
+                drawArrow(ctx, fromX, fromY, toX, toY, getColor('oneWays'));
             });
         }
     }
@@ -562,14 +582,14 @@ function drawStreets() {
     return { twoWays, oneWays };
 }
 
-function drawJunction(x, y, radius, color) {
+function drawJunction(ctx, x, y, radius, color) {
     ctx.fillStyle = color;
     ctx.beginPath();
     ctx.arc(x, y, radius, 0, 2 * Math.PI);
     ctx.fill();
 }
 
-function drawJunctionOutline(x, y, radius, color) {
+function drawJunctionOutline(ctx, x, y, radius, color) {
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -577,7 +597,7 @@ function drawJunctionOutline(x, y, radius, color) {
     ctx.stroke();
 }
 
-function drawJunctions() {
+function drawJunctions(ctx) {
     console.time('drawJunctions()');
     let visibleJunctions = 0;
     const radius = 0.75;
@@ -607,14 +627,14 @@ function drawJunctions() {
     return visibleJunctions;
 }
 
-function drawPathSearch() {
+function drawPathSearch(ctx) {
     const radius = 2;
 
     // Draw current node
     if (here && junctions[here]) {
         const [x, y] = junctions[here].screen;
         if (visible(x, y)) {
-            drawJunction(x, y, radius, getColor('current'));
+            drawJunction(ctx, x, y, radius, getColor('current'));
         }
     }
 
@@ -623,7 +643,7 @@ function drawPathSearch() {
         if (!junctions[cnn]) return;
         const [x, y] = junctions[cnn].screen;
         if (invisible(x, y)) return;
-        drawJunction(x, y, radius, getColor('closedSet'));
+        drawJunction(ctx, x, y, radius, getColor('closedSet'));
     });
 
     // Draw open set
@@ -631,29 +651,29 @@ function drawPathSearch() {
         if (!junctions[cnn]) return;
         const [x, y] = junctions[cnn].screen;
         if (invisible(x, y)) return;
-        drawJunction(x, y, radius, getColor('openSet'));
+        drawJunction(ctx, x, y, radius, getColor('openSet'));
     });
 }
 
-function drawJunctionStart() {
+function drawJunctionStart(ctx) {
     if (!start || !junctions[start]) return;
     const [x, y] = junctions[start].screen;
     if (invisible(x, y)) return;
     const radius = 4;
-    drawJunction(x, y, radius, getColor('start'));
-    drawJunctionOutline(x, y, radius, getColor('text'));
+    drawJunction(ctx, x, y, radius, getColor('start'));
+    drawJunctionOutline(ctx, x, y, radius, getColor('text'));
 }
 
-function drawJunctionEnd() {
+function drawJunctionEnd(ctx) {
     if (!end || !junctions[end]) return;
     const [x, y] = junctions[end].screen;
     if (invisible(x, y)) return;
     const radius = 4;
-    drawJunction(x, y, radius, getColor('end'));
-    drawJunctionOutline(x, y, radius, getColor('text'));
+    drawJunction(ctx, x, y, radius, getColor('end'));
+    drawJunctionOutline(ctx, x, y, radius, getColor('text'));
 }
 
-function drawJunctionLabels() {
+function drawJunctionLabels(ctx) {
     if (zoom < 20) return;
 
     for (const cnn in junctions) {
@@ -674,54 +694,38 @@ function drawJunctionLabels() {
     }
 }
 
-function drawDetails() {
-    drawPathSearch();
-    drawPath();
-    drawJunctionStart();
-    drawJunctionEnd();
-    drawJunctionLabels();
-    drawStreetNames();
-    const addressCount = drawAddresses();
-    const schoolCount = drawSchools();
-    return { addressCount, schoolCount };
-}
-
 function drawMap() {
-    console.time('drawMap()');
-    if (!canvas || !ctx || !bounds) return;
-
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Background using theme color
-    ctx.fillStyle = getColor('background');
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    //console.time('drawMap()');
+    if (!canvas.bg || !canvas.pf || !canvas.ui || !bounds) return;
 
     // Calculate base screen coordinates (only if not already calculated)
     postprocessJunctions();
 
-    // Apply transform for all map drawing
-    applyCanvasTransform();
+    // Render each layer only if dirty
+    if (dirty.bg) {
+        renderBackgroundLayer();
+    }
 
-    const streetCounts = drawStreets();
-    const visibleJunctions = drawJunctions();
-    const { addressCount, schoolCount } = drawDetails();
+    if (dirty.pf) {
+        renderPathfindingLayer();
+    }
 
-    // Reset transform
-    resetCanvasTransform();
+    if (dirty.ui) {
+        renderUILayer();
+    }
 
+    // Log stats (use canvas.bg for measurements)
     const stats = [
-        `Canvas: ${canvas.width}x${canvas.height}`,
-        `Rendered ${visibleJunctions} junctions, ${streetCounts.twoWays} two-way streets, ${streetCounts.oneWays} one-way streets, ${schoolCount} schools, ${addressCount} addresses`,
+        `Canvas: ${canvas.bg.width}x${canvas.bg.height}`,
         `Zoom: ${zoom.toFixed(3)}x, Pan: [${panX.toFixed(1)}, ${panY.toFixed(1)}]`,
+        `Dirty: BG:${dirty.bg} PF:${dirty.pf} UI:${dirty.ui}`
     ].join(' | ');
-
     log(stats);
-    console.timeEnd('drawMap()');
-    console.log(' ');
+
+    //console.timeEnd('drawMap()');
 }
 
-function drawPath() {
+function drawPath(ctx) {
     if (path.length < 2) return;
 
     ctx.strokeStyle = getColor('path');
@@ -741,14 +745,14 @@ function drawPath() {
 }
 
 // Apply canvas transform before drawing
-function applyCanvasTransform() {
+function applyCanvasTransform(ctx) {
     ctx.save();
     ctx.scale(zoom, zoom);
     ctx.translate(-panX, -panY);
 }
 
 // Reset canvas transform after drawing
-function resetCanvasTransform() {
+function resetCanvasTransform(ctx) {
     ctx.restore();
 }
 
@@ -763,19 +767,18 @@ function requestRedraw() {
     }
 }
 
-function padCoord(coord) {
-    // Pad coordinates to 5 digits with trailing zeros
-    return parseInt(coord.toString().padEnd(5, '0'));
-}
-
 function preprocessAddresses(rawAddresses) {
     const processed = {};
 
     Object.entries(rawAddresses).forEach(([street, addresses]) => {
         processed[street] = {};
         Object.entries(addresses).forEach(([number, coords]) => {
-            const [lat, lon] = coords;
-            processed[street][number] = [padCoord(lat), padCoord(lon)];
+            // Convert decimals to full geographic coordinates.
+            const [latDec, lonDec] = coords;
+            processed[street][number] = [
+                parseFloat(`37.${latDec}`),
+                parseFloat(`-122.${lonDec}`)
+            ];
         });
     });
 
@@ -796,83 +799,81 @@ function preprocessJunctions(rawJunctions) {
     const processed = {};
 
     Object.entries(rawJunctions).forEach(([cnn, junction]) => {
-        const [lat, lon] = junction.ll;
+        const [latDec, lonDec] = junction.ll;
         processed[cnn] = {
             ...junction,
-            ll: [padCoord(lat), padCoord(lon)]
+            // Convert decimals to full geographic coordinates.
+            ll: [
+                parseFloat(`37.${latDec}`),
+                parseFloat(`-122.${lonDec}`)
+            ]
         };
     });
 
     return processed;
 }
 
-function preprocessSchools(rawSchools) {
-    return rawSchools.map(school => ({
-        ...school,
-        coords: [
-            padCoord(Math.round((school.ll[0] - 37) * 100000)),        // latitude
-            padCoord(Math.round(Math.abs(school.ll[1] + 122) * 100000)) // longitude
-        ]
-    }));
-}
-
-function resizeCanvas() {
-    if (!canvas) return;
-
+function resizeCanvases() {
     // Store the geographic center point before resizing
     let centerLat, centerLon;
     if (bounds) {
-        const centerScreenX = canvas.width / 2;
-        const centerScreenY = canvas.height / 2;
+        const centerScreenX = canvas.bg.width / 2;
+        const centerScreenY = canvas.bg.height / 2;
         [centerLat, centerLon] = screenToCoords(centerScreenX, centerScreenY);
     }
 
     const container = document.querySelector('.map-container');
     const rect = container.getBoundingClientRect();
 
-    // Set canvas size to match container
-    canvas.width = rect.width;
-    canvas.height = rect.height;
+    // Set all canvas sizes to match container
+    for (const key in canvas) {
+        canvas[key].width = rect.width;
+        canvas[key].height = rect.height;
+    }
 
-    // Calculate display dimensions to maintain geographic accuracy
-    canvasAspectRatio = canvas.width / canvas.height;
+    // Calculate display dimensions (use canvas.bg for measurements)
+    canvasAspectRatio = canvas.bg.width / canvas.bg.height;
 
-    // Calculate geometry for coordsToScreen().
     if (mapAspectRatio > canvasAspectRatio) {
-        // Map is wider than canvas - fit to width
-        mapDisplayWidth = canvas.width;
-        mapDisplayHeight = canvas.width / mapAspectRatio;
+        mapDisplayWidth = canvas.bg.width;
+        mapDisplayHeight = canvas.bg.width / mapAspectRatio;
         mapOffsetX = 0;
-        mapOffsetY = (canvas.height - mapDisplayHeight) / 2;
+        mapOffsetY = (canvas.bg.height - mapDisplayHeight) / 2;
     } else {
-        // Map is taller than canvas - fit to height
-        mapDisplayWidth = canvas.height * mapAspectRatio;
-        mapDisplayHeight = canvas.height;
-        mapOffsetX = (canvas.width - mapDisplayWidth) / 2;
+        mapDisplayWidth = canvas.bg.height * mapAspectRatio;
+        mapDisplayHeight = canvas.bg.height;
+        mapOffsetX = (canvas.bg.width - mapDisplayWidth) / 2;
         mapOffsetY = 0;
     }
 
     // Adjust pan to keep the same geographic center point centered
     if (bounds && centerLat !== undefined && centerLon !== undefined) {
         const [newCenterX, newCenterY] = coordsToScreen(centerLat, centerLon);
-        const newCenterScreenX = canvas.width / 2;
-        const newCenterScreenY = canvas.height / 2;
+        const newCenterScreenX = canvas.bg.width / 2;
+        const newCenterScreenY = canvas.bg.height / 2;
 
-        // Adjust pan so the center point appears at the center of the new viewport
         panX += (newCenterX - newCenterScreenX) / zoom;
         panY += (newCenterY - newCenterScreenY) / zoom;
     }
 
-    // Redraw the map with new dimensions
+    dirty.bg = true;
+    dirty.pf = true;
+    dirty.ui = true;
+
     requestRedraw();
 }
 
 function loadMap() {
-    canvas = document.getElementById('mapCanvas');
-    ctx = canvas.getContext('2d');
+    canvas.bg = document.getElementById('bgCanvas');
+    canvas.pf = document.getElementById('pfCanvas');
+    canvas.ui = document.getElementById('uiCanvas');
 
-    if (!canvas || !ctx) {
-        log("Error: Could not initialize canvas");
+    context.bg = canvas.bg.getContext('2d');
+    context.pf = canvas.pf.getContext('2d');
+    context.ui = canvas.ui.getContext('2d');
+
+    if (!canvas.bg || !context.bg || !canvas.pf || !context.pf || !canvas.ui || !context.ui) {
+        log("Error: Could not initialize canvases");
         return;
     }
 
@@ -884,16 +885,16 @@ function loadMap() {
     Object.assign(junctions, processedJunctions);
 
     addresses = preprocessAddresses(addressData);
-    schools = preprocessSchools(schoolData);
+    schools = schoolData;
 
-    // Must calculate map boundaries before calling resizeCanvas().
+    // Must calculate map boundaries before calling resizeCanvases().
     bounds = calculateBounds();
-    console.log(`Map bounds: lat 37.${bounds.minLat.toFixed(0)} - 37.${bounds.maxLat.toFixed(0)}, lon -122.${bounds.minLon.toFixed(0)} - -122.${bounds.maxLon.toFixed(0)}`);
+    console.log(`Map bounds: lat ${bounds.minLat.toFixed(5)} - ${bounds.maxLat.toFixed(5)}, lon ${bounds.minLon.toFixed(5)} - ${bounds.maxLon.toFixed(5)}`);
 
     setupEventListeners();
 
     // Resize canvas to fill container
-    resizeCanvas();
+    resizeCanvases();
 
     // Calculate proper initial pan values to center the map
     initializeMapView();
@@ -903,17 +904,18 @@ function loadMap() {
 }
 
 function setupEventListeners() {
-    // Mouse events for pan/zoom
-    canvas.addEventListener('mousedown', handleMouseDown);
-    canvas.addEventListener('mousemove', handleMouseMove);
-    canvas.addEventListener('mouseup', handleMouseUp);
-    canvas.addEventListener('wheel', handleWheel);
-    canvas.addEventListener('click', handleClick);
+    // Use the top canvas (UI layer) for mouse events
+    const topCanvas = canvas.ui;
 
-    // Touch events for mobile panning
-    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
-    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
-    canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+    topCanvas.addEventListener('mousedown', handleMouseDown);
+    topCanvas.addEventListener('mousemove', handleMouseMove);
+    topCanvas.addEventListener('mouseup', handleMouseUp);
+    topCanvas.addEventListener('wheel', handleWheel);
+    topCanvas.addEventListener('click', handleClick);
+
+    topCanvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+    topCanvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    topCanvas.addEventListener('touchend', handleTouchEnd, { passive: false });
 }
 
 function handleMouseDown(e) {
@@ -940,6 +942,10 @@ function handleMouseMove(e) {
     lastMouseX = e.offsetX;
     lastMouseY = e.offsetY;
 
+    dirty.bg = true;
+    dirty.pf = true;
+    dirty.ui = true;
+
     requestRedraw();
 }
 
@@ -954,23 +960,24 @@ function handleWheel(e) {
     const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
     const newZoom = Math.max(minZoom, Math.min(maxZoom, zoom * zoomFactor));
 
-    // Zoom toward mouse position
-    const rect = canvas.getBoundingClientRect();
+    // Use canvas.ui for measurements since it's the interaction layer
+    const rect = canvas.ui.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
-    // Reverse the coordinate transformation to find where the mouse points in
-    // the "base" coordinate space (before zoom/pan).
-
-    // First, reverse the zoom transformation
+    // Rest of function stays the same...
     const baseMouseX = mouseX / newZoom - panX;
     const baseMouseY = mouseY / newZoom - panY;
 
-    // Pan baseMouseX,baseMouseY to mouseX,mouseY after zoom
     panX = mouseX / zoom - baseMouseX;
     panY = mouseY / zoom - baseMouseY;
 
     zoom = newZoom;
+
+    dirty.bg = true;
+    dirty.pf = true;
+    dirty.ui = true;
+
     requestRedraw();
 }
 
@@ -981,7 +988,7 @@ function handleClick(e) {
         return;
     }
 
-    const rect = canvas.getBoundingClientRect();
+    const rect = canvas.ui.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
@@ -1013,7 +1020,7 @@ function handleClick(e) {
     let closestSchoolDistance = Infinity;
 
     schools.forEach((school, index) => {
-        const [lat, lon] = school.coords;
+        const [lat, lon] = school.ll;
         const [x, y] = coordsToScreen(lat, lon);
         const distance = coordsDistance([y, x], [baseMouseY, baseMouseX]);
 
@@ -1029,8 +1036,8 @@ function handleClick(e) {
     }
 }
 
-function getTouchCoordinates(e, canvas) {
-    const rect = canvas.getBoundingClientRect();
+function getTouchCoordinates(e) {
+    const rect = canvas.ui.getBoundingClientRect();
     const touch = e.touches[0] || e.changedTouches[0];
     return {
         x: touch.clientX - rect.left,
@@ -1046,8 +1053,8 @@ function getTouchDistance(touch1, touch2) {
 }
 
 // Helper function to get center point between two touches
-function getTouchCenter(touch1, touch2, canvas) {
-    const rect = canvas.getBoundingClientRect();
+function getTouchCenter(touch1, touch2) {
+    const rect = canvas.ui.getBoundingClientRect();
     return {
         x: (touch1.clientX + touch2.clientX) / 2 - rect.left,
         y: (touch1.clientY + touch2.clientY) / 2 - rect.top
@@ -1061,7 +1068,7 @@ function handleTouchStart(e) {
         // Single touch - start panning
         isDragging = true;
         isPinching = false;
-        const coords = getTouchCoordinates(e, canvas);
+        const coords = getTouchCoordinates(e);
         lastMouseX = coords.x;
         lastMouseY = coords.y;
     } else if (e.touches.length === 2) {
@@ -1073,7 +1080,7 @@ function handleTouchStart(e) {
         const touch2 = e.touches[1];
 
         initialPinchDistance = getTouchDistance(touch1, touch2);
-        initialPinchCenter = getTouchCenter(touch1, touch2, canvas);
+        initialPinchCenter = getTouchCenter(touch1, touch2);
         initialZoom = zoom;
     }
 }
@@ -1083,7 +1090,7 @@ function handleTouchMove(e) {
 
     if (e.touches.length === 1 && isDragging && !isPinching) {
         // Single touch panning
-        const coords = getTouchCoordinates(e, canvas);
+        const coords = getTouchCoordinates(e);
         const deltaX = coords.x - lastMouseX;
         const deltaY = coords.y - lastMouseY;
 
@@ -1093,6 +1100,10 @@ function handleTouchMove(e) {
         lastMouseX = coords.x;
         lastMouseY = coords.y;
 
+        dirty.bg = true;
+        dirty.pf = true;
+        dirty.ui = true;
+
         requestRedraw();
     } else if (e.touches.length === 2 && isPinching) {
         // Two touch pinch-to-zoom
@@ -1100,7 +1111,7 @@ function handleTouchMove(e) {
         const touch2 = e.touches[1];
 
         const currentDistance = getTouchDistance(touch1, touch2);
-        const currentCenter = getTouchCenter(touch1, touch2, canvas);
+        const currentCenter = getTouchCenter(touch1, touch2);
 
         // Calculate zoom factor based on distance change
         const zoomFactor = currentDistance / initialPinchDistance;
@@ -1116,6 +1127,11 @@ function handleTouchMove(e) {
             panY = baseCenterY - currentCenter.y / newZoom;
 
             zoom = newZoom;
+
+            dirty.bg = true;
+            dirty.pf = true;
+            dirty.ui = true;
+
             requestRedraw();
         }
     }
@@ -1132,7 +1148,7 @@ function handleTouchEnd(e) {
         // Went from pinch to single touch - switch to panning
         isPinching = false;
         isDragging = true;
-        const coords = getTouchCoordinates(e, canvas);
+        const coords = getTouchCoordinates(e);
         lastMouseX = coords.x;
         lastMouseY = coords.y;
     }
@@ -1143,6 +1159,7 @@ function selectJunction(cnn) {
         start = parseInt(cnn);
         document.getElementById('infoPanel').textContent =
             `Start point: Junction ${cnn}. Click another junction for the destination.`;
+        dirty.ui = true;
         requestRedraw();
         return;
     }
@@ -1152,6 +1169,7 @@ function selectJunction(cnn) {
         document.getElementById('findPathBtn').disabled = false;
         document.getElementById('infoPanel').textContent =
             `Route set: ${start} → ${end}. Ready for A* pathfinding!`;
+        dirty.ui = true;
         requestRedraw();
         return;
     }
@@ -1163,6 +1181,8 @@ function selectJunction(cnn) {
     document.getElementById('findPathBtn').disabled = true;
     document.getElementById('infoPanel').textContent =
         `Start point: Junction ${start}. Click another junction for the destination.`;
+    dirty.pf = true;
+    dirty.ui = true;
     requestRedraw();
 }
 
@@ -1170,8 +1190,8 @@ function zoomTowardCenter(zoomFactor) {
     const newZoom = Math.max(minZoom, Math.min(maxZoom, zoom * zoomFactor));
     if (newZoom === zoom) return;
 
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
+    const centerX = canvas.ui.width / 2;
+    const centerY = canvas.ui.height / 2;
 
     // Find what base coordinates the center currently shows
     const baseCenterX = centerX / zoom + panX;
@@ -1182,6 +1202,11 @@ function zoomTowardCenter(zoomFactor) {
     panY = baseCenterY - centerY / newZoom;
 
     zoom = newZoom;
+
+    dirty.bg = true;
+    dirty.pf = true;
+    dirty.ui = true;
+
     requestRedraw();
 }
 
@@ -1314,6 +1339,8 @@ async function findPath() {
 
         checkNeighbors(gScore, fScore, cameFrom);
 
+        // Update display using proper redraw
+        dirty.pf = true;
         requestRedraw();
         document.getElementById('infoPanel').textContent =
             `A* running... Current: ${here} | Open: ${openSet.size} | Closed: ${closedSet.size}`;
@@ -1332,6 +1359,8 @@ async function findPath() {
     isPathfinding = false;
     document.getElementById('findPathBtn').disabled = false;
     console.timeEnd('findPath()');
+
+    dirty.pf = true;
     requestRedraw();
 }
 
@@ -1348,9 +1377,93 @@ window.addEventListener('load', () => {
     document.getElementById('zoomInBtn').addEventListener('click', zoomIn);
     document.getElementById('zoomOutBtn').addEventListener('click', zoomOut);
     document.getElementById('fitViewBtn').addEventListener('click', fitToView);
+
+    document.getElementById('showBackground').addEventListener('change', (e) => {
+        canvas.bg.style.display = e.target.checked ? 'block' : 'none';
+    });
+
+    document.getElementById('showPathfinding').addEventListener('change', (e) => {
+        canvas.pf.style.display = e.target.checked ? 'block' : 'none';
+    });
+
+    document.getElementById('showUI').addEventListener('change', (e) => {
+        canvas.ui.style.display = e.target.checked ? 'block' : 'none';
+    });
+
     loadMap();
 });
 
 window.addEventListener('resize', () => {
-    resizeCanvas();
+    resizeCanvases();
 });
+
+function renderBackgroundLayer() {
+    console.time('renderBackgroundLayer()');
+    const ctx = context.bg;
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.bg.width, canvas.bg.height);
+
+    // Background using theme color
+    ctx.fillStyle = getColor('background');
+    ctx.fillRect(0, 0, canvas.bg.width, canvas.bg.height);
+
+    // Apply transform
+    applyCanvasTransform(ctx);
+
+    // Draw static elements
+    const streetCounts = drawStreets(ctx);
+    const visibleJunctions = drawJunctions(ctx);
+    const schoolCount = drawSchools(ctx);
+    const addressCount = drawAddresses(ctx);
+    drawStreetNames(ctx);
+
+    // Reset transform
+    resetCanvasTransform(ctx);
+
+    dirty.bg = false;
+    console.timeEnd('renderBackgroundLayer()');
+}
+
+function renderPathfindingLayer() {
+    const ctx = context.pf;
+    //console.time('renderPathfindingLayer()');
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.pf.width, canvas.pf.height);
+
+    // Apply transform
+    applyCanvasTransform(ctx);
+
+    // Draw pathfinding visualization
+    drawPathSearch(ctx);
+    drawPath(ctx);
+
+    // Reset transform
+    resetCanvasTransform(ctx);
+
+    dirty.pf = false;
+    //console.timeEnd('renderPathfindingLayer()');
+}
+
+function renderUILayer() {
+    const ctx = context.ui;
+    //console.time('renderUILayer()');
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.ui.width, canvas.ui.height);
+
+    // Apply transform
+    applyCanvasTransform(ctx);
+
+    // Draw UI elements
+    drawJunctionStart(ctx);
+    drawJunctionEnd(ctx);
+    drawJunctionLabels(ctx);
+
+    // Reset transform
+    resetCanvasTransform(ctx);
+
+    dirty.ui = false;
+    //console.timeEnd('renderUILayer()');
+}
