@@ -1007,28 +1007,20 @@ function handleMouseUp(e) {
     // Don't reset hasSignificantlyDragged here - let handleClick check it
 }
 
-function handleWheel(e) {
-    e.preventDefault();
-
-    // Zoom toward mouse position
-    const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+function zoomCanvas(x, y, zoomFactor) {
     const newZoom = Math.max(minZoom, Math.min(maxZoom, zoom * zoomFactor));
-
-    // Use canvas.ui for measurements since it's the interaction layer
-    const rect = canvas.ui.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
+    if (newZoom === zoom) return;
 
     // Reverse the coordinate transformation to find where the mouse points in
     // the "base" coordinate space (before zoom/pan).
 
     // First, reverse the zoom transformation
-    const baseMouseX = mouseX / newZoom - panX;
-    const baseMouseY = mouseY / newZoom - panY;
+    const baseX = x / newZoom - panX;
+    const baseY = y / newZoom - panY;
 
-    // Pan baseMouseX,baseMouseY to mouseX,mouseY after zoom
-    panX = mouseX / zoom - baseMouseX;
-    panY = mouseY / zoom - baseMouseY;
+    // Pan baseX,baseY to x,y after zoom
+    panX = x / zoom - baseX;
+    panY = y / zoom - baseY;
 
     zoom = newZoom;
 
@@ -1037,6 +1029,20 @@ function handleWheel(e) {
     dirty.ui = true;
 
     requestRedraw();
+}
+
+function handleWheel(e) {
+    e.preventDefault();
+
+    // Zoom toward mouse position
+    const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+
+    // Use canvas.ui for measurements since it's the interaction layer
+    const rect = canvas.ui.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    zoomCanvas(mouseX, mouseY, zoomFactor);
 }
 
 function handleClick(e) {
