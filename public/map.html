@@ -69,10 +69,23 @@
             <option value="200">Very Slow</option>
         </select>
     </label>
+
+    <div class="layer-controls">
+        <label><input type="checkbox" id="showBackground" checked> Background</label>
+        <label><input type="checkbox" id="showPathfinding" checked> Pathfinding</label>
+        <label><input type="checkbox" id="showUI" checked> UI</label>
+    </div>
 </div>
 
 <div class="map-container">
-    <canvas id="mapCanvas"></canvas>
+    <!-- Layer 0: Background (streets, junctions, schools) -->
+    <canvas id="bgCanvas" class="canvas-layer" style="z-index: 1;"></canvas>
+
+    <!-- Layer 1: Pathfinding visualization (open/closed sets, current node, path) -->
+    <canvas id="pfCanvas" class="canvas-layer" style="z-index: 2;"></canvas>
+
+    <!-- Layer 2: UI elements (start/end markers, labels) -->
+    <canvas id="uiCanvas" class="canvas-layer" style="z-index: 3;"></canvas>
 </div>
 
 <div class="legend">
