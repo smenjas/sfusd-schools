@@ -1,4 +1,6 @@
 import { formatStreet } from './address.js';
+import { stripTags } from './html.js';
+import { describePath } from './path.js';
 import addressData from './address-data.js';
 import junctions from './junctions.js';
 import schoolData from './school-data.js';
@@ -1343,6 +1345,8 @@ function reconstructPath(cameFrom) {
     }
 
     console.log(`Path reconstructed: ${path.join(' -> ')} (${path.length} nodes)`);
+    const description = stripTags(describePath(addressData, junctions, path));
+    console.log(description);
 
     // Optional: Check if we actually reached the start
     if (path[0] !== start) {
