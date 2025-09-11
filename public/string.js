@@ -69,6 +69,9 @@ export function compressWhitespace(str) {
  * @returns {string} An encoded string of characters
  */
 export function encode(str) {
+    if (typeof str !== 'string') {
+        return str;
+    }
     str = str.toString();
     str = str.replaceAll('&', '&amp;');
     str = str.replaceAll('>', '&gt;');
@@ -86,6 +89,9 @@ export function encode(str) {
  * @returns {string} The input string with unsafe characters encoded
  */
 export function encodeURLParam(value, allowCommas = false, maxLength = 255) {
+    if (typeof value !== 'string') {
+        return value;
+    }
     value = value.substring(0, maxLength);
     value = encodeURIComponent(value).replaceAll('%20', '+');
     if (allowCommas) {
