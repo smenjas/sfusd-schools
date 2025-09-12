@@ -42,6 +42,7 @@ const colors = {
         schools: '#f44', // Red
         streets: '#bbb', // Light Gray
         oneWays: '#7f7f7f', // Gray
+        arrows: '#4f4f4f', // Dark Gray
         junctions: '#ccc', // Light Gray
         start: '#28a745', // Green
         end: '#dc3545', // Red
@@ -55,7 +56,8 @@ const colors = {
         background: '#000', // Black
         schools: '#f44', // Red
         streets: '#444', // Dark Gray
-        oneWays: '#999', // Light Gray
+        oneWays: '#7f7f7f', // Gray
+        arrows: '#afafaf', // Lightish Gray
         junctions: '#333', // Dark Gray
         start: '#4ade80', // Green
         end: '#f87171', // Salmon
@@ -256,7 +258,7 @@ function isOneWayStreet(fromCNN, toCNN) {
 
 function drawArrow(ctx, x1, y1, x2, y2, color) {
     const arrowLength = 3;
-    const arrowAngle = Math.PI / 6;
+    const arrowAngle = Math.PI / 7;
 
     const dx = x2 - x1;
     const dy = y2 - y1;
@@ -264,8 +266,8 @@ function drawArrow(ctx, x1, y1, x2, y2, color) {
 
     if (length < arrowLength * 2) return;
 
-    const arrowX = x1 + dx * 0.75;
-    const arrowY = y1 + dy * 0.75;
+    const arrowX = x1 + dx * 0.9;
+    const arrowY = y1 + dy * 0.9;
     const angle = Math.atan2(dy, dx);
 
     ctx.fillStyle = color;
@@ -573,7 +575,7 @@ function drawStreets(ctx) {
             oneWaySegments.forEach(segment => {
                 const [fromX, fromY] = junctions[segment.fromCNN].screen;
                 const [toX, toY] = junctions[segment.toCNN].screen;
-                drawArrow(ctx, fromX, fromY, toX, toY, getColor('oneWays'));
+                drawArrow(ctx, fromX, fromY, toX, toY, getColor('arrows'));
             });
         }
     }
