@@ -13,6 +13,10 @@ let zoom = 1;
 const minZoom = 1.0;
 const maxZoom = 100;
 let panX = 0, panY = 0;
+let lastPanX = 0, lastPanY = 0, lastZoom = 1;
+let coordinatesCached = false;
+let animationFrameId = null;
+let needsRedraw = false;
 let isDragging = false;
 let hasSignificantlyDragged = false;
 let lastMouseX = 0, lastMouseY = 0;
@@ -496,7 +500,7 @@ function drawStreets() {
 
             const [x2, y2] = junctions[adjCNN].screen;
 
-            if (!segmentIsVisible(x1, y1, x2, y2)) continue;
+            if (!segmentIsVisible(x1, y1, x2, y2, 200)) continue;
             streetCount++;
 
             // Check if this is a one-way street
@@ -716,6 +720,17 @@ function drawPath() {
     ctx.stroke();
 }
 
+// Throttled redraw using requestAnimationFrame
+function requestRedraw() {
+    if (!needsRedraw) {
+        needsRedraw = true;
+        animationFrameId = requestAnimationFrame(() => {
+            drawMap();
+            needsRedraw = false;
+        });
+    }
+}
+
 function padCoord(coord) {
     // Pad coordinates to 5 digits with trailing zeros
     return parseInt(coord.toString().padEnd(5, '0'));
@@ -735,11 +750,30 @@ function postprocessAddresses() {
 
 function postprocessJunctions() {
     // Calculate the screen coordinates for each junction.
+    // Only recalculate if pan/zoom changed significantly
     //console.time('postprocessJunctions()');
+    const panThreshold = 0.5;
+    const zoomThreshold = 0.001;
+
+    if (coordinatesCached &&
+        Math.abs(panX - lastPanX) < panThreshold &&
+        Math.abs(panY - lastPanY) < panThreshold &&
+        Math.abs(zoom - lastZoom) < zoomThreshold) {
+        //console.timeEnd('postprocessJunctions()');
+        return; // Use cached coordinates
+    }
+
+    // Calculate screen coordinates for each junction
     for (const cnn in junctions) {
         const [lat, lon] = junctions[cnn].ll;
         junctions[cnn].screen = coordsToScreen(lat, lon);
     }
+
+    // Cache current transform state
+    lastPanX = panX;
+    lastPanY = panY;
+    lastZoom = zoom;
+    coordinatesCached = true;
     //console.timeEnd('postprocessJunctions()');
 }
 
@@ -841,7 +875,7 @@ function resizeCanvas() {
         panY += (newCenterY - newCenterScreenY) / zoom;
     }
 
-    drawMap();
+    requestRedraw();
 }
 
 function loadMap() {
@@ -950,7 +984,7 @@ function handleMouseMove(e) {
     lastMouseX = e.offsetX;
     lastMouseY = e.offsetY;
 
-    drawMap();
+    requestRedraw();
 }
 
 function handleMouseUp(e) {
@@ -981,7 +1015,7 @@ function handleWheel(e) {
     panY = mouseY / zoom - baseMouseY;
 
     zoom = newZoom;
-    drawMap();
+    requestRedraw();
 }
 
 function handleClick(e) {
@@ -1070,7 +1104,7 @@ function handleTouchMove(e) {
         lastMouseX = coords.x;
         lastMouseY = coords.y;
 
-        drawMap();
+        requestRedraw();
     } else if (e.touches.length === 2 && isPinching) {
         // Two touch pinch-to-zoom
         const touch1 = e.touches[0];
@@ -1093,7 +1127,7 @@ function handleTouchMove(e) {
             panY = baseCenterY - currentCenter.y / newZoom;
 
             zoom = newZoom;
-            drawMap();
+            requestRedraw();
         }
     }
 }
