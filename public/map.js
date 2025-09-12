@@ -956,8 +956,6 @@ function setupEventListeners() {
 
     // Mouse events for pan/zoom
     topCanvas.addEventListener('mousedown', handleMouseDown);
-    topCanvas.addEventListener('mousemove', handleMouseMove);
-    topCanvas.addEventListener('mouseup', handleMouseUp);
     topCanvas.addEventListener('wheel', handleWheel);
     topCanvas.addEventListener('click', handleClick);
 
@@ -970,18 +968,30 @@ function setupEventListeners() {
 
 function handleMouseDown(e) {
     isDragging = true;
-    hasSignificantlyDragged = false; // Reset drag tracking
+    hasSignificantlyDragged = false;
     lastMouseX = e.offsetX;
     lastMouseY = e.offsetY;
+
+    // Add document-level listeners to handle mouse events outside the canvas
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    // Prevent text selection while dragging
+    e.preventDefault();
 }
 
 function handleMouseMove(e) {
     if (!isDragging) return;
 
-    const deltaX = e.offsetX - lastMouseX;
-    const deltaY = e.offsetY - lastMouseY;
+    // Get canvas position to calculate relative coordinates
+    const rect = canvas.ui.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
 
-    // Track if significant movement occurred (more than 3 pixels)
+    const deltaX = mouseX - lastMouseX;
+    const deltaY = mouseY - lastMouseY;
+
+    // Track if significant movement occurred
     if (Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3) {
         hasSignificantlyDragged = true;
     }
@@ -989,16 +999,21 @@ function handleMouseMove(e) {
     panX -= deltaX / zoom;
     panY -= deltaY / zoom;
 
-    lastMouseX = e.offsetX;
-    lastMouseY = e.offsetY;
+    lastMouseX = mouseX;
+    lastMouseY = mouseY;
 
     markAllLayersDirty();
     requestRedraw();
 }
 
 function handleMouseUp(e) {
-    isDragging = false;
-    // Don't reset hasSignificantlyDragged here - let handleClick check it
+    if (isDragging) {
+        isDragging = false;
+
+        // Remove document-level listeners
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+    }
 }
 
 function zoomCanvas(x, y, zoomFactor) {
