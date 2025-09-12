@@ -1011,10 +1011,6 @@ function zoomCanvas(x, y, zoomFactor) {
     const newZoom = Math.max(minZoom, Math.min(maxZoom, zoom * zoomFactor));
     if (newZoom === zoom) return;
 
-    if (newZoom === zoom) {
-        return;
-    }
-
     // Reverse the coordinate transformation to find where the mouse points in
     // the "base" coordinate space (before zoom/pan).
 
@@ -1205,27 +1201,9 @@ function selectJunction(cnn) {
 }
 
 function zoomTowardCenter(zoomFactor) {
-    const newZoom = Math.max(minZoom, Math.min(maxZoom, zoom * zoomFactor));
-    if (newZoom === zoom) return;
-
     const centerX = canvas.ui.width / 2;
     const centerY = canvas.ui.height / 2;
-
-    // Find what base coordinates the center currently shows
-    const baseCenterX = centerX / zoom + panX;
-    const baseCenterY = centerY / zoom + panY;
-
-    // After zoom, adjust pan so that same base point appears at center
-    panX = baseCenterX - centerX / newZoom;
-    panY = baseCenterY - centerY / newZoom;
-
-    zoom = newZoom;
-
-    dirty.bg = true;
-    dirty.pf = true;
-    dirty.ui = true;
-
-    requestRedraw();
+    zoomCanvas(centerX, centerY, zoomFactor);
 }
 
 function zoomIn() {
