@@ -13,8 +13,8 @@ import { getPathWaypoints,
 import Test from '../scripts/test.js';
 
 const addrs = {
-    'BURROWS ST': { '423': [7278, 4073] },
-    'GIRARD ST': { '350': [7278, 4055] },
+    'BURROWS ST': { '423': [72783, 40733] },
+    'GIRARD ST': { '350': [72777, 40549] },
 };
 
 const jcts = {
@@ -27,12 +27,12 @@ const jcts = {
 const path = [20889, 20653, 20652, 20638];
 
 const wpts = [
-    { ll: ['37.7278', '-122.4073'], name: 1, description: '423 Burrows St', sym: 'Start' },
+    { ll: ['37.72783', '-122.40733'], name: 1, description: '423 Burrows St', sym: 'Start' },
     { ll: ['37.72806', '-122.40706'], name: 2, description: 'Burrows St & Goettingen St', sym: 'Intersection' },
     { ll: ['37.72832', '-122.40608'], name: 3, description: 'Brussels St & Burrows St', sym: 'Intersection' },
     { ll: ['37.72857', '-122.40509'], name: 4, description: 'Burrows St & Girard St', sym: 'Intersection' },
     { ll: ['37.72737', '-122.40459'], name: 5, description: 'Bacon St & Girard St', sym: 'Intersection' },
-    { ll: ['37.7278', '-122.4055'], name: 6, description: '350 Girard St', sym: 'End' }
+    { ll: ['37.72777', '-122.40549'], name: 6, description: '350 Girard St', sym: 'End' }
 ];
 
 const line = `  <Placemark>
@@ -42,12 +42,12 @@ const line = `  <Placemark>
       <extrude>1</extrude>
       <tessellate>1</tessellate>
       <coordinates>
-        -122.4073,37.7278,0
+        -122.40733,37.72783,0
         -122.40706,37.72806,0
         -122.40608,37.72832,0
         -122.40509,37.72857,0
         -122.40459,37.72737,0
-        -122.4055,37.7278,0
+        -122.40549,37.72777,0
       </coordinates>
     </LineString>
   </Placemark>\n`;
@@ -61,7 +61,7 @@ const kml = `<?xml version="1.0" encoding="UTF-8"?>
     <name>1</name>
     <description>423 Burrows St</description>
     <sym>Start</sym>
-    <Point><coordinates>-122.4073,37.7278,0</coordinates></Point>
+    <Point><coordinates>-122.40733,37.72783,0</coordinates></Point>
   </Placemark>
   <Placemark>
     <name>2</name>
@@ -91,7 +91,7 @@ const kml = `<?xml version="1.0" encoding="UTF-8"?>
     <name>6</name>
     <description>350 Girard St</description>
     <sym>End</sym>
-    <Point><coordinates>-122.4055,37.7278,0</coordinates></Point>
+    <Point><coordinates>-122.40549,37.72777,0</coordinates></Point>
   </Placemark>
 ${line}</Document>
 </kml>`;

@@ -13,8 +13,8 @@ import { describePath,
 import Test from '../scripts/test.js';
 
 const addrs = {
-    'BURROWS ST': { '423': [7278, 4073] },
-    'GIRARD ST': { '350': [7278, 4055] },
+    'BURROWS ST': { '423': [72783, 40733] },
+    'GIRARD ST': { '350': [72777, 40549] },
 };
 
 const jcts = {
@@ -38,12 +38,12 @@ const start = '423 Burrows St';
 const end = '350 Girard St';
 const school = { name: 'King', types: ['Middle'], address: end };
 const schools = [school];
-const distance = 0.28036880566031713;
+const distance = 0.2783019228297766;
 const distances = { '350 GIRARD ST': distance };
 
 const maps = '<a target="_blank" href="https://www.google.com/maps/';
 let html = `<ol><li>Go <span title="71°">E</span> on ${maps}search/37.72806,-122.40706">Burrows St</a> 0.2 mi.</li>`;
-html += `<li>Go <span title="162°">S</span> on ${maps}search/37.72857,-122.40509">Girard St</a> 305 ft.</li>`;
+html += `<li>Go <span title="162°">S</span> on ${maps}search/37.72857,-122.40509">Girard St</a> 297 ft.</li>`;
 html += `<li>Arrive at ${maps}search/350+Girard+St">350 Girard St</a></li></ol>`;
 html += `<p>Total: 0.3 mi. &#x1F6B6; Walkable</p>`;
 html += `<p>${maps}dir/423+Burrows+St/350+Girard+St">Google Maps directions</a></p>`;
