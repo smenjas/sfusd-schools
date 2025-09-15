@@ -5,6 +5,7 @@ import { describePath } from './path.js';
 import addressData from './address-data.js';
 import junctions from './junctions.js';
 import schools from './school-data.js';
+import segmentData from './segments.js';
 
 // Map state
 let bounds;
@@ -257,7 +258,7 @@ function isOneWayStreet(fromCNN, toCNN) {
     return fromHasTo && !toHasFrom;
 }
 
-function drawArrow(ctx, x1, y1, x2, y2, color) {
+function drawArrow(ctx, x1, y1, x2, y2) {
     const arrowLength = Math.max(1, 25 / zoom);
     const arrowAngle = Math.PI / 7;
 
@@ -276,7 +277,7 @@ function drawArrow(ctx, x1, y1, x2, y2, color) {
     const angle = Math.atan2(dy, dx);
 
     // Draw arrow head
-    ctx.fillStyle = color;
+    ctx.fillStyle = getColor('arrows');
     ctx.lineWidth = Math.min(1, 25 / zoom);
 
     ctx.beginPath();
@@ -418,17 +419,13 @@ function drawStreetNames(ctx) {
             drawnStreets.add(key);
 
             if (!segments[key].street.length) continue;
-
-            const [x2, y2] = junctions[adjCNN].screen;
-
-            if (!segmentIsVisible(x1, y1, x2, y2)) {
-                continue;
-            }
+            if (!segmentIsVisible(cnn, adjCNN)) continue;
 
             const street = segments[key].street;
             if (!streetSegments.has(street)) {
                 streetSegments.set(street, []);
             }
+            const [x2, y2] = junctions[adjCNN].screen;
             streetSegments.get(street).push({
                 x1, y1, x2, y2,
                 length: coordsDistance([y1, x1], [y2, x2])
@@ -453,6 +450,7 @@ function drawStreetNames(ctx) {
 }
 
 function drawStreetNameOnSegment(ctx, street, segment) {
+    // FIXME: Take into account segment curves.
     const { x1, y1, x2, y2 } = segment;
 
     // Calculate midpoint
@@ -507,7 +505,7 @@ function lineIntersectsRect(x1, y1, x2, y2, rectLeft, rectTop, rectRight, rectBo
     );
 }
 
-function segmentIsVisible(x1, y1, x2, y2, margin = 100) {
+function lineIsVisible(x1, y1, x2, y2, margin = 100) {
     // Check if line segment intersects with viewport (including margin)
     const transformedMargin = margin / zoom;
     const rectLeft = panX - transformedMargin;
@@ -518,12 +516,49 @@ function segmentIsVisible(x1, y1, x2, y2, margin = 100) {
     return lineIntersectsRect(x1, y1, x2, y2, rectLeft, rectTop, rectRight, rectBottom);
 }
 
+function segmentIsVisible(cnn1, cnn2, margin) {
+    const [x1, y1] = junctions[cnn1].screen;
+    const [x2, y2] = junctions[cnn2].screen;
+    const key = [cnn1, cnn2].sort().join('-');
+    if (!(key in segments)) {
+        return lineIsVisible(x1, y1, x2, y2, margin);
+    }
+    const pairs = segments[key].screen;
+    pairs.push([x2, y2]);
+    let x, y, fro = [x1, x2];
+    for ([x, y] of pairs) {
+        if (lineIsVisible(fro[0], fro[1], x, y, margin)) {
+            return true;
+        }
+        fro = [x, y];
+    }
+    return false;
+}
+
+function drawSegment(ctx, cnn1, cnn2, oneWay = false) {
+    const key = [cnn1, cnn2].sort().join('-');
+    const [x1, y1] = junctions[cnn1].screen;
+    let penultimatePair = junctions[cnn1].screen;
+    ctx.moveTo(x1, y1);
+    if (key in segments) {
+        const pairs = segments[key].screen;
+        for (const [x, y] of pairs) {
+            ctx.lineTo(x, y);
+        }
+        penultimatePair = pairs.at(-1);
+    }
+    const [x2, y2] = junctions[cnn2].screen;
+    ctx.lineTo(x2, y2);
+    return penultimatePair;
+}
+
 function drawStreets(ctx) {
     //console.time('drawStreets()');
     let streetCount = 0;
 
     // 1st pass: Draw regular two-way streets
     ctx.strokeStyle = getColor('streets');
+    ctx.lineJoin = 'round';
     ctx.lineWidth = Math.min(1, 25 / zoom);
     ctx.beginPath();
 
@@ -540,23 +575,19 @@ function drawStreets(ctx) {
             if (drawnConnections.has(key)) continue;
             drawnConnections.add(key);
 
-            const [x2, y2] = junctions[adjCNN].screen;
-
-            if (!segmentIsVisible(x1, y1, x2, y2, 200)) continue;
+            if (!segmentIsVisible(cnn, adjCNN, 200)) continue;
             streetCount++;
 
             // Check if this is a one-way street
             if (segments[key].to) {
                 // Store one-way segment for later drawing
                 oneWaySegments.push({
-                    x1, y1, x2, y2,
                     fromCNN: segments[key].to === cnn ? adjCNN : cnn,
                     toCNN: segments[key].to === cnn ? cnn : adjCNN
                 });
             } else {
                 // Regular two-way street
-                ctx.moveTo(x1, y1);
-                ctx.lineTo(x2, y2);
+                drawSegment(ctx, cnn, adjCNN);
             }
         }
     });
@@ -570,8 +601,8 @@ function drawStreets(ctx) {
         ctx.beginPath();
 
         oneWaySegments.forEach(segment => {
-            ctx.moveTo(segment.x1, segment.y1);
-            ctx.lineTo(segment.x2, segment.y2);
+            // Get the second to last pair of screen coordinates in the segment line.
+            segment.pair = drawSegment(ctx, segment.fromCNN, segment.toCNN, true);
         });
 
         ctx.stroke();
@@ -580,9 +611,9 @@ function drawStreets(ctx) {
         if (zoom > 2) {
             oneWaySegments.forEach(segment => {
                 // Determine arrow direction based on which junction points to which
-                const [fromX, fromY] = junctions[segment.fromCNN].screen;
+                const [fromX, fromY] = segment.pair;
                 const [toX, toY] = junctions[segment.toCNN].screen;
-                drawArrow(ctx, fromX, fromY, toX, toY, getColor('arrows'));
+                drawArrow(ctx, fromX, fromY, toX, toY);
             });
         }
     }
@@ -793,6 +824,20 @@ function postprocessSchools() {
     //console.timeEnd('postprocessSchools()');
 }
 
+function postprocessSegments() {
+    // Calculate the screen coordinates for each segment.
+    //console.time('postprocessSegments()');
+    for (const key in segments) {
+        segments[key].screen = [];
+        for (const coords of segments[key].line) {
+            const [lat, lon] = coords;
+            const [x, y] = coordsToScreen(lat, lon);
+            segments[key].screen.push(coordsToScreen(lat, lon));
+        }
+    }
+    //console.timeEnd('postprocessSegments()');
+}
+
 function preprocessAddresses() {
     //console.time('preprocessAddresses()');
     Object.entries(addressData).forEach(([street, numbers]) => {
@@ -805,6 +850,16 @@ function preprocessAddresses() {
     //console.timeEnd('preprocessAddresses()');
 }
 
+function preprocessSegmentLine(lls) {
+    if (!lls) return [];
+    const line = [];
+    for (const ll of lls) {
+        // Convert decimals to full geographic coordinates.
+        line.push(expandCoords(ll));
+    }
+    return line;
+}
+
 function preprocessSegment(cnn, adjCNN) {
     if (!junctions[adjCNN]) return;
 
@@ -813,6 +868,7 @@ function preprocessSegment(cnn, adjCNN) {
 
     const segment = {
         street: '',
+        line: preprocessSegmentLine(segmentData[key]),
         to: null
     };
 
@@ -838,10 +894,9 @@ function preprocessSegment(cnn, adjCNN) {
 function preprocessJunctions() {
     //console.time('preprocessJunctions()');
     Object.entries(junctions).forEach(([cnn, junction]) => {
-        const [latDec, lonDec] = junction.ll;
+        // Convert decimals to full geographic coordinates.
         junctions[cnn] = {
             ...junction,
-            // Convert decimals to full geographic coordinates.
             ll: expandCoords(junction.ll)
         };
         for (const adjCNN of junction.adj) {
@@ -890,6 +945,7 @@ function resizeCanvases() {
     postprocessAddresses();
     postprocessJunctions();
     postprocessSchools();
+    postprocessSegments();
 
     // Step 5: Adjust pan to keep the same geographic center point centered
     if (bounds && centerLat !== undefined && centerLon !== undefined) {
