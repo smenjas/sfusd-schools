@@ -257,7 +257,7 @@ function isOneWayStreet(fromCNN, toCNN) {
 }
 
 function drawArrow(ctx, x1, y1, x2, y2, color) {
-    const arrowLength = 3;
+    const arrowLength = Math.max(1, 25 / zoom);
     const arrowAngle = Math.PI / 7;
 
     const dx = x2 - x1;
@@ -276,7 +276,7 @@ function drawArrow(ctx, x1, y1, x2, y2, color) {
 
     // Draw arrow head
     ctx.fillStyle = color;
-    ctx.lineWidth = 0.75;
+    ctx.lineWidth = Math.min(1, 25 / zoom);
 
     ctx.beginPath();
     // Arrow point
@@ -297,15 +297,15 @@ function drawArrow(ctx, x1, y1, x2, y2, color) {
 
 function drawAddresses(ctx) {
     // Only show addresses when zoomed in enough to be readable
-    if (zoom < 40) return 0;
+    if (zoom < 50) return 0;
 
     //console.time('drawAddresses()');
     ctx.lineJoin = 'round';
-    ctx.lineWidth = 0.02;
+    ctx.lineWidth = 2 / zoom;
     ctx.miterLimit = 3;
     ctx.fillStyle = getColor('text');
     ctx.strokeStyle = getColor('background');
-    ctx.font = `0.25px Arial`;
+    ctx.font = `${Math.min(0.18, 11 / zoom)}px Arial`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
@@ -365,12 +365,12 @@ function drawSchool(ctx, size, school) {
     // Draw school name when zoomed in enough
     ctx.fillStyle = getColor('text');
     ctx.strokeStyle = getColor('background');
-    ctx.font = '2.5px Arial';
+    ctx.font = `${Math.min(2, 24 / zoom)}px Arial`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
 
     const schoolName = `${school.prefix} ${school.name} ${school.suffix}`.trim();
-    const textY = y + size/2;
+    const textY = y + size/2.75;
     ctx.strokeText(schoolName, x, textY);
     ctx.fillText(schoolName, x, textY);
 
@@ -379,9 +379,9 @@ function drawSchool(ctx, size, school) {
 
 function drawSchools(ctx) {
     ctx.lineJoin = 'round';
-    ctx.lineWidth = 0.25;
+    ctx.lineWidth = 4 / zoom;
 
-    const size = 4;
+    const size = Math.min(1.5, 100 / zoom);
     let schoolCount = 0;
 
     schools.forEach(school => {
@@ -397,10 +397,10 @@ function drawStreetNames(ctx) {
     //console.time('drawStreetNames()');
     ctx.fillStyle = getColor('text');
     ctx.strokeStyle = getColor('background');
-    ctx.font = '1.5px Arial';
+    ctx.font = `${Math.min(1.5, 18 / zoom)}px Arial`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.lineWidth = 0.25;
+    ctx.lineWidth = 4 / zoom;
     ctx.lineJoin = 'round';
 
     const drawnStreets = new Set();
@@ -529,7 +529,7 @@ function drawStreets(ctx) {
 
     // 1st pass: Draw regular two-way streets
     ctx.strokeStyle = getColor('streets');
-    ctx.lineWidth = 1;
+    ctx.lineWidth = Math.min(1, 25 / zoom);
     ctx.beginPath();
 
     const drawnConnections = new Set();
@@ -574,7 +574,7 @@ function drawStreets(ctx) {
     // 2nd pass: Draw one-way streets in a different color
     if (oneWaySegments.length > 0) {
         ctx.strokeStyle = getColor('oneWays');
-        ctx.lineWidth = 1;
+        ctx.lineWidth = Math.min(1, 25 / zoom);
         ctx.beginPath();
 
         oneWaySegments.forEach(segment => {
@@ -617,7 +617,7 @@ function drawJunctionOutline(ctx, x, y, radius, color) {
 function drawJunctions(ctx) {
     //console.time('drawJunctions()');
     let junctionCount = 0;
-    const radius = 0.75;
+    const radius = Math.min(0.5, 20 / zoom);
 
     // 1st pass: Draw all gray/default junctions
     // Batch all gray junctions into a single path
@@ -646,7 +646,7 @@ function drawJunctions(ctx) {
 }
 
 function drawPathSearch(ctx) {
-    const radius = 0.75;
+    const radius = Math.min(0.5, 20 / zoom);
 
     // 2nd pass: Draw current node
     if (here && junctions[here]) {
@@ -694,7 +694,7 @@ function drawJunctionEnd(ctx) {
 }
 
 function drawJunctionLabels(ctx) {
-    if (zoom < 20) return;
+    if (zoom < 30) return;
 
     for (const cnn in junctions) {
         const [x, y] = junctions[cnn].screen;
@@ -702,11 +702,11 @@ function drawJunctionLabels(ctx) {
         if (invisible(x, y)) continue;
 
         ctx.lineJoin = 'round';
-        ctx.lineWidth = 0.1;
+        ctx.lineWidth = 2 / zoom;
         ctx.miterLimit = 3;
         ctx.fillStyle = getColor('text');
         ctx.strokeStyle = getColor('background');
-        ctx.font = '0.6px Arial';
+        ctx.font = `${Math.min(1, 12 / zoom)}px Arial`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.strokeText(cnn, x, y);
