@@ -1,10 +1,11 @@
 import { formatStreet } from './address.js';
-import { expandCoords } from './geo.js';
+import { expandCoords, howFar } from './geo.js';
 import { stripTags } from './html.js';
 import { describePath } from './path.js';
 import addressData from './address-data.js';
 import junctions from './junctions.js';
 import schools from './school-data.js';
+import segments from './segments.js';
 
 // Map state
 let bounds;
@@ -35,7 +36,7 @@ const tapThreshold = 10; // pixels
 const tapMaxDuration = 300; // milliseconds
 let theme = 'light';
 let addresses = {};
-let segments = {};
+let segmentJunctions = {};
 
 const colors = {
     light: {
@@ -386,54 +387,59 @@ function drawStreetNames(ctx) {
     ctx.lineWidth = 4 / zoom;
     ctx.lineJoin = 'round';
 
-    const drawnStreets = new Set();
     const streetSegments = new Map(); // street name -> array of segments
 
     // Collect street segments
-    for (const [cnn, junction] of Object.entries(junctions)) {
-        const [x1, y1] = junction.screen;
+    for (const [cnn, segment] of Object.entries(segments)) {
+        if (!segmentIsVisible(cnn, 0)) continue;
 
-        for (const adjCNN of junction.adj) {
-            if (!junctions[adjCNN]) continue;
-            const key = [cnn, adjCNN].sort().join('-');
-            if (drawnStreets.has(key)) continue;
-            drawnStreets.add(key);
-
-            if (!segments[key].street.length) continue;
-
-            const [x2, y2] = junctions[adjCNN].screen;
-
-            if (!segmentIsVisible(x1, y1, x2, y2, 0)) continue;
-
-            const street = segments[key].street;
-            if (!streetSegments.has(street)) {
-                streetSegments.set(street, []);
-            }
-            streetSegments.get(street).push({
-                x1, y1, x2, y2,
-                length: coordsDistance([y1, x1], [y2, x2])
-            });
+        const street = segments[cnn].street;
+        if (!streetSegments.has(street)) {
+            streetSegments.set(street, []);
         }
+        streetSegments.get(street).push({
+            cnn,
+            distance: segment.distance
+        });
     }
 
     // Draw street names on longest segments
-    streetSegments.forEach((segments, street) => {
+    streetSegments.forEach((blocks, street) => {
         // Find the longest segment for this street
-        const longestSegment = segments.reduce((longest, segment) =>
-            segment.length > longest.length ? segment : longest
+        const longestSegment = blocks.reduce((longest, segment) =>
+            segment.distance > longest.distance ? segment : longest
         );
 
         // Only draw if segment is long enough for text
         const textWidth = ctx.measureText(street).width;
-        if (longestSegment.length > textWidth / 2) {
-            drawStreetNameOnSegment(ctx, street, longestSegment);
+        const xy1 = segments[longestSegment.cnn].screen[0];
+        const xy2 = segments[longestSegment.cnn].screen.at(-1);
+        const length = coordsDistance(xy1, xy2);
+        if (length > textWidth / 2) {
+            drawStreetNameOnSegment(ctx, street, longestSegment.cnn);
         }
     });
     //console.timeEnd('  drawStreetNames()');
 }
 
-function drawStreetNameOnSegment(ctx, street, segment) {
-    const { x1, y1, x2, y2 } = segment;
+function drawStreetNameOnSegment(ctx, street, cnn) {
+    const segment = segments[cnn];
+    if (!segment) return;
+
+    const pairs = segment.screen;
+    let longest = -Infinity, longestIndex;
+    for (let i = 0; i < pairs.length - 1; i++) {
+        const length = coordsDistance(pairs[i], pairs[i + 1]);
+        if (length > longest) {
+            longest = length;
+            longestIndex = i;
+        }
+    }
+
+    if (!longestIndex) return;
+
+    const [x1, y1] = pairs[longestIndex];
+    const [x2, y2] = pairs[longestIndex + 1];
 
     // Calculate midpoint
     const midX = (x1 + x2) / 2;
@@ -487,7 +493,7 @@ function lineIntersectsRect(x1, y1, x2, y2, rectLeft, rectTop, rectRight, rectBo
     );
 }
 
-function segmentIsVisible(x1, y1, x2, y2, margin = 100) {
+function lineIsVisible(x1, y1, x2, y2, margin = 100) {
     // Check if line segment intersects with viewport (including margin)
     margin /= zoom;
     const canvas = canvases.bg;
@@ -499,6 +505,38 @@ function segmentIsVisible(x1, y1, x2, y2, margin = 100) {
     return lineIntersectsRect(x1, y1, x2, y2, rectLeft, rectTop, rectRight, rectBottom);
 }
 
+function segmentIsVisible(cnn, margin) {
+    const pairs = segments[cnn].screen;
+    if (pairs.length < 2) {
+        console.log('Segment', cnn, 'only has', pairs.length, 'coordinates:', pairs);
+        return false;
+    }
+    for (let i = 0; i < pairs.length - 1; i++) {
+        const [x1, y1] = pairs[i];
+        const [x2, y2] = pairs[i + 1];
+        if (lineIsVisible(x1, y1, x2, y2, margin)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function drawSegment(ctx, cnn) {
+    const segment = segments[cnn];
+    if (!segment?.screen.length) return;
+    const [x1, y1] = segment.screen[0];
+    ctx.moveTo(x1, y1);
+    const pairs = segment.screen;
+    for (let i = 1; i < pairs.length; i++) {
+        const [x, y] = pairs[i];
+        ctx.lineTo(x, y);
+    }
+}
+
+function createSegmentKey(cnn1, cnn2) {
+    return Math.min(cnn1, cnn2) + '-' + Math.max(cnn1, cnn2);
+}
+
 function drawStreets(ctx) {
     //console.time('  drawStreets()');
     let streetCount = 0;
@@ -507,39 +545,22 @@ function drawStreets(ctx) {
     //console.time('    drawStreets(): 2-way');
     ctx.strokeStyle = getColor('streets');
     ctx.lineWidth = Math.min(1, 25 / zoom);
+    ctx.lineJoin = 'round';
     ctx.beginPath();
 
-    const drawnConnections = new Set();
     const oneWaySegments = [];
 
-    Object.entries(junctions).forEach(([cnn, junction]) => {
-        const [x1, y1] = junction.screen;
+    Object.entries(segments).forEach(([cnn, segment]) => {
+        if (!segmentIsVisible(cnn, 200)) return;
+        streetCount++;
 
-        for (const adjCNN of junction.adj) {
-            if (!junctions[adjCNN]) continue;
-
-            const key = [cnn, adjCNN].sort().join('-');
-            if (drawnConnections.has(key)) continue;
-            drawnConnections.add(key);
-
-            const [x2, y2] = junctions[adjCNN].screen;
-
-            if (!segmentIsVisible(x1, y1, x2, y2, 200)) continue;
-            streetCount++;
-
-            // Check if this is a one-way street
-            if (segments[key].to) {
-                // Store one-way segment for later drawing
-                oneWaySegments.push({
-                    x1, y1, x2, y2,
-                    fromCNN: segments[key].to === cnn ? adjCNN : cnn,
-                    toCNN: segments[key].to === cnn ? cnn : adjCNN
-                });
-            } else {
-                // Regular two-way street
-                ctx.moveTo(x1, y1);
-                ctx.lineTo(x2, y2);
-            }
+        // Check if this is a one-way street
+        if (segment.to) {
+            // Store one-way segment for later drawing
+            oneWaySegments.push(cnn);
+        } else {
+            // Regular two-way street
+            drawSegment(ctx, cnn);
         }
     });
 
@@ -553,9 +574,8 @@ function drawStreets(ctx) {
         ctx.lineWidth = Math.min(1, 25 / zoom);
         ctx.beginPath();
 
-        oneWaySegments.forEach(segment => {
-            ctx.moveTo(segment.x1, segment.y1);
-            ctx.lineTo(segment.x2, segment.y2);
+        oneWaySegments.forEach(cnn => {
+            drawSegment(ctx, cnn);
         });
 
         ctx.stroke();
@@ -564,11 +584,18 @@ function drawStreets(ctx) {
         // Draw arrows on one-way streets (only when zoomed in enough)
         if (zoom > 2) {
             //console.time('    drawStreets(): 1-way arrows');
-            oneWaySegments.forEach(segment => {
+            oneWaySegments.forEach(cnn => {
                 // Determine arrow direction based on which junction points to which
-                const [fromX, fromY] = junctions[segment.fromCNN].screen;
-                const [toX, toY] = junctions[segment.toCNN].screen;
-                drawArrow(ctx, fromX, fromY, toX, toY, getColor('arrows'));
+                const segment = segments[cnn];
+                if (!segment || segment.screen.length < 2) {
+                    console.warn('Segment', cnn, 'only has', segment.screen.length, 'coordinates:', segment.screen);
+                    return;
+                }
+                const screen = Array.from(segment.screen);
+                if (segment.to === segment.f) screen.reverse();
+                const [x1, y1] = screen.at(-2);
+                const [x2, y2] = screen.at(-1);
+                drawArrow(ctx, x1, y1, x2, y2, getColor('arrows'));
             });
             //console.timeEnd('    drawStreets(): 1-way arrows');
         }
@@ -710,6 +737,11 @@ function renderLayer(key, draw) {
 
     resetCanvasTransform(ctx);
 
+    // Force canvas flush with getImageData
+    if (key === 'bg') {
+        ctx.getImageData(0, 0, 1, 1);
+    }
+
     dirty[key] = false;
     //console.timeEnd(`renderLayer(${key}, ...)`);
 }
@@ -786,12 +818,10 @@ function drawPath(ctx) {
     ctx.lineJoin = 'round';
     ctx.beginPath();
 
-    const [startX, startY] = junctions[path[0]].screen;
-    ctx.moveTo(startX, startY);
-
-    for (let i = 1; i < path.length; i++) {
-        const [x, y] = junctions[path[i]].screen;
-        ctx.lineTo(x, y);
+    for (let i = 0; i < path.length - 1; i++) {
+        const cnn1 = path[i], cnn2 = path[i + 1];
+        const cnn = segmentJunctions[cnn1][cnn2][0];
+        drawSegment(ctx, cnn);
     }
     ctx.stroke();
 }
@@ -851,6 +881,19 @@ function postprocessSchools() {
     //console.timeEnd('postprocessSchools()');
 }
 
+function postprocessSegments() {
+    // Calculate the screen coordinates for each segment.
+    //console.time('postprocessSegments()');
+    for (const cnn in segments) {
+        segments[cnn].screen = [];
+        for (const coords of segments[cnn].line) {
+            const [lat, lon] = coords;
+            segments[cnn].screen.push(coordsToScreen(lat, lon));
+        }
+    }
+    //console.timeEnd('postprocessSegments()');
+}
+
 function preprocessAddresses() {
     //console.time('preprocessAddresses()');
     Object.entries(addressData).forEach(([street, numbers]) => {
@@ -863,35 +906,63 @@ function preprocessAddresses() {
     //console.timeEnd('preprocessAddresses()');
 }
 
-function findCommonStreets(cnn1, cnn2) {
-    // Find common street names between the two junctions
-    return junctions[cnn1].streets.filter(street =>
-        junctions[cnn2].streets.includes(street)
-    );
-}
-
-function preprocessSegment(cnn, adjCNN) {
-    if (!junctions[adjCNN]) return;
-
-    const key = [cnn, adjCNN].sort().join('-');
-    if (key in segments) return;
-
-    segments[key] = {
-        street: findCommonStreets(cnn, adjCNN)[0],
-        to: isOneWaySegment(cnn, adjCNN),
-    };
-}
-
 function preprocessJunctions() {
     //console.time('preprocessJunctions()');
     Object.entries(junctions).forEach(([cnn, junction]) => {
         // Convert decimals to full geographic coordinates.
         junctions[cnn].ll = expandCoords(junction.ll);
-        for (const adjCNN of junction.adj) {
-            preprocessSegment(cnn, adjCNN);
-        }
     });
     //console.timeEnd('preprocessJunctions()');
+}
+
+function howFarSegment(cnn) {
+    const segment = segments[cnn];
+    if (!segment) return Infinity;
+    if (segment.line.length < 2) return 0;
+    let distance = 0;
+    for (let i = 0; i < segment.line.length - 1; i++) {
+        distance += howFar(segment.line[i], segment.line[i + 1]);
+    }
+    return distance;
+}
+
+function preprocessSegment(cnn) {
+    const segment = segments[cnn];
+    if (!segment) return;
+    const f = segment.f;
+    const t = segment.t;
+
+    // Convert decimals to full geographic coordinates.
+    for (let i = 0; i < segment.line.length; i++) {
+        segment.line[i] = expandCoords(segment.line[i]);
+    }
+
+    // Allow fast segment lookup by junction CNN.
+    if (!segmentJunctions[f]) {
+        segmentJunctions[f] = {};
+    }
+    if (!segmentJunctions[f][t]) {
+        segmentJunctions[f][t] = [];
+    }
+    segmentJunctions[f][t].push(cnn);
+    if (!segmentJunctions[t]) {
+        segmentJunctions[t] = {};
+    }
+    if (!segmentJunctions[t][f]) {
+        segmentJunctions[t][f] = [];
+    }
+    segmentJunctions[t][f].push(cnn);
+
+    segment.to = isOneWaySegment(f, t);
+    segment.distance = howFarSegment(cnn);
+}
+
+function preprocessSegments() {
+    //console.time('preprocessSegments()');
+    for (const cnn in segments) {
+        preprocessSegment(cnn);
+    }
+    //console.timeEnd('preprocessSegments()');
 }
 
 function resizeCanvases() {
@@ -935,9 +1006,12 @@ function resizeCanvases() {
     }
 
     // Step 4: Update screen coordinates when bounds change (not on every pan/zoom).
+    //console.time('Postprocess data (update screen coordinates)');
     postprocessAddresses();
     postprocessJunctions();
     postprocessSchools();
+    postprocessSegments();
+    //console.timeEnd('Postprocess data (update screen coordinates)');
 
     // Step 5: Adjust pan to keep the same geographic center point centered
     if (bounds && centerLat !== undefined && centerLon !== undefined) {
@@ -955,6 +1029,7 @@ function resizeCanvases() {
 
 function loadMap() {
     console.time('loadMap()');
+    const contextOptions = { willReadFrequently: true };
     for (const key in canvases) {
         const id = `${key}Canvas`;
         canvases[key] = document.getElementById(id);
@@ -963,7 +1038,7 @@ function loadMap() {
             log("Cannot find canvas: " + id);
             return;
         }
-        contexts[key] = canvases[key].getContext('2d');
+        contexts[key] = canvases[key].getContext('2d', contextOptions);
         if (!contexts[key]) {
             info('Oh no! Can\'t draw the map, sorry.');
             log("Cannot get context for: " + id);
@@ -971,8 +1046,11 @@ function loadMap() {
         }
     }
 
+    //console.time('Preprocess data');
     preprocessJunctions();
+    preprocessSegments();
     preprocessAddresses();
+    //console.timeEnd('Preprocess data');
 
     // Must calculate map boundaries before calling resizeCanvases().
     bounds = calculateBounds();
