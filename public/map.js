@@ -33,6 +33,7 @@ const tapMaxDuration = 300; // milliseconds
 let theme = 'light';
 let addresses = {};
 let schools = [];
+let segments = {};
 
 const colors = {
     light: {
@@ -376,18 +377,13 @@ function drawStreetNames() {
             if (drawnStreets.has(key)) continue;
             drawnStreets.add(key);
 
-            // Find common street names between the two junctions
-            const commonStreets = junction.streets.filter(street =>
-                junctions[adjCNN].streets.includes(street)
-            );
-
-            if (!commonStreets.length) continue;
+            if (!segments[key].street.length) continue;
 
             const [x2, y2] = junctions[adjCNN].screen;
 
             if (!segmentIsVisible(x1, y1, x2, y2, 0)) continue;
 
-            const street = commonStreets[0]; // Use first common street
+            const street = segments[key].street;
             if (!streetSegments.has(street)) {
                 streetSegments.set(street, []);
             }
@@ -507,15 +503,12 @@ function drawStreets() {
             streetCount++;
 
             // Check if this is a one-way street
-            const isOneWayFromTo = isOneWayStreet(cnn, adjCNN);
-            const isOneWayToFrom = isOneWayStreet(adjCNN, cnn);
-
-            if (isOneWayFromTo || isOneWayToFrom) {
+            if (segments[key].to) {
                 // Store one-way segment for later drawing
                 oneWaySegments.push({
                     x1, y1, x2, y2,
-                    fromCNN: isOneWayFromTo ? cnn : adjCNN,
-                    toCNN: isOneWayFromTo ? adjCNN : cnn
+                    fromCNN: segments[key].to === cnn ? adjCNN : cnn,
+                    toCNN: segments[key].to === cnn ? cnn : adjCNN
                 });
             } else {
                 // Regular two-way street
@@ -811,6 +804,36 @@ function preprocessAddresses() {
     //console.timeEnd('preprocessAddresses()');
 }
 
+function preprocessSegment(cnn, adjCNN) {
+    if (!junctions[adjCNN]) return;
+
+    const key = [cnn, adjCNN].sort().join('-');
+    if (key in segments) return;
+
+    const segment = {
+        street: '',
+        to: null
+    };
+
+    // Check if this is a one-way street
+    const isOneWayFromTo = isOneWayStreet(cnn, adjCNN);
+    const isOneWayToFrom = isOneWayStreet(adjCNN, cnn);
+
+    if (isOneWayFromTo || isOneWayToFrom) {
+        segment.to = isOneWayFromTo ? adjCNN : cnn;
+    }
+
+    // Find common street names between the two junctions
+    const commonStreets = junctions[cnn].streets.filter(street =>
+        junctions[adjCNN].streets.includes(street)
+    );
+    if (commonStreets.length) {
+        segment.street = commonStreets[0]; // Use first common street
+    }
+
+    segments[key] = segment;
+}
+
 function preprocessJunctions() {
     //console.time('preprocessJunctions()');
     Object.entries(junctions).forEach(([cnn, junction]) => {
@@ -819,6 +842,9 @@ function preprocessJunctions() {
             ...junction,
             ll: [padCoord(lat), padCoord(lon)]
         };
+        for (const adjCNN of junction.adj) {
+            preprocessSegment(cnn, adjCNN);
+        }
     });
     //console.timeEnd('preprocessJunctions()');
 }
