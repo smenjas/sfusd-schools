@@ -32,6 +32,7 @@ const tapThreshold = 10; // pixels
 const tapMaxDuration = 300; // milliseconds
 let theme = 'light';
 let addresses = {};
+let segments = {};
 
 const colors = {
     light: {
@@ -216,6 +217,12 @@ function isOneWayStreet(fromCNN, toCNN) {
     return fromHasTo && !toHasFrom;
 }
 
+function isOneWaySegment(cnn1, cnn2) {
+    if (isOneWayStreet(cnn1, cnn2)) return cnn2;
+    if (isOneWayStreet(cnn2, cnn1)) return cnn1;
+    return null;
+}
+
 function drawArrow(x1, y1, x2, y2, color) {
     const arrowLength = Math.max(6, zoom + 1);
     const arrowAngle = Math.PI / 7;
@@ -377,18 +384,13 @@ function drawStreetNames() {
             if (drawnStreets.has(key)) continue;
             drawnStreets.add(key);
 
-            // Find common street names between the two junctions
-            const commonStreets = junction.streets.filter(street =>
-                junctions[adjCNN].streets.includes(street)
-            );
-
-            if (!commonStreets.length) continue;
+            if (!segments[key].street.length) continue;
 
             const [x2, y2] = junctions[adjCNN].screen;
 
             if (!segmentIsVisible(x1, y1, x2, y2, 0)) continue;
 
-            const street = commonStreets[0]; // Use first common street
+            const street = segments[key].street;
             if (!streetSegments.has(street)) {
                 streetSegments.set(street, []);
             }
@@ -509,15 +511,12 @@ function drawStreets() {
             streetCount++;
 
             // Check if this is a one-way street
-            const isOneWayFromTo = isOneWayStreet(cnn, adjCNN);
-            const isOneWayToFrom = isOneWayStreet(adjCNN, cnn);
-
-            if (isOneWayFromTo || isOneWayToFrom) {
+            if (segments[key].to) {
                 // Store one-way segment for later drawing
                 oneWaySegments.push({
                     x1, y1, x2, y2,
-                    fromCNN: isOneWayFromTo ? cnn : adjCNN,
-                    toCNN: isOneWayFromTo ? adjCNN : cnn
+                    fromCNN: segments[key].to === cnn ? adjCNN : cnn,
+                    toCNN: segments[key].to === cnn ? cnn : adjCNN
                 });
             } else {
                 // Regular two-way street
@@ -822,11 +821,33 @@ function preprocessAddresses() {
     //console.timeEnd('preprocessAddresses()');
 }
 
+function findCommonStreets(cnn1, cnn2) {
+    // Find common street names between the two junctions
+    return junctions[cnn1].streets.filter(street =>
+        junctions[cnn2].streets.includes(street)
+    );
+}
+
+function preprocessSegment(cnn, adjCNN) {
+    if (!junctions[adjCNN]) return;
+
+    const key = [cnn, adjCNN].sort().join('-');
+    if (key in segments) return;
+
+    segments[key] = {
+        street: findCommonStreets(cnn, adjCNN)[0],
+        to: isOneWaySegment(cnn, adjCNN),
+    };
+}
+
 function preprocessJunctions() {
     //console.time('preprocessJunctions()');
     Object.entries(junctions).forEach(([cnn, junction]) => {
         // Pad coordinates to 5 digits with trailing zeros
         junctions[cnn].ll = padCoords(junction.ll);
+        for (const adjCNN of junction.adj) {
+            preprocessSegment(cnn, adjCNN);
+        }
     });
     //console.timeEnd('preprocessJunctions()');
 }
