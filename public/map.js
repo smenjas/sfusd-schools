@@ -524,13 +524,29 @@ function segmentIsVisible(cnn, margin) {
 function drawSegment(ctx, cnn) {
     const segment = segments[cnn];
     if (!segment?.screen.length) return;
-    const [x1, y1] = segment.screen[0];
-    ctx.moveTo(x1, y1);
-    const pairs = segment.screen;
-    for (let i = 1; i < pairs.length; i++) {
-        const [x, y] = pairs[i];
-        ctx.lineTo(x, y);
+
+    const points = segment.screen;
+    if (points.length < 2) return;
+
+    ctx.moveTo(points[0][0], points[0][1]);
+
+    if (points.length < 4) {
+        for (let i = 1; i < points.length; i++) {
+            ctx.lineTo(points[i][0], points[i][1]);
+        }
+        return;
     }
+
+    // Draw first span as straight line
+    ctx.lineTo(points[1][0], points[1][1]);
+
+    // Draw middle spans as bezier curves - CHANGE THIS LINE TO TEST DIFFERENT ApproachES
+    for (let i = 1; i < points.length - 2; i++) {
+        drawBezierSpan_Approach6(ctx, points, i);  // <-- Change this to test different approaches
+    }
+
+    // Draw last span as straight line
+    ctx.lineTo(points[points.length - 1][0], points[points.length - 1][1]);
 }
 
 function drawStreets(ctx) {
@@ -1600,3 +1616,169 @@ window.addEventListener('resize', () => {
     resizeCanvases();
     requestRedraw();
 });
+
+// -------------------------------------------------
+
+// Approach 1: Simple forward direction (your working baseline, but with higher tension)
+// Result: Cannot discern from straight lines, due to short control distances.
+function drawBezierSpan_Approach1(ctx, points, i) {
+    const p1 = points[i];
+    const p2 = points[i + 1];
+
+    const tension = 0.5; // Increased from 0.25 to make curves more visible
+
+    const forwardX = p2[0] - p1[0];
+    const forwardY = p2[1] - p1[1];
+
+    const cp1 = [p1[0] + forwardX * tension, p1[1] + forwardY * tension];
+    const cp2 = [p2[0] - forwardX * tension, p2[1] - forwardY * tension];
+
+    ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], p2[0], p2[1]);
+}
+
+// Approach 2: Use perpendicular offset
+// Result: Curve shapes look correct, but in the wrong direction.
+function drawBezierSpan_Approach2(ctx, points, i) {
+    const p1 = points[i];
+    const p2 = points[i + 1];
+
+    const tension = 0.3;
+
+    // Calculate perpendicular direction
+    const dx = p2[0] - p1[0];
+    const dy = p2[1] - p1[1];
+    const length = Math.sqrt(dx * dx + dy * dy);
+
+    if (length === 0) {
+        ctx.lineTo(p2[0], p2[1]);
+        return;
+    }
+
+    // Perpendicular vector (rotated 90 degrees)
+    const perpX = -dy / length;
+    const perpY = dx / length;
+
+    const offset = length * tension;
+
+    const cp1 = [p1[0] + dx * 0.3 + perpX * offset * 0.2, p1[1] + dy * 0.3 + perpY * offset * 0.2];
+    const cp2 = [p2[0] - dx * 0.3 + perpX * offset * 0.2, p2[1] - dy * 0.3 + perpY * offset * 0.2];
+
+    ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], p2[0], p2[1]);
+}
+
+// Approach 3: Look at next point for direction (this might cause jogs)
+// Result: Weird jogs in the wrong direction.
+function drawBezierSpan_Approach3(ctx, points, i) {
+    const p0 = points[i - 1];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[i + 2];
+
+    const tension = 0.3;
+
+    // Direction from p0 to p2 (skipping p1)
+    const dir1X = p2[0] - p0[0];
+    const dir1Y = p2[1] - p0[1];
+
+    // Direction from p1 to p3 (skipping p2)
+    const dir2X = p3[0] - p1[0];
+    const dir2Y = p3[1] - p1[1];
+
+    const cp1 = [p1[0] + dir1X * tension, p1[1] + dir1Y * tension];
+    const cp2 = [p2[0] - dir2X * tension, p2[1] - dir2Y * tension];
+
+    ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], p2[0], p2[1]);
+}
+
+// Approach 4: Average of adjacent directions (this might cause jogs)
+// Result: Weird jogs in the wrong direction, but more subtle than approach 3.
+function drawBezierSpan_Approach4(ctx, points, i) {
+    const p0 = points[i - 1];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[i + 2];
+
+    const tension = 0.3;
+
+    // Incoming direction to p1
+    const in1X = p1[0] - p0[0];
+    const in1Y = p1[1] - p0[1];
+
+    // Outgoing direction from p1
+    const out1X = p2[0] - p1[0];
+    const out1Y = p2[1] - p1[1];
+
+    // Average direction at p1
+    const avg1X = (in1X + out1X) / 2;
+    const avg1Y = (in1Y + out1Y) / 2;
+
+    // Incoming direction to p2
+    const in2X = p2[0] - p1[0];
+    const in2Y = p2[1] - p1[1];
+
+    // Outgoing direction from p2
+    const out2X = p3[0] - p2[0];
+    const out2Y = p3[1] - p2[1];
+
+    // Average direction at p2
+    const avg2X = (in2X + out2X) / 2;
+    const avg2Y = (in2Y + out2Y) / 2;
+
+    const cp1 = [p1[0] + avg1X * tension, p1[1] + avg1Y * tension];
+    const cp2 = [p2[0] - avg2X * tension, p2[1] - avg2Y * tension];
+
+    ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], p2[0], p2[1]);
+}
+
+// Approach 5: Fixed distance along segment
+// Result: Cannot discern from straight lines, due to short control distances.
+function drawBezierSpan_Approach5(ctx, points, i) {
+    const p1 = points[i];
+    const p2 = points[i + 1];
+
+    const fixedDistance = 20; // Fixed pixel distance regardless of segment length
+
+    const dx = p2[0] - p1[0];
+    const dy = p2[1] - p1[1];
+    const length = Math.sqrt(dx * dx + dy * dy);
+
+    if (length === 0) {
+        ctx.lineTo(p2[0], p2[1]);
+        return;
+    }
+
+    const ratio = Math.min(fixedDistance / length, 0.4); // Cap at 40% of segment length
+
+    const cp1 = [p1[0] + dx * ratio, p1[1] + dy * ratio];
+    const cp2 = [p2[0] - dx * ratio, p2[1] - dy * ratio];
+
+    ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], p2[0], p2[1]);
+}
+
+// Approach 6: Normalized vector approach
+// Result: Works well, without weird jogs in the wrong direction.
+function drawBezierSpan_Approach6(ctx, points, i) {
+    const p0 = points[i - 1];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[i + 2];
+
+    const tension = 0.4;
+
+    // Normalize vectors
+    function normalize(x, y) {
+        const length = Math.sqrt(x * x + y * y);
+        return length > 0 ? [x / length, y / length] : [0, 0];
+    }
+
+    const [norm1X, norm1Y] = normalize(p2[0] - p0[0], p2[1] - p0[1]);
+    const [norm2X, norm2Y] = normalize(p3[0] - p1[0], p3[1] - p1[1]);
+
+    const segmentLength = Math.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2);
+    const controlDistance = segmentLength * tension;
+
+    const cp1 = [p1[0] + norm1X * controlDistance, p1[1] + norm1Y * controlDistance];
+    const cp2 = [p2[0] - norm2X * controlDistance, p2[1] - norm2Y * controlDistance];
+
+    ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], p2[0], p2[1]);
+}
