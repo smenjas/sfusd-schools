@@ -1,5 +1,5 @@
 import { formatStreet } from './address.js';
-import { howFarJunctions } from './geo.js';
+import { expandCoords, howFar } from './geo.js';
 import addressData from './address-data.js';
 import junctions from './junctions.js';
 import schools from './school-data.js';
@@ -152,7 +152,7 @@ function coordsToScreen(lat, lon) {
     if (!bounds) return [0, 0];
 
     // Calculate normalized coordinates (0-1)
-    const normalizedX = (bounds.maxLon - lon) / (bounds.maxLon - bounds.minLon);
+    const normalizedX = (lon - bounds.minLon) / (bounds.maxLon - bounds.minLon);
     const normalizedY = (bounds.maxLat - lat) / (bounds.maxLat - bounds.minLat);
 
     // Convert to screen coordinates within the map display area
@@ -179,7 +179,7 @@ function screenToCoords(screenX, screenY) {
     const normalizedY = baseY / canvas.height;
 
     // Reverse the coordinate mapping
-    const lon = bounds.maxLon - normalizedX * (bounds.maxLon - bounds.minLon);
+    const lon = bounds.minLon + normalizedX * (bounds.maxLon - bounds.minLon);
     const lat = bounds.maxLat - normalizedY * (bounds.maxLat - bounds.minLat);
 
     return [lat, lon];
@@ -749,17 +749,6 @@ function requestRedraw() {
     }
 }
 
-function padCoord(coord) {
-    // Pad coordinate to 5 digits with trailing zeros
-    return parseInt(coord.toString().padEnd(5, '0'));
-}
-
-function padCoords(coords) {
-    // Pad coordinates to 5 digits with trailing zeros
-    const [lat, lon] = coords;
-    return [padCoord(lat), padCoord(lon)];
-}
-
 function postprocessAddresses() {
     //console.time('postprocessAddresses()');
     // Calculate the screen coordinates for each address.
@@ -815,8 +804,8 @@ function preprocessAddresses() {
     Object.entries(addressData).forEach(([street, numbers]) => {
         addresses[street] = {};
         Object.entries(numbers).forEach(([number, ll]) => {
-            // Pad coordinates to 5 digits with trailing zeros
-            addresses[street][number] = { ll: padCoords(ll) };
+            // Convert decimals to full geographic coordinates.
+            addresses[street][number] = { ll: expandCoords(ll) };
         });
     });
     //console.timeEnd('preprocessAddresses()');
@@ -844,23 +833,13 @@ function preprocessSegment(cnn, adjCNN) {
 function preprocessJunctions() {
     //console.time('preprocessJunctions()');
     Object.entries(junctions).forEach(([cnn, junction]) => {
-        // Pad coordinates to 5 digits with trailing zeros
-        junctions[cnn].ll = padCoords(junction.ll);
+        // Convert decimals to full geographic coordinates.
+        junctions[cnn].ll = expandCoords(junction.ll);
         for (const adjCNN of junction.adj) {
             preprocessSegment(cnn, adjCNN);
         }
     });
     //console.timeEnd('preprocessJunctions()');
-}
-
-function preprocessSchools() {
-    //console.time('preprocessSchools()');
-    schools.map(school => {
-        const lat = Math.round((school.ll[0] - 37) * 1e5);
-        const lon = Math.round(Math.abs(school.ll[1] + 122) * 1e5);
-        school.ll = [lat, lon];
-    });
-    //console.timeEnd('preprocessSchools()');
 }
 
 function resizeCanvas() {
@@ -931,12 +910,11 @@ function loadMap() {
     //console.time('Preprocess data');
     preprocessAddresses();
     preprocessJunctions();
-    preprocessSchools();
     //console.timeEnd('Preprocess data');
 
     // Must calculate map boundaries before calling resizeCanvas().
     bounds = calculateBounds();
-    console.log(`Map bounds: lat 37.${bounds.minLat.toFixed(0)} - 37.${bounds.maxLat.toFixed(0)}, lon -122.${bounds.minLon.toFixed(0)} - -122.${bounds.maxLon.toFixed(0)}`);
+    console.log(`Map bounds: lat ${bounds.minLat.toFixed(5)} - ${bounds.maxLat.toFixed(5)}, lon ${bounds.minLon.toFixed(5)} - ${bounds.maxLon.toFixed(5)}`);
 
     addEventListeners();
 
@@ -1304,19 +1282,19 @@ function checkNeighbors(gScore, fScore, cameFrom) {
     for (const neighbor of neighbors) {
         if (closedSet.has(neighbor)) continue;
 
-        const tentativeGScore = gScore[here] + howFarJunctions(junctions, here, neighbor);
+        const tentativeGScore = gScore[here] + howFar(junctions[here].ll, junctions[neighbor].ll);
 
         if (!openSet.has(neighbor)) {
             // First time visiting this neighbor
             openSet.add(neighbor);
             cameFrom[neighbor] = here;
             gScore[neighbor] = tentativeGScore;
-            fScore[neighbor] = gScore[neighbor] + howFarJunctions(junctions, neighbor, end);
+            fScore[neighbor] = gScore[neighbor] + howFar(junctions[neighbor].ll, junctions[end].ll);
         } else if (tentativeGScore < (gScore[neighbor] || Infinity)) {
             // Found a better path to this neighbor
             cameFrom[neighbor] = here;
             gScore[neighbor] = tentativeGScore;
-            fScore[neighbor] = gScore[neighbor] + howFarJunctions(junctions, neighbor, end);
+            fScore[neighbor] = gScore[neighbor] + howFar(junctions[neighbor].ll, junctions[end].ll);
         }
         // If tentativeGScore >= existing gScore, don't update anything
     }
@@ -1374,7 +1352,7 @@ async function findPath() {
 
     openSet.add(start);
     gScore[start] = 0;
-    fScore[start] = howFarJunctions(junctions, start, end);
+    fScore[start] = howFar(junctions[start].ll, junctions[end].ll);
 
     while (openSet.size > 0) {
         // Find node with lowest fScore
@@ -1402,7 +1380,7 @@ async function findPath() {
     }
 
     info(path.length > 0 ?
-        `Path found! ${path.length} junctions, cost: ${gScore[end].toFixed(1)}` :
+        `Path found! ${path.length} junctions, ${gScore[end].toFixed(1)} mi.` :
         'No path found!');
 
     here = null;
