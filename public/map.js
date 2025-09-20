@@ -540,9 +540,9 @@ function drawSegment(ctx, cnn) {
     // Draw first span as straight line
     ctx.lineTo(points[1][0], points[1][1]);
 
-    // Draw middle spans as bezier curves - CHANGE THIS LINE TO TEST DIFFERENT ApproachES
+    // Draw middle spans as bezier curves using the working approach
     for (let i = 1; i < points.length - 2; i++) {
-        drawBezierSpan_Approach6(ctx, points, i);  // <-- Change this to test different approaches
+        drawBezierSpan_Adaptive(ctx, points, i);
     }
 
     // Draw last span as straight line
@@ -1755,15 +1755,14 @@ function drawBezierSpan_Approach5(ctx, points, i) {
     ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], p2[0], p2[1]);
 }
 
-// Approach 6: Normalized vector approach
-// Result: Works well, without weird jogs in the wrong direction.
-function drawBezierSpan_Approach6(ctx, points, i) {
+// Working approach: Based on Approach 6 (normalized vectors)
+function drawBezierSpan_Working(ctx, points, i) {
     const p0 = points[i - 1];
     const p1 = points[i];
     const p2 = points[i + 1];
     const p3 = points[i + 2];
 
-    const tension = 0.4;
+    const tension = 0.4; // Adjust this for more/less curvature
 
     // Normalize vectors
     function normalize(x, y) {
@@ -1779,6 +1778,70 @@ function drawBezierSpan_Approach6(ctx, points, i) {
 
     const cp1 = [p1[0] + norm1X * controlDistance, p1[1] + norm1Y * controlDistance];
     const cp2 = [p2[0] - norm2X * controlDistance, p2[1] - norm2Y * controlDistance];
+
+    ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], p2[0], p2[1]);
+}
+
+// Refined version: More control over curve strength
+function drawBezierSpan_Refined(ctx, points, i) {
+    const p0 = points[i - 1];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[i + 2];
+
+    const baseTension = 0.3;
+    const maxControlDistance = 50; // Maximum control point distance in pixels
+
+    function normalize(x, y) {
+        const length = Math.sqrt(x * x + y * y);
+        return length > 0 ? [x / length, y / length] : [0, 0];
+    }
+
+    const [norm1X, norm1Y] = normalize(p2[0] - p0[0], p2[1] - p0[1]);
+    const [norm2X, norm2Y] = normalize(p3[0] - p1[0], p3[1] - p1[1]);
+
+    const segmentLength = Math.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2);
+    const controlDistance = Math.min(segmentLength * baseTension, maxControlDistance);
+
+    const cp1 = [p1[0] + norm1X * controlDistance, p1[1] + norm1Y * controlDistance];
+    const cp2 = [p2[0] - norm2X * controlDistance, p2[1] - norm2Y * controlDistance];
+
+    ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], p2[0], p2[1]);
+}
+
+// ADAPTIVE VERSION: Adjusts curve based on angle between segments
+function drawBezierSpan_Adaptive(ctx, points, i) {
+    const p0 = points[i - 1];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[i + 2];
+
+    function normalize(x, y) {
+        const length = Math.sqrt(x * x + y * y);
+        return length > 0 ? [x / length, y / length] : [0, 0];
+    }
+
+    // Calculate angle between incoming and outgoing directions at p1 and p2
+    const [in1X, in1Y] = normalize(p1[0] - p0[0], p1[1] - p0[1]);
+    const [out1X, out1Y] = normalize(p2[0] - p1[0], p2[1] - p1[1]);
+    const [in2X, in2Y] = normalize(p2[0] - p1[0], p2[1] - p1[1]);
+    const [out2X, out2Y] = normalize(p3[0] - p2[0], p3[1] - p2[1]);
+
+    // Calculate angle changes (dot product gives us angle similarity)
+    const angle1Change = Math.abs(in1X * out1X + in1Y * out1Y);
+    const angle2Change = Math.abs(in2X * out2X + in2Y * out2Y);
+
+    // More curve where there's more direction change (lower dot product)
+    const adaptiveTension1 = (1 - angle1Change) * 0.5 + 0.2;
+    const adaptiveTension2 = (1 - angle2Change) * 0.5 + 0.2;
+
+    const [norm1X, norm1Y] = normalize(p2[0] - p0[0], p2[1] - p0[1]);
+    const [norm2X, norm2Y] = normalize(p3[0] - p1[0], p3[1] - p1[1]);
+
+    const segmentLength = Math.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2);
+
+    const cp1 = [p1[0] + norm1X * segmentLength * adaptiveTension1, p1[1] + norm1Y * segmentLength * adaptiveTension1];
+    const cp2 = [p2[0] - norm2X * segmentLength * adaptiveTension2, p2[1] - norm2Y * segmentLength * adaptiveTension2];
 
     ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], p2[0], p2[1]);
 }
