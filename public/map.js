@@ -505,6 +505,47 @@ function segmentIsVisible(cnn, margin) {
     return false;
 }
 
+function drawBezier(ctx, points, i) {
+    // Anticipate the flow of the street segment, and draw curves accordingly.
+    const p0 = points[i - 1];
+    const p1 = points[i];      // Start of current span
+    const p2 = points[i + 1];  // End of current span
+    const p3 = points[i + 2];
+
+    // Current span direction
+    const spanDirX = p2[0] - p1[0];
+    const spanDirY = p2[1] - p1[1];
+    const spanLength = Math.sqrt(spanDirX * spanDirX + spanDirY * spanDirY);
+
+    if (spanLength === 0) {
+        ctx.lineTo(p2[0], p2[1]);
+        return;
+    }
+
+    // Where we want the curve to flow at each end (overall direction)
+    const flowDir1X = p2[0] - p0[0]; // Overall direction through p1
+    const flowDir1Y = p2[1] - p0[1];
+    const flowDir2X = p3[0] - p1[0]; // Overall direction through p2
+    const flowDir2Y = p3[1] - p1[1];
+
+    // Normalize flow directions
+    const flow1Length = Math.sqrt(flowDir1X * flowDir1X + flowDir1Y * flowDir1Y);
+    const flow2Length = Math.sqrt(flowDir2X * flowDir2X + flowDir2Y * flowDir2Y);
+
+    const normFlow1X = flow1Length > 0 ? flowDir1X / flow1Length : spanDirX / spanLength;
+    const normFlow1Y = flow1Length > 0 ? flowDir1Y / flow1Length : spanDirY / spanLength;
+    const normFlow2X = flow2Length > 0 ? flowDir2X / flow2Length : spanDirX / spanLength;
+    const normFlow2Y = flow2Length > 0 ? flowDir2Y / flow2Length : spanDirY / spanLength;
+
+    // Position control points in the flow direction
+    const controlDistance = spanLength * 0.35;
+
+    const cp1 = [p1[0] + normFlow1X * controlDistance, p1[1] + normFlow1Y * controlDistance];
+    const cp2 = [p2[0] - normFlow2X * controlDistance, p2[1] - normFlow2Y * controlDistance];
+
+    ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], p2[0], p2[1]);
+}
+
 function drawSegment(ctx, cnn) {
     const segment = segments[cnn];
     if (!segment) return;
@@ -514,9 +555,24 @@ function drawSegment(ctx, cnn) {
 
     ctx.moveTo(points[0][0], points[0][1]);
 
-    for (let i = 1; i < points.length; i++) {
-        ctx.lineTo(points[i][0], points[i][1]);
+    // Draw the first span as a straight line.
+    ctx.lineTo(points[1][0], points[1][1]);
+
+    if (points.length < 5) {
+        for (let i = 2; i < points.length; i++) {
+            ctx.lineTo(points[i][0], points[i][1]);
+        }
+        return;
     }
+
+    // Draw middle spans using Bézier curves.
+    for (let i = 1; i < points.length - 2; i++) {
+        drawBezier(ctx, points, i);
+    }
+
+    // Draw the last span as a straight line.
+    const end = points[points.length - 1];
+    ctx.lineTo(end[0], end[1]);
 }
 
 function drawStreets(ctx) {
