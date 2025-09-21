@@ -521,6 +521,7 @@ function segmentIsVisible(cnn, margin) {
     return false;
 }
 
+/*
 function drawSegment(ctx, cnn) {
     const segment = segments[cnn];
     if (!segment?.screen.length) return;
@@ -548,6 +549,7 @@ function drawSegment(ctx, cnn) {
     // Draw last span as straight line
     ctx.lineTo(points[points.length - 1][0], points[points.length - 1][1]);
 }
+*/
 
 function drawStreets(ctx) {
     //console.time('  drawStreets()');
@@ -1622,141 +1624,86 @@ window.addEventListener('resize', () => {
 
 // -------------------------------------------------
 
-// APPROACH 1: Simple forward direction (your working baseline, but with higher tension)
-function drawBezierSpan_Approach1(ctx, points, i) {
-    const p1 = points[i];
-    const p2 = points[i + 1];
+// Cubic bezier curves with flow anticipation (back to the successful approach)
+function drawSegment(ctx, cnn) {
+    const segment = segments[cnn];
+    if (!segment?.screen.length) return;
 
-    const tension = 0.5; // Increased from 0.25 to make curves more visible
+    const points = segment.screen;
+    if (points.length < 2) return;
 
-    const forwardX = p2[0] - p1[0];
-    const forwardY = p2[1] - p1[1];
+    // Start at the first point
+    ctx.moveTo(points[0][0], points[0][1]);
 
-    const cp1 = [p1[0] + forwardX * tension, p1[1] + forwardY * tension];
-    const cp2 = [p2[0] - forwardX * tension, p2[1] - forwardY * tension];
+    if (points.length === 2) {
+        // Simple case: just two points, draw a straight line
+        ctx.lineTo(points[1][0], points[1][1]);
+        return;
+    }
 
-    ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], p2[0], p2[1]);
+    if (points.length < 4) {
+        // Handle segments with less than 4 points as straight lines
+        for (let i = 1; i < points.length; i++) {
+            ctx.lineTo(points[i][0], points[i][1]);
+        }
+        return;
+    }
+
+    // Draw first span as straight line
+    ctx.lineTo(points[1][0], points[1][1]);
+
+    // Draw middle spans as bezier curves
+    for (let i = 1; i < points.length - 2; i++) {
+        drawBezierSpan_FlowAnticipation(ctx, points, i);
+    }
+
+    // Draw last span as straight line
+    ctx.lineTo(points[points.length - 1][0], points[points.length - 1][1]);
 }
 
-// APPROACH 2: Use perpendicular offset
-function drawBezierSpan_Approach2(ctx, points, i) {
-    const p1 = points[i];
-    const p2 = points[i + 1];
+// Flow anticipation approach (the most successful cubic approach)
+function drawBezierSpan_FlowAnticipation(ctx, points, i) {
+    const p0 = points[i - 1];
+    const p1 = points[i];      // Start of current span
+    const p2 = points[i + 1];  // End of current span
+    const p3 = points[i + 2];
 
-    const tension = 0.3;
+    // Current span direction
+    const spanDirX = p2[0] - p1[0];
+    const spanDirY = p2[1] - p1[1];
+    const spanLength = Math.sqrt(spanDirX * spanDirX + spanDirY * spanDirY);
 
-    // Calculate perpendicular direction
-    const dx = p2[0] - p1[0];
-    const dy = p2[1] - p1[1];
-    const length = Math.sqrt(dx * dx + dy * dy);
-
-    if (length === 0) {
+    if (spanLength === 0) {
         ctx.lineTo(p2[0], p2[1]);
         return;
     }
 
-    // Perpendicular vector (rotated 90 degrees)
-    const perpX = -dy / length;
-    const perpY = dx / length;
+    // Where we want the curve to flow at each end (overall direction)
+    const flowDir1X = p2[0] - p0[0];  // Overall direction through p1
+    const flowDir1Y = p2[1] - p0[1];
+    const flowDir2X = p3[0] - p1[0];  // Overall direction through p2
+    const flowDir2Y = p3[1] - p1[1];
 
-    const offset = length * tension;
+    // Normalize flow directions
+    const flow1Length = Math.sqrt(flowDir1X * flowDir1X + flowDir1Y * flowDir1Y);
+    const flow2Length = Math.sqrt(flowDir2X * flowDir2X + flowDir2Y * flowDir2Y);
 
-    const cp1 = [p1[0] + dx * 0.3 + perpX * offset * 0.2, p1[1] + dy * 0.3 + perpY * offset * 0.2];
-    const cp2 = [p2[0] - dx * 0.3 + perpX * offset * 0.2, p2[1] - dy * 0.3 + perpY * offset * 0.2];
+    const normFlow1X = flow1Length > 0 ? flowDir1X / flow1Length : spanDirX / spanLength;
+    const normFlow1Y = flow1Length > 0 ? flowDir1Y / flow1Length : spanDirY / spanLength;
+    const normFlow2X = flow2Length > 0 ? flowDir2X / flow2Length : spanDirX / spanLength;
+    const normFlow2Y = flow2Length > 0 ? flowDir2Y / flow2Length : spanDirY / spanLength;
 
-    ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], p2[0], p2[1]);
-}
+    // Position control points in the flow direction
+    const controlDistance = spanLength * 0.35;
 
-// APPROACH 3: Look at next point for direction (this might cause jogs)
-function drawBezierSpan_Approach3(ctx, points, i) {
-    const p0 = points[i - 1];
-    const p1 = points[i];
-    const p2 = points[i + 1];
-    const p3 = points[i + 2];
-
-    const tension = 0.3;
-
-    // Direction from p0 to p2 (skipping p1)
-    const dir1X = p2[0] - p0[0];
-    const dir1Y = p2[1] - p0[1];
-
-    // Direction from p1 to p3 (skipping p2)
-    const dir2X = p3[0] - p1[0];
-    const dir2Y = p3[1] - p1[1];
-
-    const cp1 = [p1[0] + dir1X * tension, p1[1] + dir1Y * tension];
-    const cp2 = [p2[0] - dir2X * tension, p2[1] - dir2Y * tension];
+    const cp1 = [p1[0] + normFlow1X * controlDistance, p1[1] + normFlow1Y * controlDistance];
+    const cp2 = [p2[0] - normFlow2X * controlDistance, p2[1] - normFlow2Y * controlDistance];
 
     ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], p2[0], p2[1]);
 }
 
-// APPROACH 4: Average of adjacent directions (this might cause jogs)
-function drawBezierSpan_Approach4(ctx, points, i) {
-    const p0 = points[i - 1];
-    const p1 = points[i];
-    const p2 = points[i + 1];
-    const p3 = points[i + 2];
-
-    const tension = 0.3;
-
-    // Incoming direction to p1
-    const in1X = p1[0] - p0[0];
-    const in1Y = p1[1] - p0[1];
-
-    // Outgoing direction from p1
-    const out1X = p2[0] - p1[0];
-    const out1Y = p2[1] - p1[1];
-
-    // Average direction at p1
-    const avg1X = (in1X + out1X) / 2;
-    const avg1Y = (in1Y + out1Y) / 2;
-
-    // Incoming direction to p2
-    const in2X = p2[0] - p1[0];
-    const in2Y = p2[1] - p1[1];
-
-    // Outgoing direction from p2
-    const out2X = p3[0] - p2[0];
-    const out2Y = p3[1] - p2[1];
-
-    // Average direction at p2
-    const avg2X = (in2X + out2X) / 2;
-    const avg2Y = (in2Y + out2Y) / 2;
-
-    const cp1 = [p1[0] + avg1X * tension, p1[1] + avg1Y * tension];
-    const cp2 = [p2[0] - avg2X * tension, p2[1] - avg2Y * tension];
-
-    ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], p2[0], p2[1]);
-}
-
-// APPROACH 5: Fixed distance along segment
-function drawBezierSpan_Approach5(ctx, points, i) {
-    const p1 = points[i];
-    const p2 = points[i + 1];
-
-    const fixedDistance = 20; // Fixed pixel distance regardless of segment length
-
-    const dx = p2[0] - p1[0];
-    const dy = p2[1] - p1[1];
-    const length = Math.sqrt(dx * dx + dy * dy);
-
-    if (length === 0) {
-        ctx.lineTo(p2[0], p2[1]);
-        return;
-    }
-
-    const ratio = Math.min(fixedDistance / length, 0.4); // Cap at 40% of segment length
-
-    const cp1 = [p1[0] + dx * ratio, p1[1] + dy * ratio];
-    const cp2 = [p2[0] - dx * ratio, p2[1] - dy * ratio];
-
-    ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], p2[0], p2[1]);
-}
-
-// APPROACHES THAT ADDRESS CONTROL POINT DISTANCE AT TRANSITION POINTS
-
-// APPROACH 1: Adaptive control distance based on adjacent span lengths
-function drawBezierSpan_TransitionAware1(ctx, points, i) {
+// Alternative: TransitionAware approach (was among the best)
+function drawBezierSpan_TransitionAware(ctx, points, i) {
     const p0 = points[i - 1];
     const p1 = points[i];
     const p2 = points[i + 1];
@@ -1775,7 +1722,7 @@ function drawBezierSpan_TransitionAware1(ctx, points, i) {
     const prevSpanLength = Math.sqrt((p1[0] - p0[0]) ** 2 + (p1[1] - p0[1]) ** 2);
     const nextSpanLength = Math.sqrt((p3[0] - p2[0]) ** 2 + (p3[1] - p2[1]) ** 2);
 
-    // Flow directions (same as successful approaches)
+    // Flow directions
     const flowDir1X = p2[0] - p0[0];
     const flowDir1Y = p2[1] - p0[1];
     const flowDir2X = p3[0] - p1[0];
@@ -1800,177 +1747,6 @@ function drawBezierSpan_TransitionAware1(ctx, points, i) {
     ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], p2[0], p2[1]);
 }
 
-// APPROACH 2: Fixed maximum control distance to prevent over-extension
-function drawBezierSpan_TransitionAware2(ctx, points, i) {
-    const p0 = points[i - 1];
-    const p1 = points[i];
-    const p2 = points[i + 1];
-    const p3 = points[i + 2];
-
-    const spanDirX = p2[0] - p1[0];
-    const spanDirY = p2[1] - p1[1];
-    const spanLength = Math.sqrt(spanDirX * spanDirX + spanDirY * spanDirY);
-
-    if (spanLength === 0) {
-        ctx.lineTo(p2[0], p2[1]);
-        return;
-    }
-
-    // Flow directions
-    const flowDir1X = p2[0] - p0[0];
-    const flowDir1Y = p2[1] - p0[1];
-    const flowDir2X = p3[0] - p1[0];
-    const flowDir2Y = p3[1] - p1[1];
-
-    const flow1Length = Math.sqrt(flowDir1X * flowDir1X + flowDir1Y * flowDir1Y);
-    const flow2Length = Math.sqrt(flowDir2X * flowDir2X + flowDir2Y * flowDir2Y);
-
-    const normFlow1X = flow1Length > 0 ? flowDir1X / flow1Length : spanDirX / spanLength;
-    const normFlow1Y = flow1Length > 0 ? flowDir1Y / flow1Length : spanDirY / spanLength;
-    const normFlow2X = flow2Length > 0 ? flowDir2X / flow2Length : spanDirX / spanLength;
-    const normFlow2Y = flow2Length > 0 ? flowDir2Y / flow2Length : spanDirY / spanLength;
-
-    // Cap control distance to prevent control points from extending too far
-    const baseTension = 0.35;
-    const maxControlPixels = 30; // Maximum control distance in screen pixels
-    const controlDistance = Math.min(spanLength * baseTension, maxControlPixels);
-
-    const cp1 = [p1[0] + normFlow1X * controlDistance, p1[1] + normFlow1Y * controlDistance];
-    const cp2 = [p2[0] - normFlow2X * controlDistance, p2[1] - normFlow2Y * controlDistance];
-
-    ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], p2[0], p2[1]);
-}
-
-// APPROACH 3: Different control distances for sharp vs gentle transitions
-function drawBezierSpan_TransitionAware3(ctx, points, i) {
-    const p0 = points[i - 1];
-    const p1 = points[i];
-    const p2 = points[i + 1];
-    const p3 = points[i + 2];
-
-    const spanDirX = p2[0] - p1[0];
-    const spanDirY = p2[1] - p1[1];
-    const spanLength = Math.sqrt(spanDirX * spanDirX + spanDirY * spanDirY);
-
-    if (spanLength === 0) {
-        ctx.lineTo(p2[0], p2[1]);
-        return;
-    }
-
-    // Calculate how sharp the transitions are at each end
-    const incomingDirX = p1[0] - p0[0];
-    const incomingDirY = p1[1] - p0[1];
-    const outgoingDirX = p2[0] - p1[0];
-    const outgoingDirY = p2[1] - p1[1];
-    const nextDirX = p3[0] - p2[0];
-    const nextDirY = p3[1] - p2[1];
-
-    // Normalize directions for angle calculation
-    const inLen = Math.sqrt(incomingDirX * incomingDirX + incomingDirY * incomingDirY);
-    const outLen = Math.sqrt(outgoingDirX * outgoingDirX + outgoingDirY * outgoingDirY);
-    const nextLen = Math.sqrt(nextDirX * nextDirX + nextDirY * nextDirY);
-
-    const normInX = inLen > 0 ? incomingDirX / inLen : 0;
-    const normInY = inLen > 0 ? incomingDirY / inLen : 0;
-    const normOutX = outLen > 0 ? outgoingDirX / outLen : 0;
-    const normOutY = outLen > 0 ? outgoingDirY / outLen : 0;
-    const normNextX = nextLen > 0 ? nextDirX / nextLen : 0;
-    const normNextY = nextLen > 0 ? nextDirY / nextLen : 0;
-
-    // Calculate angle similarity (dot product - closer to 1 means less angle change)
-    const angle1Similarity = Math.abs(normInX * normOutX + normInY * normOutY);
-    const angle2Similarity = Math.abs(normOutX * normNextX + normOutY * normNextY);
-
-    // Flow directions
-    const flowDir1X = p2[0] - p0[0];
-    const flowDir1Y = p2[1] - p0[1];
-    const flowDir2X = p3[0] - p1[0];
-    const flowDir2Y = p3[1] - p1[1];
-
-    const flow1Length = Math.sqrt(flowDir1X * flowDir1X + flowDir1Y * flowDir1Y);
-    const flow2Length = Math.sqrt(flowDir2X * flowDir2X + flowDir2Y * flowDir2Y);
-
-    const normFlow1X = flow1Length > 0 ? flowDir1X / flow1Length : spanDirX / spanLength;
-    const normFlow1Y = flow1Length > 0 ? flowDir1Y / flow1Length : spanDirY / spanLength;
-    const normFlow2X = flow2Length > 0 ? flowDir2X / flow2Length : spanDirX / spanLength;
-    const normFlow2Y = flow2Length > 0 ? flowDir2Y / flow2Length : spanDirY / spanLength;
-
-    // Reduce control distance for sharp transitions, increase for gentle ones
-    const baseTension = 0.35;
-    const sharpTransitionFactor = 0.7; // Reduce control distance for sharp turns
-
-    const tension1 = baseTension * (angle1Similarity * (1 - sharpTransitionFactor) + sharpTransitionFactor);
-    const tension2 = baseTension * (angle2Similarity * (1 - sharpTransitionFactor) + sharpTransitionFactor);
-
-    const controlDist1 = spanLength * tension1;
-    const controlDist2 = spanLength * tension2;
-
-    const cp1 = [p1[0] + normFlow1X * controlDist1, p1[1] + normFlow1Y * controlDist1];
-    const cp2 = [p2[0] - normFlow2X * controlDist2, p2[1] - normFlow2Y * controlDist2];
-
-    ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], p2[0], p2[1]);
-}
-
-// REFINED VERSION: More control over curve strength
-function drawBezierSpan_Refined(ctx, points, i) {
-    const p0 = points[i - 1];
-    const p1 = points[i];
-    const p2 = points[i + 1];
-    const p3 = points[i + 2];
-
-    const baseTension = 0.3;
-    const maxControlDistance = 50; // Maximum control point distance in pixels
-
-    function normalize(x, y) {
-        const length = Math.sqrt(x * x + y * y);
-        return length > 0 ? [x / length, y / length] : [0, 0];
-    }
-
-    const [norm1X, norm1Y] = normalize(p2[0] - p0[0], p2[1] - p0[1]);
-    const [norm2X, norm2Y] = normalize(p3[0] - p1[0], p3[1] - p1[1]);
-
-    const segmentLength = Math.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2);
-    const controlDistance = Math.min(segmentLength * baseTension, maxControlDistance);
-
-    const cp1 = [p1[0] + norm1X * controlDistance, p1[1] + norm1Y * controlDistance];
-    const cp2 = [p2[0] - norm2X * controlDistance, p2[1] - norm2Y * controlDistance];
-
-    ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], p2[0], p2[1]);
-}
-
-// ADAPTIVE VERSION: Adjusts curve based on angle between segments
-function drawBezierSpan_Adaptive(ctx, points, i) {
-    const p0 = points[i - 1];
-    const p1 = points[i];
-    const p2 = points[i + 1];
-    const p3 = points[i + 2];
-
-    function normalize(x, y) {
-        const length = Math.sqrt(x * x + y * y);
-        return length > 0 ? [x / length, y / length] : [0, 0];
-    }
-
-    // Calculate angle between incoming and outgoing directions at p1 and p2
-    const [in1X, in1Y] = normalize(p1[0] - p0[0], p1[1] - p0[1]);
-    const [out1X, out1Y] = normalize(p2[0] - p1[0], p2[1] - p1[1]);
-    const [in2X, in2Y] = normalize(p2[0] - p1[0], p2[1] - p1[1]);
-    const [out2X, out2Y] = normalize(p3[0] - p2[0], p3[1] - p2[1]);
-
-    // Calculate angle changes (dot product gives us angle similarity)
-    const angle1Change = Math.abs(in1X * out1X + in1Y * out1Y);
-    const angle2Change = Math.abs(in2X * out2X + in2Y * out2Y);
-
-    // More curve where there's more direction change (lower dot product)
-    const adaptiveTension1 = (1 - angle1Change) * 0.5 + 0.2;
-    const adaptiveTension2 = (1 - angle2Change) * 0.5 + 0.2;
-
-    const [norm1X, norm1Y] = normalize(p2[0] - p0[0], p2[1] - p0[1]);
-    const [norm2X, norm2Y] = normalize(p3[0] - p1[0], p3[1] - p1[1]);
-
-    const segmentLength = Math.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2);
-
-    const cp1 = [p1[0] + norm1X * segmentLength * adaptiveTension1, p1[1] + norm1Y * segmentLength * adaptiveTension1];
-    const cp2 = [p2[0] - norm2X * segmentLength * adaptiveTension2, p2[1] - norm2Y * segmentLength * adaptiveTension2];
-
-    ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], p2[0], p2[1]);
-}
+// To test different approaches, change the function call in the main loop:
+// drawBezierSpan_FlowAnticipation(ctx, points, i);   // Flow anticipation (default)
+// drawBezierSpan_TransitionAware(ctx, points, i);    // Transition aware
