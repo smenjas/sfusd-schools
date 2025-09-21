@@ -1769,6 +1769,7 @@ let debugControlPoints = {
     dragTarget: null
 };
 
+/*
 function drawSegment(ctx, cnn) {
     const segment = segments[cnn];
     if (!segment?.screen.length) return;
@@ -1807,6 +1808,7 @@ function drawSegment(ctx, cnn) {
     // Draw last span as straight line
     ctx.lineTo(points[points.length - 1][0], points[points.length - 1][1]);
 }
+*/
 
 function drawDebugSpan(ctx, points, i, cnn) {
     const p0 = points[i - 1];
@@ -1964,11 +1966,11 @@ function handleClick(e) {
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
-    // Check if clicking on a debug control point
+    // Check if clicking on a debug control point (larger click area)
     if (debugControlPoints.cp1 && debugControlPoints.cp2) {
         const baseMouseX = mouseX / zoom + panX;
         const baseMouseY = mouseY / zoom + panY;
-        const clickRadius = 15 / zoom;
+        const clickRadius = 25 / zoom; // Larger click area
 
         const dist1 = Math.sqrt((baseMouseX - debugControlPoints.cp1[0]) ** 2 + (baseMouseY - debugControlPoints.cp1[1]) ** 2);
         const dist2 = Math.sqrt((baseMouseX - debugControlPoints.cp2[0]) ** 2 + (baseMouseY - debugControlPoints.cp2[1]) ** 2);
@@ -1976,10 +1978,14 @@ function handleClick(e) {
         if (dist1 < clickRadius) {
             debugControlPoints.isDragging = true;
             debugControlPoints.dragTarget = 'cp1';
+            e.preventDefault();
+            e.stopPropagation();
             return;
         } else if (dist2 < clickRadius) {
             debugControlPoints.isDragging = true;
             debugControlPoints.dragTarget = 'cp2';
+            e.preventDefault();
+            e.stopPropagation();
             return;
         }
     }
@@ -2035,6 +2041,8 @@ function handleMouseUp(e) {
     if (debugControlPoints.isDragging) {
         debugControlPoints.isDragging = false;
         debugControlPoints.dragTarget = null;
+        e.preventDefault();
+        e.stopPropagation();
         return;
     }
 
@@ -2043,4 +2051,111 @@ function handleMouseUp(e) {
 
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
+}
+
+// Adaptive approach: Flow anticipation with subtle correction for sharp transitions
+function drawBezierSpan_Adaptive(ctx, points, i) {
+    const p0 = points[i - 1];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[i + 2];
+
+    const spanDirX = p2[0] - p1[0];
+    const spanDirY = p2[1] - p1[1];
+    const spanLength = Math.sqrt(spanDirX * spanDirX + spanDirY * spanDirY);
+
+    if (spanLength === 0) {
+        ctx.lineTo(p2[0], p2[1]);
+        return;
+    }
+
+    // Standard flow anticipation calculation
+    const flowDir1X = p2[0] - p0[0];
+    const flowDir1Y = p2[1] - p0[1];
+    const flowDir2X = p3[0] - p1[0];
+    const flowDir2Y = p3[1] - p1[1];
+
+    const flow1Length = Math.sqrt(flowDir1X * flowDir1X + flowDir1Y * flowDir1Y);
+    const flow2Length = Math.sqrt(flowDir2X * flowDir2X + flowDir2Y * flowDir2Y);
+
+    const normFlow1X = flow1Length > 0 ? flowDir1X / flow1Length : spanDirX / spanLength;
+    const normFlow1Y = flow1Length > 0 ? flowDir1Y / flow1Length : spanDirY / spanLength;
+    const normFlow2X = flow2Length > 0 ? flowDir2X / flow2Length : spanDirX / spanLength;
+    const normFlow2Y = flow2Length > 0 ? flowDir2Y / flow2Length : spanDirY / spanLength;
+
+    // Detect sharp transitions by analyzing direction changes
+    const prevSpanDir = [p1[0] - p0[0], p1[1] - p0[1]];
+    const currSpanDir = [p2[0] - p1[0], p2[1] - p1[1]];
+    const nextSpanDir = [p3[0] - p2[0], p3[1] - p2[1]];
+
+    const prevSpanLength = Math.sqrt(prevSpanDir[0] ** 2 + prevSpanDir[1] ** 2);
+    const nextSpanLength = Math.sqrt(nextSpanDir[0] ** 2 + nextSpanDir[1] ** 2);
+
+    // Normalize span directions
+    const normPrevSpan = prevSpanLength > 0 ? [prevSpanDir[0] / prevSpanLength, prevSpanDir[1] / prevSpanLength] : [0, 0];
+    const normCurrSpan = [currSpanDir[0] / spanLength, currSpanDir[1] / spanLength];
+    const normNextSpan = nextSpanLength > 0 ? [nextSpanDir[0] / nextSpanLength, nextSpanDir[1] / nextSpanLength] : [0, 0];
+
+    // Calculate direction changes (dot product gives alignment)
+    const alignmentAtP1 = normPrevSpan[0] * normCurrSpan[0] + normPrevSpan[1] * normCurrSpan[1];
+    const alignmentAtP2 = normCurrSpan[0] * normNextSpan[0] + normCurrSpan[1] * normNextSpan[1];
+
+    // Detect short spans with sharp direction changes
+    const isSharpTransition = (alignmentAtP1 < 0.8 || alignmentAtP2 < 0.8) && spanLength < 5.0;
+
+    let controlDistance = spanLength * 0.35; // Standard distance
+    let cp1 = [p1[0] + normFlow1X * controlDistance, p1[1] + normFlow1Y * controlDistance];
+    let cp2 = [p2[0] - normFlow2X * controlDistance, p2[1] - normFlow2Y * controlDistance];
+
+    // Apply tiny correction for sharp transitions
+    if (isSharpTransition) {
+        // Very small adjustment based on Mercury Street optimal data
+        // The optimal required moving CP1 Y by -0.1, so we apply a proportional correction
+        const correctionFactor = 0.03; // Much smaller than before
+
+        cp1[1] -= correctionFactor; // Tiny downward adjustment to CP1 Y
+    }
+
+    ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], p2[0], p2[1]);
+}
+
+// Change the main drawing function to test the adaptive approach
+function drawSegment(ctx, cnn) {
+    const segment = segments[cnn];
+    if (!segment?.screen.length) return;
+
+    const points = segment.screen;
+    if (points.length < 2) return;
+
+    ctx.moveTo(points[0][0], points[0][1]);
+
+    if (points.length === 2) {
+        ctx.lineTo(points[1][0], points[1][1]);
+        return;
+    }
+
+    if (points.length < 4) {
+        for (let i = 1; i < points.length; i++) {
+            ctx.lineTo(points[i][0], points[i][1]);
+        }
+        return;
+    }
+
+    // Draw first span as straight line
+    ctx.lineTo(points[1][0], points[1][1]);
+
+    // Draw middle spans as bezier curves
+    for (let i = 1; i < points.length - 2; i++) {
+        //if (cnn === '8987000' && i === 1) {
+        //    // Keep debug version for Mercury Street
+        //    drawDebugSpan(ctx, points, i, cnn);
+        //} else {
+            // Test the adaptive approach on other segments
+            drawBezierSpan_Adaptive(ctx, points, i);
+            // To compare, change to: drawBezierSpan_FlowAnticipation(ctx, points, i);
+        //}
+    }
+
+    // Draw last span as straight line
+    ctx.lineTo(points[points.length - 1][0], points[points.length - 1][1]);
 }
