@@ -521,7 +521,6 @@ function segmentIsVisible(cnn, margin) {
     return false;
 }
 
-/*
 function drawSegment(ctx, cnn) {
     const segment = segments[cnn];
     if (!segment?.screen.length) return;
@@ -530,6 +529,11 @@ function drawSegment(ctx, cnn) {
     if (points.length < 2) return;
 
     ctx.moveTo(points[0][0], points[0][1]);
+
+    if (points.length === 2) {
+        ctx.lineTo(points[1][0], points[1][1]);
+        return;
+    }
 
     if (points.length < 4) {
         for (let i = 1; i < points.length; i++) {
@@ -541,15 +545,14 @@ function drawSegment(ctx, cnn) {
     // Draw first span as straight line
     ctx.lineTo(points[1][0], points[1][1]);
 
-    // Test approaches that address control point distance at transition points
+    // Draw middle spans using hybrid approach
     for (let i = 1; i < points.length - 2; i++) {
-        drawBezierSpan_TransitionAware3(ctx, points, i);
+        drawBezierSpan_Hybrid(ctx, points, i);
     }
 
     // Draw last span as straight line
     ctx.lineTo(points[points.length - 1][0], points[points.length - 1][1]);
 }
-*/
 
 function drawStreets(ctx) {
     //console.time('  drawStreets()');
@@ -804,7 +807,6 @@ function renderPathfindingLayer() {
     });
 }
 
-/*
 function renderUILayer() {
     renderLayer('ui', (ctx) => {
         // Draw UI elements
@@ -813,7 +815,6 @@ function renderUILayer() {
         drawJunctionLabels(ctx);
     });
 }
-*/
 
 function drawMap() {
     if (!bounds) return;
@@ -910,12 +911,6 @@ function postprocessSegments() {
             segments[cnn].screen.push(coordsToScreen(lat, lon));
         }
     }
-    console.log("segment['4343000'] = {");
-    const segment = segments['4343000'];
-    for (const key in segment) {
-        console.log(`    ${key}: ${segment[key]},`);
-    }
-    console.log("};");
     //console.timeEnd('postprocessSegments()');
 }
 
@@ -1158,7 +1153,6 @@ function handleMouseDown(e) {
     e.preventDefault();
 }
 
-/*
 function handleMouseMove(e) {
     if (!isDragging) return;
 
@@ -1193,7 +1187,6 @@ function handleMouseUp(e) {
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
 }
-*/
 
 function zoomCanvas(x, y, zoomFactor) {
     const newZoom = Math.max(minZoom, Math.min(maxZoom, zoom * zoomFactor));
@@ -1230,7 +1223,6 @@ function handleWheel(e) {
     zoomCanvas(mouseX, mouseY, zoomFactor);
 }
 
-/*
 function handleClick(e) {
     // Ignore clicks that happen immediately after dragging
     if (isDragging || isPathfinding || hasSignificantlyDragged) {
@@ -1244,7 +1236,6 @@ function handleClick(e) {
 
     handleTouchTap(mouseX, mouseY);
 }
-*/
 
 function getTouchCoordinates(e) {
     const rect = canvases.ui.getBoundingClientRect();
@@ -1634,90 +1625,56 @@ window.addEventListener('resize', () => {
     requestRedraw();
 });
 
-// -------------------------------------------------
+function drawBezierSpan_Hybrid(ctx, points, i) {
+    const p_prev = points[i - 1];
+    const p_start = points[i];
+    const p_end = points[i + 1];
+    const p_next = points[i + 2];
 
-/*
-// Cubic bezier curves with flow anticipation (back to the successful approach)
-function drawSegment(ctx, cnn) {
-    const segment = segments[cnn];
-    if (!segment?.screen.length) return;
+    // Check if we should use geometric method
+    if (points.length === 4 && shouldUseGeometric(p_prev, p_start, p_end, p_next)) {
+        const controlPoints = calculateGeometricControlPointsLimited(p_prev, p_start, p_end, p_next);
 
-    const points = segment.screen;
-    if (points.length < 2) return;
-
-    // Start at the first point
-    ctx.moveTo(points[0][0], points[0][1]);
-
-    if (points.length === 2) {
-        // Simple case: just two points, draw a straight line
-        ctx.lineTo(points[1][0], points[1][1]);
-        return;
-    }
-
-    if (points.length < 4) {
-        // Handle segments with less than 4 points as straight lines
-        for (let i = 1; i < points.length; i++) {
-            ctx.lineTo(points[i][0], points[i][1]);
+        if (controlPoints) {
+            const [cp1x, cp1y] = controlPoints.cp1;
+            const [cp2x, cp2y] = controlPoints.cp2;
+            ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p_end[0], p_end[1]);
+            return;
         }
-        return;
     }
 
-    // Draw first span as straight line
-    ctx.lineTo(points[1][0], points[1][1]);
-
-    // Draw middle spans as bezier curves
-    for (let i = 1; i < points.length - 2; i++) {
-        drawBezierSpan_FlowAnticipation(ctx, points, i);
-    }
-
-    // Draw last span as straight line
-    ctx.lineTo(points[points.length - 1][0], points[points.length - 1][1]);
+    // Fall back to flow anticipation method
+    drawBezierSpan_FlowAnticipation(ctx, points, i);
 }
 
-// Flow anticipation approach (the most successful cubic approach)
+function shouldUseGeometric(p_prev, p_start, p_end, p_next) {
+    // Calculate angle between span 0-1 and span 2-3
+    const span1Dir = [p_start[0] - p_prev[0], p_start[1] - p_prev[1]];
+    const span3Dir = [p_next[0] - p_end[0], p_next[1] - p_end[1]];
+
+    // Normalize vectors
+    const span1Length = Math.sqrt(span1Dir[0] ** 2 + span1Dir[1] ** 2);
+    const span3Length = Math.sqrt(span3Dir[0] ** 2 + span3Dir[1] ** 2);
+
+    if (span1Length === 0 || span3Length === 0) {
+        return false; // Can't calculate angle
+    }
+
+    const norm1 = [span1Dir[0] / span1Length, span1Dir[1] / span1Length];
+    const norm3 = [span3Dir[0] / span3Length, span3Dir[1] / span3Length];
+
+    // Calculate dot product to get angle
+    const dotProduct = norm1[0] * norm3[0] + norm1[1] * norm3[1];
+    const angleRadians = Math.acos(Math.max(-1, Math.min(1, dotProduct))); // Clamp to valid range
+    const angleDegrees = angleRadians * (180 / Math.PI);
+
+    // Use geometric method for angles <= 120 degrees
+    const threshold = 120;
+    return angleDegrees <= threshold;
+}
+
 function drawBezierSpan_FlowAnticipation(ctx, points, i) {
-    const p0 = points[i - 1];
-    const p1 = points[i];      // Start of current span
-    const p2 = points[i + 1];  // End of current span
-    const p3 = points[i + 2];
-
-    // Current span direction
-    const spanDirX = p2[0] - p1[0];
-    const spanDirY = p2[1] - p1[1];
-    const spanLength = Math.sqrt(spanDirX * spanDirX + spanDirY * spanDirY);
-
-    if (spanLength === 0) {
-        ctx.lineTo(p2[0], p2[1]);
-        return;
-    }
-
-    // Where we want the curve to flow at each end (overall direction)
-    const flowDir1X = p2[0] - p0[0];  // Overall direction through p1
-    const flowDir1Y = p2[1] - p0[1];
-    const flowDir2X = p3[0] - p1[0];  // Overall direction through p2
-    const flowDir2Y = p3[1] - p1[1];
-
-    // Normalize flow directions
-    const flow1Length = Math.sqrt(flowDir1X * flowDir1X + flowDir1Y * flowDir1Y);
-    const flow2Length = Math.sqrt(flowDir2X * flowDir2X + flowDir2Y * flowDir2Y);
-
-    const normFlow1X = flow1Length > 0 ? flowDir1X / flow1Length : spanDirX / spanLength;
-    const normFlow1Y = flow1Length > 0 ? flowDir1Y / flow1Length : spanDirY / spanLength;
-    const normFlow2X = flow2Length > 0 ? flowDir2X / flow2Length : spanDirX / spanLength;
-    const normFlow2Y = flow2Length > 0 ? flowDir2Y / flow2Length : spanDirY / spanLength;
-
-    // Position control points in the flow direction
-    const controlDistance = spanLength * 0.35;
-
-    const cp1 = [p1[0] + normFlow1X * controlDistance, p1[1] + normFlow1Y * controlDistance];
-    const cp2 = [p2[0] - normFlow2X * controlDistance, p2[1] - normFlow2Y * controlDistance];
-
-    ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], p2[0], p2[1]);
-}
-*/
-
-// Alternative: TransitionAware approach (was among the best)
-function drawBezierSpan_TransitionAware(ctx, points, i) {
+    // Anticipate the flow of the street segment, and draw curves accordingly.
     const p0 = points[i - 1];
     const p1 = points[i];
     const p2 = points[i + 1];
@@ -1732,11 +1689,6 @@ function drawBezierSpan_TransitionAware(ctx, points, i) {
         return;
     }
 
-    // Calculate lengths of adjacent spans for adaptive control distance
-    const prevSpanLength = Math.sqrt((p1[0] - p0[0]) ** 2 + (p1[1] - p0[1]) ** 2);
-    const nextSpanLength = Math.sqrt((p3[0] - p2[0]) ** 2 + (p3[1] - p2[1]) ** 2);
-
-    // Flow directions
     const flowDir1X = p2[0] - p0[0];
     const flowDir1Y = p2[1] - p0[1];
     const flowDir2X = p3[0] - p1[0];
@@ -1750,144 +1702,7 @@ function drawBezierSpan_TransitionAware(ctx, points, i) {
     const normFlow2X = flow2Length > 0 ? flowDir2X / flow2Length : spanDirX / spanLength;
     const normFlow2Y = flow2Length > 0 ? flowDir2Y / flow2Length : spanDirY / spanLength;
 
-    // Adaptive control distances based on surrounding spans
-    const baseTension = 0.35;
-    const controlDist1 = Math.min(spanLength, prevSpanLength) * baseTension;
-    const controlDist2 = Math.min(spanLength, nextSpanLength) * baseTension;
-
-    const cp1 = [p1[0] + normFlow1X * controlDist1, p1[1] + normFlow1Y * controlDist1];
-    const cp2 = [p2[0] - normFlow2X * controlDist2, p2[1] - normFlow2Y * controlDist2];
-
-    ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], p2[0], p2[1]);
-}
-
-// To test different approaches, change the function call in the main loop:
-// drawBezierSpan_FlowAnticipation(ctx, points, i);   // Flow anticipation (default)
-// drawBezierSpan_TransitionAware(ctx, points, i);    // Transition aware
-
-// -----------------------------------------
-
-// Simplified control point debugging for Conkling Street only
-let debugControlPoints = {
-    cp1: null,
-    cp2: null,
-    isDragging: false,
-    dragTarget: null
-};
-
-function drawSegment(ctx, cnn) {
-    const segment = segments[cnn];
-    if (!segment?.screen.length) return;
-
-    const points = segment.screen;
-    if (points.length < 2) return;
-
-    ctx.moveTo(points[0][0], points[0][1]);
-
-    if (points.length === 2) {
-        ctx.lineTo(points[1][0], points[1][1]);
-        return;
-    }
-
-    if (points.length < 4) {
-        for (let i = 1; i < points.length; i++) {
-            ctx.lineTo(points[i][0], points[i][1]);
-        }
-        return;
-    }
-
-    // Draw first span as straight line
-    ctx.lineTo(points[1][0], points[1][1]);
-
-    // Draw middle spans as bezier curves
-    for (let i = 1; i < points.length - 2; i++) {
-        if (cnn === '4343000' && i === 1) {
-            // Debug span for Conkling Street
-            drawConklingDebugSpan(ctx, points, i);
-        } else {
-            drawBezierSpan_Adaptive(ctx, points, i);
-        }
-    }
-
-    // Draw last span as straight line
-    ctx.lineTo(points[points.length - 1][0], points[points.length - 1][1]);
-}
-
-function drawConklingDebugSpan(ctx, points, i) {
-    const p0 = points[i - 1];  // Point 0
-    const p1 = points[i];      // Point 1 (start of debug span)
-    const p2 = points[i + 1];  // Point 2 (end of debug span)
-    const p3 = points[i + 2];  // Point 3
-
-    const spanDirX = p2[0] - p1[0];
-    const spanDirY = p2[1] - p1[1];
-    const spanLength = Math.sqrt(spanDirX * spanDirX + spanDirY * spanDirY);
-
-    if (spanLength === 0) {
-        ctx.lineTo(p2[0], p2[1]);
-        return;
-    }
-
-    // Initialize control points if not set
-    if (!debugControlPoints.cp1 || !debugControlPoints.cp2) {
-        const flowDir1X = p2[0] - p0[0];
-        const flowDir1Y = p2[1] - p0[1];
-        const flowDir2X = p3[0] - p1[0];
-        const flowDir2Y = p3[1] - p1[1];
-
-        const flow1Length = Math.sqrt(flowDir1X * flowDir1X + flowDir1Y * flowDir1Y);
-        const flow2Length = Math.sqrt(flowDir2X * flowDir2X + flowDir2Y * flowDir2Y);
-
-        const normFlow1X = flow1Length > 0 ? flowDir1X / flow1Length : spanDirX / spanLength;
-        const normFlow1Y = flow1Length > 0 ? flowDir1Y / flow1Length : spanDirY / spanLength;
-        const normFlow2X = flow2Length > 0 ? flowDir2X / flow2Length : spanDirX / spanLength;
-        const normFlow2Y = flow2Length > 0 ? flowDir2Y / flow2Length : spanDirY / spanLength;
-
-        const controlDistance = spanLength * 0.35;
-
-        debugControlPoints.cp1 = [p1[0] + normFlow1X * controlDistance, p1[1] + normFlow1Y * controlDistance];
-        debugControlPoints.cp2 = [p2[0] - normFlow2X * controlDistance, p2[1] - normFlow2Y * controlDistance];
-    }
-
-    // Draw the bezier curve with current control points
-    ctx.bezierCurveTo(debugControlPoints.cp1[0], debugControlPoints.cp1[1],
-                      debugControlPoints.cp2[0], debugControlPoints.cp2[1],
-                      p2[0], p2[1]);
-
-    // Display control point coordinates
-    info(`Conkling St Control Points: CP1[${debugControlPoints.cp1[0].toFixed(1)}, ${debugControlPoints.cp1[1].toFixed(1)}] CP2[${debugControlPoints.cp2[0].toFixed(1)}, ${debugControlPoints.cp2[1].toFixed(1)}]`);
-}
-
-function drawBezierSpan_Adaptive(ctx, points, i) {
-    const p0 = points[i - 1];
-    const p1 = points[i];
-    const p2 = points[i + 1];
-    const p3 = points[i + 2];
-
-    const spanDirX = p2[0] - p1[0];
-    const spanDirY = p2[1] - p1[1];
-    const spanLength = Math.sqrt(spanDirX * spanDirX + spanDirY * spanDirY);
-
-    if (spanLength === 0) {
-        ctx.lineTo(p2[0], p2[1]);
-        return;
-    }
-
-    // Standard flow anticipation calculation
-    const flowDir1X = p2[0] - p0[0];
-    const flowDir1Y = p2[1] - p0[1];
-    const flowDir2X = p3[0] - p1[0];
-    const flowDir2Y = p3[1] - p1[1];
-
-    const flow1Length = Math.sqrt(flowDir1X * flowDir1X + flowDir1Y * flowDir1Y);
-    const flow2Length = Math.sqrt(flowDir2X * flowDir2X + flowDir2Y * flowDir2Y);
-
-    const normFlow1X = flow1Length > 0 ? flowDir1X / flow1Length : spanDirX / spanLength;
-    const normFlow1Y = flow1Length > 0 ? flowDir1Y / flow1Length : spanDirY / spanLength;
-    const normFlow2X = flow2Length > 0 ? flowDir2X / flow2Length : spanDirX / spanLength;
-    const normFlow2Y = flow2Length > 0 ? flowDir2Y / flow2Length : spanDirY / spanLength;
-
-    // Detect sharp transitions
+    // Detect sharp transitions for adaptive correction
     const prevSpanDir = [p1[0] - p0[0], p1[1] - p0[1]];
     const currSpanDir = [p2[0] - p1[0], p2[1] - p1[1]];
     const nextSpanDir = [p3[0] - p2[0], p3[1] - p2[1]];
@@ -1916,159 +1731,147 @@ function drawBezierSpan_Adaptive(ctx, points, i) {
     ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], p2[0], p2[1]);
 }
 
-// Visual debugging: draw control points as draggable circles
-function renderUILayer() {
-    renderLayer('ui', (ctx) => {
-        drawJunctionStart(ctx);
-        drawJunctionEnd(ctx);
-        drawJunctionLabels(ctx);
+function drawBezierSpan_Geometric(ctx, points, i) {
+    const p_prev = points[i - 1];  // Previous point
+    const p_start = points[i];     // Start of current span
+    const p_end = points[i + 1];   // End of current span
+    const p_next = points[i + 2];  // Next point
 
-        // Draw debug control points for Conkling Street
-        if (debugControlPoints.cp1 && debugControlPoints.cp2) {
-            drawDebugControlPoints(ctx);
-        }
-    });
-}
+    // Calculate control points using geometric intersection method
+    const controlPoints = calculateGeometricControlPoints(p_prev, p_start, p_end, p_next);
 
-function drawDebugControlPoints(ctx) {
-    const radius = 8 / zoom;
-
-    // Draw control point 1 (red)
-    ctx.fillStyle = '#ff0000';
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 2 / zoom;
-    ctx.beginPath();
-    ctx.arc(debugControlPoints.cp1[0], debugControlPoints.cp1[1], radius, 0, 2 * Math.PI);
-    ctx.fill();
-    ctx.stroke();
-
-    // Draw control point 2 (blue)
-    ctx.fillStyle = '#0000ff';
-    ctx.beginPath();
-    ctx.arc(debugControlPoints.cp2[0], debugControlPoints.cp2[1], radius, 0, 2 * Math.PI);
-    ctx.fill();
-    ctx.stroke();
-
-    // Draw connection lines to curve endpoints
-    const conklingSegment = segments['4343000'];
-    if (conklingSegment && conklingSegment.screen) {
-        const p1 = conklingSegment.screen[1]; // Start of span
-        const p2 = conklingSegment.screen[2]; // End of span
-
-        ctx.strokeStyle = '#888888';
-        ctx.lineWidth = 1 / zoom;
-        ctx.setLineDash([5 / zoom, 5 / zoom]);
-
-        // Line from p1 to cp1
-        ctx.beginPath();
-        ctx.moveTo(p1[0], p1[1]);
-        ctx.lineTo(debugControlPoints.cp1[0], debugControlPoints.cp1[1]);
-        ctx.stroke();
-
-        // Line from p2 to cp2
-        ctx.beginPath();
-        ctx.moveTo(p2[0], p2[1]);
-        ctx.lineTo(debugControlPoints.cp2[0], debugControlPoints.cp2[1]);
-        ctx.stroke();
-
-        ctx.setLineDash([]);
+    if (controlPoints) {
+        const [cp1x, cp1y] = controlPoints.cp1;
+        const [cp2x, cp2y] = controlPoints.cp2;
+        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p_end[0], p_end[1]);
+    } else {
+        // Fallback to straight line if intersection calculation fails
+        ctx.lineTo(p_end[0], p_end[1]);
     }
 }
 
-// Mouse interaction for dragging control points
-function handleClick(e) {
-    if (isDragging || isPathfinding || hasSignificantlyDragged) {
-        hasSignificantlyDragged = false;
-        return;
+function calculateGeometricControlPoints(p_prev, p_start, p_end, p_next) {
+    // Find intersection point M of extended lines
+    const intersection = findLineIntersection(p_prev, p_start, p_end, p_next);
+
+    if (!intersection) {
+        return null; // Lines are parallel or calculation failed
     }
 
-    const rect = canvases.ui.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
+    // Control points are halfway between span endpoints and intersection
+    const cp1 = [
+        (p_start[0] + intersection[0]) / 2,
+        (p_start[1] + intersection[1]) / 2
+    ];
 
-    // Check if clicking on a debug control point
-    if (debugControlPoints.cp1 && debugControlPoints.cp2) {
-        const baseMouseX = mouseX / zoom + panX;
-        const baseMouseY = mouseY / zoom + panY;
-        const clickRadius = 25 / zoom;
+    const cp2 = [
+        (p_end[0] + intersection[0]) / 2,
+        (p_end[1] + intersection[1]) / 2
+    ];
 
-        const dist1 = Math.sqrt((baseMouseX - debugControlPoints.cp1[0]) ** 2 + (baseMouseY - debugControlPoints.cp1[1]) ** 2);
-        const dist2 = Math.sqrt((baseMouseX - debugControlPoints.cp2[0]) ** 2 + (baseMouseY - debugControlPoints.cp2[1]) ** 2);
-
-        if (dist1 < clickRadius) {
-            debugControlPoints.isDragging = true;
-            debugControlPoints.dragTarget = 'cp1';
-            e.preventDefault();
-            e.stopPropagation();
-            return;
-        } else if (dist2 < clickRadius) {
-            debugControlPoints.isDragging = true;
-            debugControlPoints.dragTarget = 'cp2';
-            e.preventDefault();
-            e.stopPropagation();
-            return;
-        }
-    }
-
-    // Normal click handling for junction selection
-    handleTouchTap(mouseX, mouseY);
+    return { cp1, cp2 };
 }
 
-function handleMouseMove(e) {
-    if (debugControlPoints.isDragging) {
-        const rect = canvases.ui.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-        const baseMouseX = mouseX / zoom + panX;
-        const baseMouseY = mouseY / zoom + panY;
+function findLineIntersection(p1, p2, p3, p4) {
+    // Find intersection of line through p1-p2 extended and line through p3-p4 extended
+    // Line 1: p1 to p2 (previous span extended)
+    // Line 2: p3 to p4 (next span extended)
 
-        if (debugControlPoints.dragTarget === 'cp1') {
-            debugControlPoints.cp1 = [baseMouseX, baseMouseY];
-        } else if (debugControlPoints.dragTarget === 'cp2') {
-            debugControlPoints.cp2 = [baseMouseX, baseMouseY];
-        }
+    const x1 = p1[0], y1 = p1[1];
+    const x2 = p2[0], y2 = p2[1];
+    const x3 = p3[0], y3 = p3[1];
+    const x4 = p4[0], y4 = p4[1];
 
-        markAllLayersDirty();
-        requestRedraw();
-        return;
+    // Calculate direction vectors
+    const dx1 = x2 - x1;
+    const dy1 = y2 - y1;
+    const dx2 = x4 - x3;
+    const dy2 = y4 - y3;
+
+    // Calculate denominator for intersection formula
+    const denominator = dx1 * dy2 - dy1 * dx2;
+
+    // Check if lines are parallel
+    if (Math.abs(denominator) < 1e-10) {
+        return null;
     }
 
-    // Normal mouse move handling for panning
-    if (!isDragging) return;
+    // Calculate intersection point using parametric line equations
+    const dx3 = x1 - x3;
+    const dy3 = y1 - y3;
 
-    const rect = canvases.ui.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
+    const t1 = (dx2 * dy3 - dy2 * dx3) / denominator;
 
-    const deltaX = mouseX - lastMouseX;
-    const deltaY = mouseY - lastMouseY;
+    // Calculate intersection point
+    const intersectionX = x1 + t1 * dx1;
+    const intersectionY = y1 + t1 * dy1;
 
-    if (Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3) {
-        hasSignificantlyDragged = true;
-    }
-
-    panX -= deltaX / zoom;
-    panY -= deltaY / zoom;
-
-    lastMouseX = mouseX;
-    lastMouseY = mouseY;
-
-    markAllLayersDirty();
-    requestRedraw();
+    return [intersectionX, intersectionY];
 }
 
-function handleMouseUp(e) {
-    if (debugControlPoints.isDragging) {
-        debugControlPoints.isDragging = false;
-        debugControlPoints.dragTarget = null;
-        e.preventDefault();
-        e.stopPropagation();
-        return;
+// Enhanced version with distance limits to prevent extreme control points
+function calculateGeometricControlPointsLimited(p_prev, p_start, p_end, p_next) {
+    const intersection = findLineIntersection(p_prev, p_start, p_end, p_next);
+
+    if (!intersection) {
+        return null;
     }
 
-    if (!isDragging) return;
-    isDragging = false;
+    // Calculate span length for limiting control point distance
+    const spanLength = Math.sqrt((p_end[0] - p_start[0]) ** 2 + (p_end[1] - p_start[1]) ** 2);
+    const maxControlDistance = spanLength * 0.8; // Limit to 80% of span length
 
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleMouseUp);
+    // Calculate distances from span endpoints to intersection
+    const dist1 = Math.sqrt((intersection[0] - p_start[0]) ** 2 + (intersection[1] - p_start[1]) ** 2);
+    const dist2 = Math.sqrt((intersection[0] - p_end[0]) ** 2 + (intersection[1] - p_end[1]) ** 2);
+
+    // Calculate control points (halfway to intersection, but limited)
+    let cp1, cp2;
+
+    if (dist1 / 2 > maxControlDistance) {
+        // Limit CP1 distance
+        const ratio = maxControlDistance / dist1;
+        cp1 = [
+            p_start[0] + (intersection[0] - p_start[0]) * ratio,
+            p_start[1] + (intersection[1] - p_start[1]) * ratio
+        ];
+    } else {
+        cp1 = [
+            (p_start[0] + intersection[0]) / 2,
+            (p_start[1] + intersection[1]) / 2
+        ];
+    }
+
+    if (dist2 / 2 > maxControlDistance) {
+        // Limit CP2 distance
+        const ratio = maxControlDistance / dist2;
+        cp2 = [
+            p_end[0] + (intersection[0] - p_end[0]) * ratio,
+            p_end[1] + (intersection[1] - p_end[1]) * ratio
+        ];
+    } else {
+        cp2 = [
+            (p_end[0] + intersection[0]) / 2,
+            (p_end[1] + intersection[1]) / 2
+        ];
+    }
+
+    return { cp1, cp2 };
+}
+
+function drawBezierSpan_GeometricLimited(ctx, points, i) {
+    const p_prev = points[i - 1];
+    const p_start = points[i];
+    const p_end = points[i + 1];
+    const p_next = points[i + 2];
+
+    const controlPoints = calculateGeometricControlPointsLimited(p_prev, p_start, p_end, p_next);
+
+    if (controlPoints) {
+        const [cp1x, cp1y] = controlPoints.cp1;
+        const [cp2x, cp2y] = controlPoints.cp2;
+        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p_end[0], p_end[1]);
+    } else {
+        ctx.lineTo(p_end[0], p_end[1]);
+    }
 }
