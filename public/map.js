@@ -804,6 +804,7 @@ function renderPathfindingLayer() {
     });
 }
 
+/*
 function renderUILayer() {
     renderLayer('ui', (ctx) => {
         // Draw UI elements
@@ -812,6 +813,7 @@ function renderUILayer() {
         drawJunctionLabels(ctx);
     });
 }
+*/
 
 function drawMap() {
     if (!bounds) return;
@@ -1150,6 +1152,7 @@ function handleMouseDown(e) {
     e.preventDefault();
 }
 
+/*
 function handleMouseMove(e) {
     if (!isDragging) return;
 
@@ -1184,6 +1187,7 @@ function handleMouseUp(e) {
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
 }
+*/
 
 function zoomCanvas(x, y, zoomFactor) {
     const newZoom = Math.max(minZoom, Math.min(maxZoom, zoom * zoomFactor));
@@ -1220,6 +1224,7 @@ function handleWheel(e) {
     zoomCanvas(mouseX, mouseY, zoomFactor);
 }
 
+/*
 function handleClick(e) {
     // Ignore clicks that happen immediately after dragging
     if (isDragging || isPathfinding || hasSignificantlyDragged) {
@@ -1233,6 +1238,7 @@ function handleClick(e) {
 
     handleTouchTap(mouseX, mouseY);
 }
+*/
 
 function getTouchCoordinates(e) {
     const rect = canvases.ui.getBoundingClientRect();
@@ -1624,6 +1630,7 @@ window.addEventListener('resize', () => {
 
 // -------------------------------------------------
 
+/*
 // Cubic bezier curves with flow anticipation (back to the successful approach)
 function drawSegment(ctx, cnn) {
     const segment = segments[cnn];
@@ -1701,6 +1708,7 @@ function drawBezierSpan_FlowAnticipation(ctx, points, i) {
 
     ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], p2[0], p2[1]);
 }
+*/
 
 // Alternative: TransitionAware approach (was among the best)
 function drawBezierSpan_TransitionAware(ctx, points, i) {
@@ -1750,3 +1758,289 @@ function drawBezierSpan_TransitionAware(ctx, points, i) {
 // To test different approaches, change the function call in the main loop:
 // drawBezierSpan_FlowAnticipation(ctx, points, i);   // Flow anticipation (default)
 // drawBezierSpan_TransitionAware(ctx, points, i);    // Transition aware
+
+// -----------------------------------------
+
+// Interactive control point debugging for Mercury Street point K
+let debugControlPoints = {
+    cp1: null,
+    cp2: null,
+    isDragging: false,
+    dragTarget: null
+};
+
+function drawSegment(ctx, cnn) {
+    const segment = segments[cnn];
+    if (!segment?.screen.length) return;
+
+    const points = segment.screen;
+    if (points.length < 2) return;
+
+    // Start at the first point
+    ctx.moveTo(points[0][0], points[0][1]);
+
+    if (points.length === 2) {
+        ctx.lineTo(points[1][0], points[1][1]);
+        return;
+    }
+
+    if (points.length < 4) {
+        for (let i = 1; i < points.length; i++) {
+            ctx.lineTo(points[i][0], points[i][1]);
+        }
+        return;
+    }
+
+    // Draw first span as straight line
+    ctx.lineTo(points[1][0], points[1][1]);
+
+    // Draw middle spans as bezier curves
+    for (let i = 1; i < points.length - 2; i++) {
+        if (cnn === '8987000' && i === 1) {
+            // Special handling for Mercury Street point K span
+            drawDebugSpan(ctx, points, i, cnn);
+        } else {
+            drawBezierSpan_FlowAnticipation(ctx, points, i);
+        }
+    }
+
+    // Draw last span as straight line
+    ctx.lineTo(points[points.length - 1][0], points[points.length - 1][1]);
+}
+
+function drawDebugSpan(ctx, points, i, cnn) {
+    const p0 = points[i - 1];
+    const p1 = points[i];      // Point K
+    const p2 = points[i + 1];  // End of span
+    const p3 = points[i + 2];
+
+    const spanDirX = p2[0] - p1[0];
+    const spanDirY = p2[1] - p1[1];
+    const spanLength = Math.sqrt(spanDirX * spanDirX + spanDirY * spanDirY);
+
+    if (spanLength === 0) {
+        ctx.lineTo(p2[0], p2[1]);
+        return;
+    }
+
+    // Initialize control points if not set
+    if (!debugControlPoints.cp1 || !debugControlPoints.cp2) {
+        // Calculate initial positions using flow anticipation
+        const flowDir1X = p2[0] - p0[0];
+        const flowDir1Y = p2[1] - p0[1];
+        const flowDir2X = p3[0] - p1[0];
+        const flowDir2Y = p3[1] - p1[1];
+
+        const flow1Length = Math.sqrt(flowDir1X * flowDir1X + flowDir1Y * flowDir1Y);
+        const flow2Length = Math.sqrt(flowDir2X * flowDir2X + flowDir2Y * flowDir2Y);
+
+        const normFlow1X = flow1Length > 0 ? flowDir1X / flow1Length : spanDirX / spanLength;
+        const normFlow1Y = flow1Length > 0 ? flowDir1Y / flow1Length : spanDirY / spanLength;
+        const normFlow2X = flow2Length > 0 ? flowDir2X / flow2Length : spanDirX / spanLength;
+        const normFlow2Y = flow2Length > 0 ? flowDir2Y / flow2Length : spanDirY / spanLength;
+
+        const controlDistance = spanLength * 0.35;
+
+        debugControlPoints.cp1 = [p1[0] + normFlow1X * controlDistance, p1[1] + normFlow1Y * controlDistance];
+        debugControlPoints.cp2 = [p2[0] - normFlow2X * controlDistance, p2[1] - normFlow2Y * controlDistance];
+    }
+
+    // Draw the bezier curve with current control points
+    ctx.bezierCurveTo(debugControlPoints.cp1[0], debugControlPoints.cp1[1],
+                      debugControlPoints.cp2[0], debugControlPoints.cp2[1],
+                      p2[0], p2[1]);
+
+    // Display control point coordinates
+    const cp1Screen = debugControlPoints.cp1;
+    const cp2Screen = debugControlPoints.cp2;
+
+    info(`Mercury St Point K Control Points: CP1[${cp1Screen[0].toFixed(1)}, ${cp1Screen[1].toFixed(1)}] CP2[${cp2Screen[0].toFixed(1)}, ${cp2Screen[1].toFixed(1)}]`);
+}
+
+function drawBezierSpan_FlowAnticipation(ctx, points, i) {
+    const p0 = points[i - 1];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[i + 2];
+
+    const spanDirX = p2[0] - p1[0];
+    const spanDirY = p2[1] - p1[1];
+    const spanLength = Math.sqrt(spanDirX * spanDirX + spanDirY * spanDirY);
+
+    if (spanLength === 0) {
+        ctx.lineTo(p2[0], p2[1]);
+        return;
+    }
+
+    const flowDir1X = p2[0] - p0[0];
+    const flowDir1Y = p2[1] - p0[1];
+    const flowDir2X = p3[0] - p1[0];
+    const flowDir2Y = p3[1] - p1[1];
+
+    const flow1Length = Math.sqrt(flowDir1X * flowDir1X + flowDir1Y * flowDir1Y);
+    const flow2Length = Math.sqrt(flowDir2X * flowDir2X + flowDir2Y * flowDir2Y);
+
+    const normFlow1X = flow1Length > 0 ? flowDir1X / flow1Length : spanDirX / spanLength;
+    const normFlow1Y = flow1Length > 0 ? flowDir1Y / flow1Length : spanDirY / spanLength;
+    const normFlow2X = flow2Length > 0 ? flowDir2X / flow2Length : spanDirX / spanLength;
+    const normFlow2Y = flow2Length > 0 ? flowDir2Y / flow2Length : spanDirY / spanLength;
+
+    const controlDistance = spanLength * 0.35;
+
+    const cp1 = [p1[0] + normFlow1X * controlDistance, p1[1] + normFlow1Y * controlDistance];
+    const cp2 = [p2[0] - normFlow2X * controlDistance, p2[1] - normFlow2Y * controlDistance];
+
+    ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], p2[0], p2[1]);
+}
+
+// Visual debugging: draw control points as draggable circles
+function renderUILayer() {
+    renderLayer('ui', (ctx) => {
+        // Draw UI elements
+        drawJunctionStart(ctx);
+        drawJunctionEnd(ctx);
+        drawJunctionLabels(ctx);
+
+        // Draw debug control points for Mercury Street
+        if (debugControlPoints.cp1 && debugControlPoints.cp2) {
+            drawDebugControlPoints(ctx);
+        }
+    });
+}
+
+function drawDebugControlPoints(ctx) {
+    const radius = 8 / zoom;
+
+    // Draw control point 1
+    ctx.fillStyle = '#ff0000'; // Red
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2 / zoom;
+    ctx.beginPath();
+    ctx.arc(debugControlPoints.cp1[0], debugControlPoints.cp1[1], radius, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.stroke();
+
+    // Draw control point 2
+    ctx.fillStyle = '#0000ff'; // Blue
+    ctx.beginPath();
+    ctx.arc(debugControlPoints.cp2[0], debugControlPoints.cp2[1], radius, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.stroke();
+
+    // Draw lines from control points to curve endpoints
+    const mercurySegment = segments['8987000'];
+    if (mercurySegment && mercurySegment.screen) {
+        const p1 = mercurySegment.screen[1]; // Point K
+        const p2 = mercurySegment.screen[2]; // End of span
+
+        ctx.strokeStyle = '#888888';
+        ctx.lineWidth = 1 / zoom;
+        ctx.setLineDash([5 / zoom, 5 / zoom]);
+
+        // Line from p1 to cp1
+        ctx.beginPath();
+        ctx.moveTo(p1[0], p1[1]);
+        ctx.lineTo(debugControlPoints.cp1[0], debugControlPoints.cp1[1]);
+        ctx.stroke();
+
+        // Line from p2 to cp2
+        ctx.beginPath();
+        ctx.moveTo(p2[0], p2[1]);
+        ctx.lineTo(debugControlPoints.cp2[0], debugControlPoints.cp2[1]);
+        ctx.stroke();
+
+        ctx.setLineDash([]);
+    }
+}
+
+// Add mouse interaction for dragging control points
+function handleClick(e) {
+    if (isDragging || isPathfinding || hasSignificantlyDragged) {
+        hasSignificantlyDragged = false;
+        return;
+    }
+
+    const rect = canvases.ui.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    // Check if clicking on a debug control point
+    if (debugControlPoints.cp1 && debugControlPoints.cp2) {
+        const baseMouseX = mouseX / zoom + panX;
+        const baseMouseY = mouseY / zoom + panY;
+        const clickRadius = 15 / zoom;
+
+        const dist1 = Math.sqrt((baseMouseX - debugControlPoints.cp1[0]) ** 2 + (baseMouseY - debugControlPoints.cp1[1]) ** 2);
+        const dist2 = Math.sqrt((baseMouseX - debugControlPoints.cp2[0]) ** 2 + (baseMouseY - debugControlPoints.cp2[1]) ** 2);
+
+        if (dist1 < clickRadius) {
+            debugControlPoints.isDragging = true;
+            debugControlPoints.dragTarget = 'cp1';
+            return;
+        } else if (dist2 < clickRadius) {
+            debugControlPoints.isDragging = true;
+            debugControlPoints.dragTarget = 'cp2';
+            return;
+        }
+    }
+
+    // Normal click handling for junction selection
+    handleTouchTap(mouseX, mouseY);
+}
+
+function handleMouseMove(e) {
+    if (debugControlPoints.isDragging) {
+        const rect = canvases.ui.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        const baseMouseX = mouseX / zoom + panX;
+        const baseMouseY = mouseY / zoom + panY;
+
+        if (debugControlPoints.dragTarget === 'cp1') {
+            debugControlPoints.cp1 = [baseMouseX, baseMouseY];
+        } else if (debugControlPoints.dragTarget === 'cp2') {
+            debugControlPoints.cp2 = [baseMouseX, baseMouseY];
+        }
+
+        markAllLayersDirty();
+        requestRedraw();
+        return;
+    }
+
+    // Normal mouse move handling for panning
+    if (!isDragging) return;
+
+    const rect = canvases.ui.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    const deltaX = mouseX - lastMouseX;
+    const deltaY = mouseY - lastMouseY;
+
+    if (Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3) {
+        hasSignificantlyDragged = true;
+    }
+
+    panX -= deltaX / zoom;
+    panY -= deltaY / zoom;
+
+    lastMouseX = mouseX;
+    lastMouseY = mouseY;
+
+    markAllLayersDirty();
+    requestRedraw();
+}
+
+function handleMouseUp(e) {
+    if (debugControlPoints.isDragging) {
+        debugControlPoints.isDragging = false;
+        debugControlPoints.dragTarget = null;
+        return;
+    }
+
+    if (!isDragging) return;
+    isDragging = false;
+
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+}
