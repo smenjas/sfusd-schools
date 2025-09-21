@@ -910,6 +910,12 @@ function postprocessSegments() {
             segments[cnn].screen.push(coordsToScreen(lat, lon));
         }
     }
+    console.log("segment['4343000'] = {");
+    const segment = segments['4343000'];
+    for (const key in segment) {
+        console.log(`    ${key}: ${segment[key]},`);
+    }
+    console.log("};");
     //console.timeEnd('postprocessSegments()');
 }
 
