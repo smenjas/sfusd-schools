@@ -486,40 +486,23 @@ function segmentIsVisible(cnn, margin) {
 }
 
 function drawBezier(ctx, points, i) {
-    // Anticipate the flow of the street segment, and draw curves accordingly.
     const p0 = points[i - 1];
     const p1 = points[i];     // Start of current span
     const p2 = points[i + 1]; // End of current span
     const p3 = points[i + 2];
 
-    // Current span direction
-    const spanDirX = p2[0] - p1[0];
-    const spanDirY = p2[1] - p1[1];
-    const spanLength = Math.sqrt(spanDirX * spanDirX + spanDirY * spanDirY);
-
-    if (spanLength === 0) {
-        ctx.lineTo(p2[0], p2[1]);
-        return;
+    // Normalize vectors
+    function normalize(x, y) {
+        const length = Math.sqrt(x * x + y * y);
+        return length > 0 ? [x / length, y / length] : [0, 0];
     }
 
-    // Where we want the curve to flow at each end (overall direction)
-    const flowDir1X = p2[0] - p0[0]; // Overall direction through p1
-    const flowDir1Y = p2[1] - p0[1];
-    const flowDir2X = p3[0] - p1[0]; // Overall direction through p2
-    const flowDir2Y = p3[1] - p1[1];
+    const [norm1X, norm1Y] = normalize(p2[0] - p0[0], p2[1] - p0[1]);
+    const [norm2X, norm2Y] = normalize(p3[0] - p1[0], p3[1] - p1[1]);
 
-    // Normalize flow directions
-    const flow1Length = Math.sqrt(flowDir1X * flowDir1X + flowDir1Y * flowDir1Y);
-    const flow2Length = Math.sqrt(flowDir2X * flowDir2X + flowDir2Y * flowDir2Y);
-
-    const norm1X = flow1Length > 0 ? flowDir1X / flow1Length : spanDirX / spanLength;
-    const norm1Y = flow1Length > 0 ? flowDir1Y / flow1Length : spanDirY / spanLength;
-    const norm2X = flow2Length > 0 ? flowDir2X / flow2Length : spanDirX / spanLength;
-    const norm2Y = flow2Length > 0 ? flowDir2Y / flow2Length : spanDirY / spanLength;
-
-    // Position control points in the flow direction
-    const tension = 0.35;
-    const controlDistance = spanLength * 0.35;
+    const tension = 0.4;
+    const spanLength = Math.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2);
+    const controlDistance = spanLength * tension;
 
     const cp1 = [p1[0] + norm1X * controlDistance, p1[1] + norm1Y * controlDistance];
     const cp2 = [p2[0] - norm2X * controlDistance, p2[1] - norm2Y * controlDistance];
