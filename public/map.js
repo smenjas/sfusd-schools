@@ -521,6 +521,47 @@ function segmentIsVisible(cnn, margin) {
     return false;
 }
 
+function drawBezier(ctx, points, i) {
+    // Anticipate the flow of the street segment, and draw curves accordingly.
+    const p0 = points[i - 1];
+    const p1 = points[i];      // Start of current span
+    const p2 = points[i + 1];  // End of current span
+    const p3 = points[i + 2];
+
+    // Current span direction
+    const spanDirX = p2[0] - p1[0];
+    const spanDirY = p2[1] - p1[1];
+    const spanLength = Math.sqrt(spanDirX * spanDirX + spanDirY * spanDirY);
+
+    if (spanLength === 0) {
+        ctx.lineTo(p2[0], p2[1]);
+        return;
+    }
+
+    // Where we want the curve to flow at each end (overall direction)
+    const flowDir1X = p2[0] - p0[0]; // Overall direction through p1
+    const flowDir1Y = p2[1] - p0[1];
+    const flowDir2X = p3[0] - p1[0]; // Overall direction through p2
+    const flowDir2Y = p3[1] - p1[1];
+
+    // Normalize flow directions
+    const flow1Length = Math.sqrt(flowDir1X * flowDir1X + flowDir1Y * flowDir1Y);
+    const flow2Length = Math.sqrt(flowDir2X * flowDir2X + flowDir2Y * flowDir2Y);
+
+    const normFlow1X = flow1Length > 0 ? flowDir1X / flow1Length : spanDirX / spanLength;
+    const normFlow1Y = flow1Length > 0 ? flowDir1Y / flow1Length : spanDirY / spanLength;
+    const normFlow2X = flow2Length > 0 ? flowDir2X / flow2Length : spanDirX / spanLength;
+    const normFlow2Y = flow2Length > 0 ? flowDir2Y / flow2Length : spanDirY / spanLength;
+
+    // Position control points in the flow direction
+    const controlDistance = spanLength * 0.35;
+
+    const cp1 = [p1[0] + normFlow1X * controlDistance, p1[1] + normFlow1Y * controlDistance];
+    const cp2 = [p2[0] - normFlow2X * controlDistance, p2[1] - normFlow2Y * controlDistance];
+
+    ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], p2[0], p2[1]);
+}
+
 function drawSegment(ctx, cnn) {
     const segment = segments[cnn];
     if (!segment?.screen.length) return;
@@ -530,28 +571,24 @@ function drawSegment(ctx, cnn) {
 
     ctx.moveTo(points[0][0], points[0][1]);
 
-    if (points.length === 2) {
-        ctx.lineTo(points[1][0], points[1][1]);
-        return;
-    }
+    // Draw the first span as a straight line.
+    ctx.lineTo(points[1][0], points[1][1]);
 
-    if (points.length < 4) {
-        for (let i = 1; i < points.length; i++) {
+    if (points.length < 5) {
+        for (let i = 2; i < points.length; i++) {
             ctx.lineTo(points[i][0], points[i][1]);
         }
         return;
     }
 
-    // Draw first span as straight line
-    ctx.lineTo(points[1][0], points[1][1]);
-
-    // Draw middle spans using hybrid approach
+    // Draw middle spans using Bézier curves.
     for (let i = 1; i < points.length - 2; i++) {
-        drawBezierSpan_Hybrid(ctx, points, i);
+        drawBezier(ctx, points, i);
     }
 
-    // Draw last span as straight line
-    ctx.lineTo(points[points.length - 1][0], points[points.length - 1][1]);
+    // Draw the last span as a straight line.
+    const end = points[points.length - 1];
+    ctx.lineTo(end[0], end[1]);
 }
 
 function drawStreets(ctx) {
@@ -1624,254 +1661,3 @@ window.addEventListener('resize', () => {
     resizeCanvases();
     requestRedraw();
 });
-
-function drawBezierSpan_Hybrid(ctx, points, i) {
-    const p_prev = points[i - 1];
-    const p_start = points[i];
-    const p_end = points[i + 1];
-    const p_next = points[i + 2];
-
-    // Check if we should use geometric method
-    if (points.length === 4 && shouldUseGeometric(p_prev, p_start, p_end, p_next)) {
-        const controlPoints = calculateGeometricControlPointsLimited(p_prev, p_start, p_end, p_next);
-
-        if (controlPoints) {
-            const [cp1x, cp1y] = controlPoints.cp1;
-            const [cp2x, cp2y] = controlPoints.cp2;
-            ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p_end[0], p_end[1]);
-            return;
-        }
-    }
-
-    // Fall back to flow anticipation method
-    drawBezierSpan_FlowAnticipation(ctx, points, i);
-}
-
-function shouldUseGeometric(p_prev, p_start, p_end, p_next) {
-    // Calculate angle between span 0-1 and span 2-3
-    const span1Dir = [p_start[0] - p_prev[0], p_start[1] - p_prev[1]];
-    const span3Dir = [p_next[0] - p_end[0], p_next[1] - p_end[1]];
-
-    // Normalize vectors
-    const span1Length = Math.sqrt(span1Dir[0] ** 2 + span1Dir[1] ** 2);
-    const span3Length = Math.sqrt(span3Dir[0] ** 2 + span3Dir[1] ** 2);
-
-    if (span1Length === 0 || span3Length === 0) {
-        return false; // Can't calculate angle
-    }
-
-    const norm1 = [span1Dir[0] / span1Length, span1Dir[1] / span1Length];
-    const norm3 = [span3Dir[0] / span3Length, span3Dir[1] / span3Length];
-
-    // Calculate dot product to get angle
-    const dotProduct = norm1[0] * norm3[0] + norm1[1] * norm3[1];
-    const angleRadians = Math.acos(Math.max(-1, Math.min(1, dotProduct))); // Clamp to valid range
-    const angleDegrees = angleRadians * (180 / Math.PI);
-
-    // Use geometric method for angles <= 120 degrees
-    const threshold = 120;
-    return angleDegrees <= threshold;
-}
-
-function drawBezierSpan_FlowAnticipation(ctx, points, i) {
-    // Anticipate the flow of the street segment, and draw curves accordingly.
-    const p0 = points[i - 1];
-    const p1 = points[i];
-    const p2 = points[i + 1];
-    const p3 = points[i + 2];
-
-    const spanDirX = p2[0] - p1[0];
-    const spanDirY = p2[1] - p1[1];
-    const spanLength = Math.sqrt(spanDirX * spanDirX + spanDirY * spanDirY);
-
-    if (spanLength === 0) {
-        ctx.lineTo(p2[0], p2[1]);
-        return;
-    }
-
-    const flowDir1X = p2[0] - p0[0];
-    const flowDir1Y = p2[1] - p0[1];
-    const flowDir2X = p3[0] - p1[0];
-    const flowDir2Y = p3[1] - p1[1];
-
-    const flow1Length = Math.sqrt(flowDir1X * flowDir1X + flowDir1Y * flowDir1Y);
-    const flow2Length = Math.sqrt(flowDir2X * flowDir2X + flowDir2Y * flowDir2Y);
-
-    const normFlow1X = flow1Length > 0 ? flowDir1X / flow1Length : spanDirX / spanLength;
-    const normFlow1Y = flow1Length > 0 ? flowDir1Y / flow1Length : spanDirY / spanLength;
-    const normFlow2X = flow2Length > 0 ? flowDir2X / flow2Length : spanDirX / spanLength;
-    const normFlow2Y = flow2Length > 0 ? flowDir2Y / flow2Length : spanDirY / spanLength;
-
-    // Detect sharp transitions for adaptive correction
-    const prevSpanDir = [p1[0] - p0[0], p1[1] - p0[1]];
-    const currSpanDir = [p2[0] - p1[0], p2[1] - p1[1]];
-    const nextSpanDir = [p3[0] - p2[0], p3[1] - p2[1]];
-
-    const prevSpanLength = Math.sqrt(prevSpanDir[0] ** 2 + prevSpanDir[1] ** 2);
-    const nextSpanLength = Math.sqrt(nextSpanDir[0] ** 2 + nextSpanDir[1] ** 2);
-
-    const normPrevSpan = prevSpanLength > 0 ? [prevSpanDir[0] / prevSpanLength, prevSpanDir[1] / prevSpanLength] : [0, 0];
-    const normCurrSpan = [currSpanDir[0] / spanLength, currSpanDir[1] / spanLength];
-    const normNextSpan = nextSpanLength > 0 ? [nextSpanDir[0] / nextSpanLength, nextSpanDir[1] / nextSpanLength] : [0, 0];
-
-    const alignmentAtP1 = normPrevSpan[0] * normCurrSpan[0] + normPrevSpan[1] * normCurrSpan[1];
-    const alignmentAtP2 = normCurrSpan[0] * normNextSpan[0] + normCurrSpan[1] * normNextSpan[1];
-
-    const isSharpTransition = (alignmentAtP1 < 0.8 || alignmentAtP2 < 0.8) && spanLength < 5.0;
-
-    let controlDistance = spanLength * 0.35;
-    let cp1 = [p1[0] + normFlow1X * controlDistance, p1[1] + normFlow1Y * controlDistance];
-    let cp2 = [p2[0] - normFlow2X * controlDistance, p2[1] - normFlow2Y * controlDistance];
-
-    if (isSharpTransition) {
-        const correctionFactor = 0.03;
-        cp1[1] -= correctionFactor;
-    }
-
-    ctx.bezierCurveTo(cp1[0], cp1[1], cp2[0], cp2[1], p2[0], p2[1]);
-}
-
-function drawBezierSpan_Geometric(ctx, points, i) {
-    const p_prev = points[i - 1];  // Previous point
-    const p_start = points[i];     // Start of current span
-    const p_end = points[i + 1];   // End of current span
-    const p_next = points[i + 2];  // Next point
-
-    // Calculate control points using geometric intersection method
-    const controlPoints = calculateGeometricControlPoints(p_prev, p_start, p_end, p_next);
-
-    if (controlPoints) {
-        const [cp1x, cp1y] = controlPoints.cp1;
-        const [cp2x, cp2y] = controlPoints.cp2;
-        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p_end[0], p_end[1]);
-    } else {
-        // Fallback to straight line if intersection calculation fails
-        ctx.lineTo(p_end[0], p_end[1]);
-    }
-}
-
-function calculateGeometricControlPoints(p_prev, p_start, p_end, p_next) {
-    // Find intersection point M of extended lines
-    const intersection = findLineIntersection(p_prev, p_start, p_end, p_next);
-
-    if (!intersection) {
-        return null; // Lines are parallel or calculation failed
-    }
-
-    // Control points are halfway between span endpoints and intersection
-    const cp1 = [
-        (p_start[0] + intersection[0]) / 2,
-        (p_start[1] + intersection[1]) / 2
-    ];
-
-    const cp2 = [
-        (p_end[0] + intersection[0]) / 2,
-        (p_end[1] + intersection[1]) / 2
-    ];
-
-    return { cp1, cp2 };
-}
-
-function findLineIntersection(p1, p2, p3, p4) {
-    // Find intersection of line through p1-p2 extended and line through p3-p4 extended
-    // Line 1: p1 to p2 (previous span extended)
-    // Line 2: p3 to p4 (next span extended)
-
-    const x1 = p1[0], y1 = p1[1];
-    const x2 = p2[0], y2 = p2[1];
-    const x3 = p3[0], y3 = p3[1];
-    const x4 = p4[0], y4 = p4[1];
-
-    // Calculate direction vectors
-    const dx1 = x2 - x1;
-    const dy1 = y2 - y1;
-    const dx2 = x4 - x3;
-    const dy2 = y4 - y3;
-
-    // Calculate denominator for intersection formula
-    const denominator = dx1 * dy2 - dy1 * dx2;
-
-    // Check if lines are parallel
-    if (Math.abs(denominator) < 1e-10) {
-        return null;
-    }
-
-    // Calculate intersection point using parametric line equations
-    const dx3 = x1 - x3;
-    const dy3 = y1 - y3;
-
-    const t1 = (dx2 * dy3 - dy2 * dx3) / denominator;
-
-    // Calculate intersection point
-    const intersectionX = x1 + t1 * dx1;
-    const intersectionY = y1 + t1 * dy1;
-
-    return [intersectionX, intersectionY];
-}
-
-// Enhanced version with distance limits to prevent extreme control points
-function calculateGeometricControlPointsLimited(p_prev, p_start, p_end, p_next) {
-    const intersection = findLineIntersection(p_prev, p_start, p_end, p_next);
-
-    if (!intersection) {
-        return null;
-    }
-
-    // Calculate span length for limiting control point distance
-    const spanLength = Math.sqrt((p_end[0] - p_start[0]) ** 2 + (p_end[1] - p_start[1]) ** 2);
-    const maxControlDistance = spanLength * 0.8; // Limit to 80% of span length
-
-    // Calculate distances from span endpoints to intersection
-    const dist1 = Math.sqrt((intersection[0] - p_start[0]) ** 2 + (intersection[1] - p_start[1]) ** 2);
-    const dist2 = Math.sqrt((intersection[0] - p_end[0]) ** 2 + (intersection[1] - p_end[1]) ** 2);
-
-    // Calculate control points (halfway to intersection, but limited)
-    let cp1, cp2;
-
-    if (dist1 / 2 > maxControlDistance) {
-        // Limit CP1 distance
-        const ratio = maxControlDistance / dist1;
-        cp1 = [
-            p_start[0] + (intersection[0] - p_start[0]) * ratio,
-            p_start[1] + (intersection[1] - p_start[1]) * ratio
-        ];
-    } else {
-        cp1 = [
-            (p_start[0] + intersection[0]) / 2,
-            (p_start[1] + intersection[1]) / 2
-        ];
-    }
-
-    if (dist2 / 2 > maxControlDistance) {
-        // Limit CP2 distance
-        const ratio = maxControlDistance / dist2;
-        cp2 = [
-            p_end[0] + (intersection[0] - p_end[0]) * ratio,
-            p_end[1] + (intersection[1] - p_end[1]) * ratio
-        ];
-    } else {
-        cp2 = [
-            (p_end[0] + intersection[0]) / 2,
-            (p_end[1] + intersection[1]) / 2
-        ];
-    }
-
-    return { cp1, cp2 };
-}
-
-function drawBezierSpan_GeometricLimited(ctx, points, i) {
-    const p_prev = points[i - 1];
-    const p_start = points[i];
-    const p_end = points[i + 1];
-    const p_next = points[i + 2];
-
-    const controlPoints = calculateGeometricControlPointsLimited(p_prev, p_start, p_end, p_next);
-
-    if (controlPoints) {
-        const [cp1x, cp1y] = controlPoints.cp1;
-        const [cp2x, cp2y] = controlPoints.cp2;
-        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p_end[0], p_end[1]);
-    } else {
-        ctx.lineTo(p_end[0], p_end[1]);
-    }
-}
