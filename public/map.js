@@ -563,14 +563,8 @@ function drawStreets(ctx) {
     //console.time('  drawStreets()');
     let streetCount = 0;
 
-    // 1st pass: Draw regular two-way streets
+    // 1st pass: Draw regular two-way streets (with outlines)
     //console.time('    drawStreets(): 2-way');
-    ctx.strokeStyle = getColor('streets');
-    ctx.lineWidth = Math.min(1, 25 / zoom);
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.beginPath();
-
     const oneWaySegments = [];
 
     Object.entries(segments).forEach(([cnn, segment]) => {
@@ -584,11 +578,15 @@ function drawStreets(ctx) {
             return;
         }
 
-        // Regular two-way street
+        ctx.strokeStyle = getColor('streets');
+        ctx.lineWidth = Math.min(1, 25 / zoom);
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
         drawSegment(ctx, cnn);
+        ctx.stroke();
     });
 
-    ctx.stroke();
     //console.timeEnd('    drawStreets(): 2-way');
 
     if (!oneWaySegments.length) {
@@ -596,19 +594,25 @@ function drawStreets(ctx) {
         return streetCount;
     }
 
-    // 2nd pass: Draw one-way streets in a different color
+    // 2nd pass: Draw one-way streets (each with its own outline)
     //console.time('    drawStreets(): 1-way');
-    ctx.strokeStyle = getColor('oneWays');
-    ctx.lineWidth = Math.min(1, 25 / zoom);
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.beginPath();
-
     oneWaySegments.forEach(cnn => {
+        // Draw outline first
+        ctx.strokeStyle = getColor('background');
+        ctx.lineWidth = Math.min(1.1, 27.5 / zoom);
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
         drawSegment(ctx, cnn);
-    });
+        ctx.stroke();
 
-    ctx.stroke();
+        // Draw one-way street line on top
+        ctx.strokeStyle = getColor('oneWays');
+        ctx.lineWidth = Math.min(1, 25 / zoom);
+        ctx.beginPath();
+        drawSegment(ctx, cnn);
+        ctx.stroke();
+    });
     //console.timeEnd('    drawStreets(): 1-way');
 
     if (zoom < 2) {
