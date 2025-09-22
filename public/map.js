@@ -227,8 +227,8 @@ function drawArrow(ctx, x1, y1, x2, y2, color) {
     if (length < arrowLength) return;
 
     // Calculate arrow position (closer to the end point)
-    const arrowX = x1 + dx * 0.9;
-    const arrowY = y1 + dy * 0.9;
+    const arrowX = x1 + dx * 0.95;
+    const arrowY = y1 + dy * 0.95;
 
     // Calculate arrow direction
     const angle = Math.atan2(dy, dx);
@@ -629,8 +629,25 @@ function drawStreets(ctx) {
         }
         const screen = Array.from(segment.screen);
         if (segment.to === segment.f) screen.reverse();
-        const [x1, y1] = screen.at(-2);
-        const [x2, y2] = screen.at(-1);
+
+        // Find the longest span in the segment
+        let longestSpanLength = 0;
+        let longestSpanIndex = 0;
+
+        for (let i = 0; i < screen.length - 1; i++) {
+            const [x1, y1] = screen[i];
+            const [x2, y2] = screen[i + 1];
+            const spanLength = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+
+            if (spanLength > longestSpanLength) {
+                longestSpanLength = spanLength;
+                longestSpanIndex = i;
+            }
+        }
+
+        // Draw arrow on the longest span
+        const [x1, y1] = screen[longestSpanIndex];
+        const [x2, y2] = screen[longestSpanIndex + 1];
         drawArrow(ctx, x1, y1, x2, y2, getColor('arrows'));
     });
     //console.timeEnd('    drawStreets(): 1-way arrows');
