@@ -378,7 +378,7 @@ function drawStreetNames(ctx) {
         streetSegments.get(street).push({
             cnn,
             distance: segment.distance,
-            visibleLength: calculateSegmentVisibleLength(cnn)  // Add visible length calculation
+            visibleLength: calculateSegmentVisibleLength(cnn)
         });
     }
 
@@ -391,8 +391,16 @@ function drawStreetNames(ctx) {
 
         // Only draw if segment has significant visible length
         const textWidth = ctx.measureText(street).width;
-        if (bestSegment.visibleLength > textWidth / 4) {  // Adjust threshold as needed
-            drawStreetNameOnSegment(ctx, street, bestSegment.cnn);
+        if (bestSegment.visibleLength > textWidth / 4) {
+            // Check if this is a long segment that should have multiple labels
+            const labelSpacing = Math.max(textWidth * 2, 150 / zoom);
+            if (bestSegment.visibleLength > labelSpacing * 2) {
+                // Long segment - use multiple labels
+                drawMultipleLabelsOnSegment(ctx, street, bestSegment.cnn);
+            } else {
+                // Short segment - use single label
+                drawStreetNameOnSegment(ctx, street, bestSegment.cnn);
+            }
         }
     });
     //console.timeEnd('  drawStreetNames()');
@@ -1721,4 +1729,90 @@ function calculateSegmentVisibleLength(cnn) {
     }
 
     return totalVisibleLength;
+}
+
+function drawMultipleLabelsOnSegment(ctx, street, cnn) {
+    const segment = segments[cnn];
+    if (!segment || segment.screen.length < 2) return;
+
+    const textWidth = ctx.measureText(street).width;
+    const labelSpacing = Math.max(textWidth * 2, 150 / zoom); // Minimum spacing between labels
+    const visibleLength = calculateSegmentVisibleLength(cnn);
+
+    // Calculate how many labels we can fit
+    const numLabels = Math.floor(visibleLength / labelSpacing);
+    if (numLabels <= 1) {
+        // Fall back to single label
+        drawStreetNameOnSegment(ctx, street, cnn);
+        return;
+    }
+
+    // Find all visible segments of the street
+    const points = segment.screen;
+    const visibleSegments = [];
+
+    for (let i = 0; i < points.length - 1; i++) {
+        const [x1, y1] = points[i];
+        const [x2, y2] = points[i + 1];
+        const segmentLength = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+        const visibleLength = calculateVisibleLineLength(x1, y1, x2, y2);
+
+        if (visibleLength > 0) {
+            visibleSegments.push({
+                index: i,
+                x1, y1, x2, y2,
+                totalLength: segmentLength,
+                visibleLength: visibleLength,
+                startVisible: calculateVisibleLineLength(x1, y1, x1, y1) > 0,
+                endVisible: calculateVisibleLineLength(x2, y2, x2, y2) > 0
+            });
+        }
+    }
+
+    if (visibleSegments.length === 0) return;
+
+    // Calculate total visible length and place labels at intervals
+    let totalVisibleLength = visibleSegments.reduce((sum, seg) => sum + seg.visibleLength, 0);
+    let labelInterval = totalVisibleLength / numLabels;
+
+    let currentDistance = labelInterval / 2; // Start offset from beginning
+
+    for (let labelIndex = 0; labelIndex < numLabels; labelIndex++) {
+        let accumulatedDistance = 0;
+
+        // Find which segment contains this label position
+        for (const visibleSeg of visibleSegments) {
+            if (accumulatedDistance + visibleSeg.visibleLength >= currentDistance) {
+                // This segment contains our label position
+                const segmentOffset = currentDistance - accumulatedDistance;
+                const ratio = segmentOffset / visibleSeg.visibleLength;
+
+                // Interpolate position along the segment
+                const labelX = visibleSeg.x1 + ratio * (visibleSeg.x2 - visibleSeg.x1);
+                const labelY = visibleSeg.y1 + ratio * (visibleSeg.y2 - visibleSeg.y1);
+
+                // Calculate angle for text rotation
+                const angle = Math.atan2(visibleSeg.y2 - visibleSeg.y1, visibleSeg.x2 - visibleSeg.x1);
+                let displayAngle = angle;
+                if (Math.abs(angle) > Math.PI / 2) {
+                    displayAngle = angle + Math.PI;
+                }
+
+                // Draw the label
+                ctx.save();
+                ctx.translate(labelX, labelY);
+                ctx.rotate(displayAngle);
+
+                const formattedStreet = formatStreet(street);
+                ctx.strokeText(formattedStreet, 0, 0);
+                ctx.fillText(formattedStreet, 0, 0);
+
+                ctx.restore();
+                break;
+            }
+            accumulatedDistance += visibleSeg.visibleLength;
+        }
+
+        currentDistance += labelInterval;
+    }
 }
