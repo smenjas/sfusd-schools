@@ -256,7 +256,7 @@ function drawArrow(ctx, x1, y1, x2, y2, color) {
 
 function drawAddresses(ctx) {
     // Only show addresses when zoomed in enough to be readable
-    if (zoom < 30) return 0;
+    if (zoom < 25) return 0;
 
     //console.time('  drawAddresses()');
     ctx.lineJoin = 'round';
@@ -283,11 +283,13 @@ function drawAddresses(ctx) {
             ctx.arc(x, y, radius, 0, 2 * Math.PI);
             ctx.fill();
 
-            // Draw address number slightly offset so it doesn't overlap the dot
-            const offsetY = 0.125;
-            ctx.fillStyle = getColor('text');
-            ctx.strokeText(number, x, y - offsetY);
-            ctx.fillText(number, x, y - offsetY);
+            if (zoom >= 50) {
+                // Draw address number slightly offset so it doesn't overlap the dot
+                const offsetY = 0.125;
+                ctx.fillStyle = getColor('text');
+                ctx.strokeText(number, x, y - offsetY);
+                ctx.fillText(number, x, y - offsetY);
+            }
 
             addressCount++;
         });
