@@ -377,24 +377,22 @@ function drawStreetNames(ctx) {
         }
         streetSegments.get(street).push({
             cnn,
-            distance: segment.distance
+            distance: segment.distance,
+            visibleLength: calculateSegmentVisibleLength(cnn)  // Add visible length calculation
         });
     }
 
-    // Draw street names on longest segments
+    // Draw street names on segments with most visible length
     streetSegments.forEach((blocks, street) => {
-        // Find the longest segment for this street
-        const longestSegment = blocks.reduce((longest, segment) =>
-            segment.distance > longest.distance ? segment : longest
+        // Find the segment with the most visible length for this street
+        const bestSegment = blocks.reduce((best, segment) =>
+            segment.visibleLength > best.visibleLength ? segment : best
         );
 
-        // Only draw if segment is long enough for text
+        // Only draw if segment has significant visible length
         const textWidth = ctx.measureText(street).width;
-        const xy1 = segments[longestSegment.cnn].screen[0];
-        const xy2 = segments[longestSegment.cnn].screen.at(-1);
-        const length = coordsDistance(xy1, xy2);
-        if (length > textWidth / 2) {
-            drawStreetNameOnSegment(ctx, street, longestSegment.cnn);
+        if (bestSegment.visibleLength > textWidth / 4) {  // Adjust threshold as needed
+            drawStreetNameOnSegment(ctx, street, bestSegment.cnn);
         }
     });
     //console.timeEnd('  drawStreetNames()');
@@ -1657,3 +1655,70 @@ window.addEventListener('resize', () => {
     resizeCanvases();
     requestRedraw();
 });
+
+function calculateVisibleLineLength(x1, y1, x2, y2, margin = 0) {
+    // Get viewport bounds
+    margin /= zoom;
+    const canvas = canvases.bg;
+    const rectLeft = panX - margin;
+    const rectTop = panY - margin;
+    const rectRight = panX + canvas.width / zoom + margin;
+    const rectBottom = panY + canvas.height / zoom + margin;
+
+    // Clip line segment to rectangle using Liang-Barsky algorithm
+    let t0 = 0, t1 = 1;
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+
+    // Helper function for Liang-Barsky clipping
+    function clipTest(p, q) {
+        if (p === 0) {
+            return q >= 0;
+        }
+        const t = q / p;
+        if (p < 0) {
+            if (t > t1) return false;
+            if (t > t0) t0 = t;
+        } else {
+            if (t < t0) return false;
+            if (t < t1) t1 = t;
+        }
+        return true;
+    }
+
+    // Test against each edge of the rectangle
+    if (!clipTest(-dx, x1 - rectLeft)) return 0;  // Left edge
+    if (!clipTest(dx, rectRight - x1)) return 0;   // Right edge
+    if (!clipTest(-dy, y1 - rectTop)) return 0;    // Top edge
+    if (!clipTest(dy, rectBottom - y1)) return 0;  // Bottom edge
+
+    // Calculate the clipped segment length
+    const clippedX1 = x1 + t0 * dx;
+    const clippedY1 = y1 + t0 * dy;
+    const clippedX2 = x1 + t1 * dx;
+    const clippedY2 = y1 + t1 * dy;
+
+    const clippedLength = Math.sqrt(
+        Math.pow(clippedX2 - clippedX1, 2) +
+        Math.pow(clippedY2 - clippedY1, 2)
+    );
+
+    return clippedLength;
+}
+
+function calculateSegmentVisibleLength(cnn) {
+    const segment = segments[cnn];
+    if (!segment || segment.screen.length < 2) return 0;
+
+    let totalVisibleLength = 0;
+    const points = segment.screen;
+
+    // Sum up visible length of each line segment within the street segment
+    for (let i = 0; i < points.length - 1; i++) {
+        const [x1, y1] = points[i];
+        const [x2, y2] = points[i + 1];
+        totalVisibleLength += calculateVisibleLineLength(x1, y1, x2, y2);
+    }
+
+    return totalVisibleLength;
+}
