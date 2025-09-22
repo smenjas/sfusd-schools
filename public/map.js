@@ -1018,32 +1018,40 @@ function howFarSegment(cnn) {
     return distance;
 }
 
+function preprocessSegmentLine(line) {
+    // Convert decimals to full geographic coordinates.
+    for (let i = 0; i < line.length; i++) {
+        line[i] = expandCoords(line[i]);
+    }
+}
+
 function preprocessSegment(cnn) {
     const segment = segments[cnn];
     if (!segment) return;
     const f = segment.f;
     const t = segment.t;
 
-    // Convert decimals to full geographic coordinates.
-    for (let i = 0; i < segment.line.length; i++) {
-        segment.line[i] = expandCoords(segment.line[i]);
-    }
+    preprocessSegmentLine(segment.line);
 
     // Allow fast segment lookup by junction CNN.
-    if (!segmentJunctions[f]) {
-        segmentJunctions[f] = {};
+    if (segment.to !== f) {
+        if (!segmentJunctions[f]) {
+            segmentJunctions[f] = {};
+        }
+        if (!segmentJunctions[f][t]) {
+            segmentJunctions[f][t] = [];
+        }
+        segmentJunctions[f][t].push(cnn);
     }
-    if (!segmentJunctions[f][t]) {
-        segmentJunctions[f][t] = [];
+    if (segment.to !== t) {
+        if (!segmentJunctions[t]) {
+            segmentJunctions[t] = {};
+        }
+        if (!segmentJunctions[t][f]) {
+            segmentJunctions[t][f] = [];
+        }
+        segmentJunctions[t][f].push(cnn);
     }
-    segmentJunctions[f][t].push(cnn);
-    if (!segmentJunctions[t]) {
-        segmentJunctions[t] = {};
-    }
-    if (!segmentJunctions[t][f]) {
-        segmentJunctions[t][f] = [];
-    }
-    segmentJunctions[t][f].push(cnn);
 
     segment.distance = howFarSegment(cnn);
 }
@@ -1052,6 +1060,14 @@ function preprocessSegments() {
     //console.time('preprocessSegments()');
     for (const cnn in segments) {
         preprocessSegment(cnn);
+    }
+    for (const cnn1 in segmentJunctions) {
+        for (const cnn2 in segmentJunctions[cnn1]) {
+            // Sort segments by distance ascending.
+            segmentJunctions[cnn1][cnn2].sort((a, b) => {
+                segments[a].distance - segments[b].distance;
+            });
+        }
     }
     //console.timeEnd('preprocessSegments()');
 }
@@ -1548,7 +1564,9 @@ function checkNeighbors(gScore, fScore, cameFrom) {
     for (const neighbor of neighbors) {
         if (closedSet.has(neighbor)) continue;
 
-        const tentativeGScore = gScore[here] + howFar(junctions[here].ll, junctions[neighbor].ll);
+        const cnn = segmentJunctions[here][neighbor][0];
+        const distance = segments[cnn].distance;
+        const tentativeGScore = gScore[here] + distance;
 
         if (!openSet.has(neighbor)) {
             // First time visiting this neighbor
