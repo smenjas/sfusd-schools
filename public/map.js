@@ -125,20 +125,26 @@ function markAllLayersDirty() {
     dirty.ui = true;
 }
 
+function updateBounds(ll) {
+    if (!bounds) {
+        bounds = {
+            maxLat: -Infinity,
+            maxLon: -Infinity,
+            minLat: Infinity,
+            minLon: Infinity,
+        }
+    }
+    const [lat, lon] = ll;
+    bounds.minLat = Math.min(bounds.minLat, lat);
+    bounds.maxLat = Math.max(bounds.maxLat, lat);
+    bounds.minLon = Math.min(bounds.minLon, lon);
+    bounds.maxLon = Math.max(bounds.maxLon, lon);
+}
+
 function calculateBounds(junctionData = junctions) {
-    let minLat = Infinity, maxLat = -Infinity;
-    let minLon = Infinity, maxLon = -Infinity;
-
-    Object.values(junctionData).forEach(junction => {
-        const [lat, lon] = junction.ll;
-        minLat = Math.min(minLat, lat);
-        maxLat = Math.max(maxLat, lat);
-        minLon = Math.min(minLon, lon);
-        maxLon = Math.max(maxLon, lon);
-    });
-
-    const latRange = maxLat - minLat;
-    const lonRange = maxLon - minLon;
+    // Must determine min/max lat/lon before calculating the range.
+    const latRange = bounds.maxLat - bounds.minLat;
+    const lonRange = bounds.maxLon - bounds.minLon;
 
     // Calculate the actual geographic aspect ratio of SF.
     // At SF's latitude, 1° longitude ≈ 0.79 × 1° latitude in distance.
@@ -151,10 +157,10 @@ function calculateBounds(junctionData = junctions) {
     const lonPadding = lonRange * padding;
 
     return {
-        minLat: minLat - latPadding,
-        maxLat: maxLat + latPadding,
-        minLon: minLon - lonPadding,
-        maxLon: maxLon + lonPadding
+        minLat: bounds.minLat - latPadding,
+        maxLat: bounds.maxLat + latPadding,
+        minLon: bounds.minLon - lonPadding,
+        maxLon: bounds.maxLon + lonPadding
     };
 }
 
@@ -989,6 +995,7 @@ function preprocessAddresses() {
         Object.entries(numbers).forEach(([number, ll]) => {
             // Convert decimals to full geographic coordinates.
             addresses[street][number] = { ll: expandCoords(ll) };
+            updateBounds(addresses[street][number].ll);
         });
     });
     //console.timeEnd('preprocessAddresses()');
@@ -1001,6 +1008,7 @@ function preprocessJunctions() {
         junctions[cnn] = {};
         Object.assign(junctions[cnn], jct);
         junctions[cnn].ll = expandCoords(jct.ll);
+        updateBounds(junctions[cnn].ll);
     });
     //console.timeEnd('preprocessJunctions()');
 }
@@ -1153,6 +1161,7 @@ function loadMap() {
         }
     }
 
+    // Must determine min/max lat/lon before calling calculateBounds().
     //console.time('Preprocess data');
     preprocessAddresses();
     preprocessJunctions();
