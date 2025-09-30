@@ -806,3 +806,75 @@ export function describePath(addressData, jcts, path, start = null, end = null) 
 
     return renderList(list, true) + html;
 }
+
+/**
+ * Describe a path.
+ *
+ * @param {StreetAddresses} addressData - All SF street addresses
+ * @param {Junctions} jcts - All SF intersections
+ * @param {CNNPrefixes} path - Intersections
+ * @param {?string} start - The starting street address
+ * @param {?string} end - The ending street address
+ * @returns {string} Navigation directions, in plain text
+ */
+export function describePathText(addressData, jcts, path, start = null, end = null) {
+    if (!path?.length) {
+        return '';
+    }
+
+    start = normalizeAddress(start);
+    end = normalizeAddress(end);
+    const newPath = Array.from(path); // findTurns() may alter the path array.
+    const turns = findTurns(addressData, jcts, newPath, start, end);
+    sumDistancesBetweenTurns(addressData, jcts, turns, path, newPath, start, end);
+    //logCNNs(jcts, newPath);
+
+    let list = [];
+    let total = 0;
+
+    for (let i = 0; i < newPath.length; i++) {
+        const cnn = newPath[i];
+
+        if (!(cnn in turns)) {
+            // We didn't turn at this intersection: don't mention it.
+            continue;
+        }
+
+        let { azimuth, distance, street } = turns[cnn];
+
+        let text = 'Go ';
+        if (azimuth !== null) {
+            text += azimuthToDirection(azimuth);
+        }
+
+        let streetName = formatStreet(street);
+        if (streetName?.endsWith(' ramp')) {
+            streetName = 'the ' + streetName;
+        }
+        text += ` on ${streetName} ${formatDistance(distance)}`;
+
+        list.push(text);
+        total += distance;
+    }
+
+    if (end !== null) {
+        list.push(`Arrive at ${formatStreet(end)}`);
+    }
+
+    let text = '';
+    let count = 0;
+
+    for (const item of list) {
+        text += `${++count}. ${item}\n`;
+    }
+
+    const sum = sumDistances(addressData, jcts, path, start, end);
+    if (numbersMatch(total, sum)) {
+        text += `\nTotal: ${formatDistance(total)}\n`;
+    } else {
+        text += `Total: ${total} mi.\n`;
+        text += `Sum: ${sum} mi.\n`;
+    }
+
+    return text;
+}
