@@ -1170,7 +1170,10 @@ function loadMap() {
 
     // Must calculate map boundaries before calling resizeCanvases().
     bounds = calculateBounds();
-    console.log(`Map bounds: lat ${bounds.minLat.toFixed(5)} - ${bounds.maxLat.toFixed(5)}, lon ${bounds.minLon.toFixed(5)} - ${bounds.maxLon.toFixed(5)}`);
+    const latMean = (parseFloat(bounds.minLat) + parseFloat(bounds.maxLat)) / 2;
+    const latDistance = howFar([bounds.minLat, bounds.minLon], [bounds.maxLat, bounds.minLon]);
+    const lonDistance = howFar([latMean, bounds.minLon], [latMean, bounds.maxLon]);
+    console.log(`Map bounds: lat ${bounds.minLat} - ${bounds.maxLat}, lon ${bounds.minLon} - ${bounds.maxLon}, ${lonDistance.toFixed(1)} mi. x ${latDistance.toFixed(1)} mi.`);
 
     addEventListeners();
 
