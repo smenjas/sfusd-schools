@@ -124,16 +124,17 @@ for (const school of schoolData) {
         maxFeet = feet;
         maxName = name;
     }
-    console.log(school.name, school.address, school.ll, coords, feet);
+    //console.log(school.name, school.address, school.ll, coords, feet);
 }
 
+const threshold = 328; // 100 meters in feet
 discrepancies.sort((a, b) => a.feet - b.feet);
-
 for (const discrepancy of discrepancies) {
+    if (discrepancy.feet < threshold) continue;
     console.log(discrepancy);
 }
 
-console.log({minName, minFeet, maxName, maxFeet});
+//console.log({minName, minFeet, maxName, maxFeet});
 
 // How long is the longest street address?
 let maxLength = 0;
