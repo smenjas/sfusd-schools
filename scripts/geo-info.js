@@ -2,12 +2,13 @@
  * @file Analyze geographic data.
  */
 
-import schoolData from '../public/school-data.js';
-import addressData from '../public/address-data.js';
+import { splitStreetAddress } from '../public/address.js';
 import { expandCoords,
          getMapURL,
          howFar,
          lonToMilesFactor } from '../public/geo.js';
+import addressData from '../public/address-data.js';
+import schoolData from '../public/school-data.js';
 
 /**
  * Generate a Google Maps URL.
@@ -97,9 +98,7 @@ const discrepancies = [];
 
 for (const school of schoolData) {
     const name = `${school.name} ${school.types[0]}`;
-    const parts = school.address.split(' ');
-    const num = parts.shift();
-    const street = parts.join(' ').toUpperCase().replace(/[^A-Z0-9\s]/g, '');
+    const [num, street] = splitStreetAddress(school.address, true);
     if (!(street in addressData)) {
         console.log('Street not found:', street, 'for', name);
         continue;
