@@ -38,6 +38,7 @@ const server = http.createServer((request, response) => {
     case '/path.js':
     case '/paths.js':
     case '/junctions.js':
+    case '/route.js':
     case '/segments.js':
     case '/sort.js':
     case '/string.js':
