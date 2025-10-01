@@ -200,6 +200,7 @@ export function getStreetSuffixes() {
         CIR: 'CIRCLE',
         CT: 'COURT',
         DR: 'DRIVE',
+        EXPY: 'EXPRESSWAY',
         //HL: 'HILL',
         HWY: 'HIGHWAY',
         LN: 'LANE',
