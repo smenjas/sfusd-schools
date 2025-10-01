@@ -1,6 +1,6 @@
 import { formatStreet } from './address.js';
 import { expandCoords, howFar } from './geo.js';
-import { describePathText } from './path.js';
+import Path from './route.js';
 import addressData from './address-data.js';
 import jcts from './junctions.js';
 import schools from './school-data.js';
@@ -13,7 +13,6 @@ let contexts = { bg: null, pf: null, ui: null };
 const dirty = { bg: true, pf: true, ui: true };
 let canvasAspectRatio, mapAspectRatio;
 let mapDisplayWidth, mapDisplayHeight, mapOffsetX, mapOffsetY;
-let start, end, isPathfinding = false;
 let zoom = 1;
 const minZoom = 1.0;
 const maxZoom = 100;
@@ -70,12 +69,6 @@ const colors = {
         text: '#fff' // White
     }
 };
-
-// A* visualization state
-let openSet = new Set();
-let closedSet = new Set();
-let here = null;
-let path = [];
 
 function info(message = '') {
     document.getElementById('infoPanel').textContent = message;
@@ -698,8 +691,8 @@ function drawJunctions(ctx) {
         junctionCount++;
 
         // Skip special junctions for later
-        if (cnn === start || cnn === end || here === cnn ||
-            openSet.has(cnn) || closedSet.has(cnn)) {
+        if (cnn === Path.start || cnn === Path.end || cnn === Path.here ||
+            Path.openSet.has(cnn) || Path.closedSet.has(cnn)) {
             continue;
         }
 
@@ -716,15 +709,15 @@ function drawPathSearch(ctx) {
     const radius = Math.min(0.5, 20 / zoom);
 
     // 2nd pass: Draw current node
-    if (here && junctions[here]) {
-        const [x, y] = junctions[here].screen;
+    if (Path.here && junctions[Path.here]) {
+        const [x, y] = junctions[Path.here].screen;
         if (visible(x, y)) {
             drawJunction(ctx, x, y, radius * 7, getColor('current'));
         }
     }
 
     // 3rd pass: Draw closed set
-    closedSet.forEach(cnn => {
+    Path.closedSet.forEach(cnn => {
         if (!junctions[cnn]) return;
         const [x, y] = junctions[cnn].screen;
         if (invisible(x, y)) return;
@@ -732,7 +725,7 @@ function drawPathSearch(ctx) {
     });
 
     // 4th pass: Draw open set
-    openSet.forEach(cnn => {
+    Path.openSet.forEach(cnn => {
         if (!junctions[cnn]) return;
         const [x, y] = junctions[cnn].screen;
         if (invisible(x, y)) return;
@@ -749,15 +742,15 @@ function drawSelectedJunction(ctx, x, y, color) {
 
 function drawJunctionStart(ctx) {
     // 5th pass: Draw starting point
-    if (!start || !junctions[start]) return;
-    const [x, y] = junctions[start].screen;
+    if (!Path.start || !junctions[Path.start]) return;
+    const [x, y] = junctions[Path.start].screen;
     drawSelectedJunction(ctx, x, y, getColor('start'));
 }
 
 function drawJunctionEnd(ctx) {
     // 6th pass: Draw end point
-    if (!end || !junctions[end]) return;
-    const [x, y] = junctions[end].screen;
+    if (!Path.end || !junctions[Path.end]) return;
+    const [x, y] = junctions[Path.end].screen;
     drawSelectedJunction(ctx, x, y, getColor('end'));
 }
 
@@ -770,7 +763,7 @@ function drawJunctionLabels(ctx) {
         if (invisible(x, y)) continue;
 
         const cnnNum = parseInt(cnn);
-        if (cnnNum === start || cnnNum === end) {
+        if (cnnNum === Path.start || cnnNum === Path.end) {
             ctx.font = `${Math.min(1.5, 18 / zoom)}px Arial`;
             ctx.lineWidth = 3 / zoom;
         } else {
@@ -877,7 +870,7 @@ function drawMap() {
 }
 
 function drawPath(ctx) {
-    if (path.length < 2) return;
+    if (Path.path.length < 2) return;
 
     ctx.strokeStyle = getColor('path');
     ctx.lineWidth = Math.min(4, 25 / zoom);
@@ -885,8 +878,8 @@ function drawPath(ctx) {
     ctx.lineJoin = 'round';
     ctx.beginPath();
 
-    for (let i = 0; i < path.length - 1; i++) {
-        const cnn1 = path[i], cnn2 = path[i + 1];
+    for (let i = 0; i < Path.path.length - 1; i++) {
+        const cnn1 = Path.path[i], cnn2 = Path.path[i + 1];
         const cnn = segmentJunctions[cnn1][cnn2][0];
         drawSegment(ctx, cnn);
     }
@@ -1322,7 +1315,7 @@ function handleWheel(e) {
 
 function handleClick(e) {
     // Ignore clicks that happen immediately after dragging
-    if (isDragging || isPathfinding || hasSignificantlyDragged) {
+    if (isDragging || Path.isPathfinding || hasSignificantlyDragged) {
         hasSignificantlyDragged = false; // Reset for next interaction
         return;
     }
@@ -1458,7 +1451,7 @@ function handleTouchEnd(e) {
         // No more touches - check if this was a tap
         const touchDuration = Date.now() - touchStartTime;
 
-        if (!touchMoved && !isPathfinding &&
+        if (!touchMoved && !Path.isPathfinding &&
             touchDuration < tapMaxDuration &&
             isDragging && !isPinching) {
 
@@ -1485,16 +1478,16 @@ function handleTouchEnd(e) {
 }
 
 function selectJunction(cnn) {
-    if (!start) {
-        start = parseInt(cnn);
+    if (!Path.start) {
+        Path.start = parseInt(cnn);
         info('Select an end point to find a path.');
         dirty.ui = true;
         drawMap();
         return;
     }
 
-    if (!end && cnn !== start) {
-        end = parseInt(cnn);
+    if (!Path.end && cnn !== Path.start) {
+        Path.end = parseInt(cnn);
         document.getElementById('findPathBtn').disabled = false;
         info('Start and end points selected.');
         dirty.ui = true;
@@ -1503,8 +1496,8 @@ function selectJunction(cnn) {
     }
 
     // Reset selection
-    start = parseInt(cnn);
-    end = null;
+    Path.start = parseInt(cnn);
+    Path.end = null;
     document.getElementById('findPathBtn').disabled = true;
     info('Select an end point to find a path.');
     dirty.pf = true;
@@ -1557,13 +1550,7 @@ function fitToView() {
 }
 
 function resetSelection() {
-    start = null;
-    end = null;
-    isPathfinding = false;
-    openSet.clear();
-    closedSet.clear();
-    here = null;
-    path = [];
+    Path.path.reset();
 
     document.getElementById('findPathBtn').disabled = true;
     info('Selection reset. Click two junctions to set new start/end points.');
@@ -1571,122 +1558,8 @@ function resetSelection() {
     drawMap();
 }
 
-function checkNeighbors(gScore, fScore, cameFrom) {
-    const neighbors = junctions[here].adj.filter(cnn => junctions[cnn]);
-    for (const neighbor of neighbors) {
-        if (closedSet.has(neighbor)) continue;
-
-        const cnn = segmentJunctions[here][neighbor][0];
-        const distance = segments[cnn].distance;
-        const tentativeGScore = gScore[here] + distance;
-
-        if (!openSet.has(neighbor)) {
-            // First time visiting this neighbor
-            openSet.add(neighbor);
-            cameFrom[neighbor] = here;
-            gScore[neighbor] = tentativeGScore;
-            fScore[neighbor] = gScore[neighbor] + howFar(junctions[neighbor].ll, junctions[end].ll);
-        } else if (tentativeGScore < (gScore[neighbor] || Infinity)) {
-            // Found a better path to this neighbor
-            cameFrom[neighbor] = here;
-            gScore[neighbor] = tentativeGScore;
-            fScore[neighbor] = gScore[neighbor] + howFar(junctions[neighbor].ll, junctions[end].ll);
-        }
-        // If tentativeGScore >= existing gScore, don't update anything
-    }
-}
-
-function reconstructPath(cameFrom) {
-    let current = end;
-    const pathSet = new Set();
-    const maxPathLength = Object.keys(junctions).length;
-
-    while (current && path.length < maxPathLength) {
-        if (pathSet.has(current)) {
-            // Cycle detected - use the path we have so far
-            console.warn(`Circular reference detected at node ${current}. Using partial path.`);
-            break;
-        }
-
-        pathSet.add(current);
-        path.unshift(current);
-        current = cameFrom[current];
-    }
-
-    if (path.length >= maxPathLength) {
-        console.error("Path reconstruction hit length limit - using partial path");
-    }
-
-    // Validate the path we have
-    if (!path.length) {
-        console.error("No valid path could be reconstructed");
-    }
-
-    console.log(`Path reconstructed: ${path.join(' -> ')} (${path.length} nodes)`);
-    const description = describePathText(addressData, jcts, path);
-    console.log(description);
-
-    // Optional: Check if we actually reached the start
-    if (path[0] !== start) {
-        console.warn(`Path doesn't reach start node. Got to ${path[0]}, wanted ${start}`);
-    }
-}
-
-async function findPath() {
-    if (!start || !end || isPathfinding) return;
-    console.time('findPath()');
-
-    isPathfinding = true;
-    document.getElementById('findPathBtn').disabled = true;
-
-    // Initialize A*
-    openSet.clear();
-    closedSet.clear();
-    path = [];
-
-    const gScore = {};
-    const fScore = {};
-    const cameFrom = {};
-
-    openSet.add(start);
-    gScore[start] = 0;
-    fScore[start] = howFar(junctions[start].ll, junctions[end].ll);
-
-    while (openSet.size > 0) {
-        // Find node with lowest fScore
-        here = Array.from(openSet).reduce((lowest, node) =>
-            fScore[node] < fScore[lowest] ? node : lowest
-        );
-
-        if (here === end) {
-            reconstructPath(cameFrom);
-            break;
-        }
-
-        openSet.delete(here);
-        closedSet.add(here);
-
-        checkNeighbors(gScore, fScore, cameFrom);
-
-        // Update display
-        dirty.pf = true;
-        requestRedraw();
-        info(`A* running... Current: ${here} | Open: ${openSet.size} | Closed: ${closedSet.size}`);
-
-        // Brief pause for visualization
-        const speed = parseInt(document.getElementById('animationSpeed').value);
-        await new Promise(resolve => setTimeout(resolve, speed));
-    }
-
-    info(path.length > 0 ?
-        `Path found! ${path.length} junctions, ${gScore[end].toFixed(1)} mi.` :
-        'No path found!');
-
-    here = null;
-    isPathfinding = false;
-    document.getElementById('findPathBtn').disabled = false;
-    console.timeEnd('findPath()');
-
+function findPath() {
+    Path.find();
     dirty.pf = true;
     requestRedraw();
 }
