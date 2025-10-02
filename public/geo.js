@@ -82,11 +82,11 @@ export function getMapURL(search) {
  *
  * @param {?LatLon} a - Decimal degrees latitude and longitude
  * @param {?LatLon} b - Decimal degrees latitude and longitude
- * @returns {?number} Distance in miles
+ * @returns {number} Distance in miles
  */
 export function howFar(a, b) {
     if (!a || !b) {
-        return null;
+        return Infinity;
     }
     const latDiff = Math.abs(a[0] - b[0]);
     const lonDiff = Math.abs(a[1] - b[1]);

@@ -752,7 +752,7 @@ function renderGradeRange(school) {
  * @returns {string} A distance in miles, or the empty string
  */
 function renderDistance(distance) {
-    if (distance === null || distance === undefined) {
+    if (distance === null || distance === undefined || distance === Infinity) {
         return '';
     }
     return distance.toFixed(1) + ' mi.';

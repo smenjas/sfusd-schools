@@ -60,9 +60,9 @@ export default class GeoTest {
 
     static howFar() {
         const tests = [
-            [[], null],
-            [[null, [0, 0]], null],
-            [[[0, 0], null], null],
+            [[], Infinity],
+            [[null, [0, 0]], Infinity],
+            [[[0, 0], null], Infinity],
             [[[0, 0], [0, 0]], 0],
             [[[0, 0], [0, 1]], 69], // 1° of longitude at the equator
             [[[0, 0], [1, 0]], 69], // 1° of latitude, just north of the equator
