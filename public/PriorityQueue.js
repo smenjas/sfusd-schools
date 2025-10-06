@@ -104,6 +104,9 @@ function reconstructPath(cameFrom, here) {
         here = cameFrom.get(here);
     }
 
+    path.unshift(here);
+    path.pop();
+
     return path;
 }
 
