@@ -1022,7 +1022,7 @@ export default [
         urls: {
             main: 'https://www.sfusd.edu/school/san-miguel-early-education-school',
             usnews: null,
-            greatschools: null,
+            greatschools: 'https://www.greatschools.org/california/san-francisco/22270-San-Miguel-Children-Center/',
         },
     },
     {
@@ -1627,7 +1627,7 @@ export default [
         urls: {
             main: 'https://www.sfusd.edu/school/theresa-s-mahler-early-education-school',
             usnews: null,
-            greatschools: null,
+            greatschools: 'https://www.greatschools.org/california/san-francisco/24748-Mahler-Theresa-S.-Children-Center/',
         },
     },
     {
@@ -1867,7 +1867,7 @@ export default [
         urls: {
             main: 'https://www.sfusd.edu/school/raphael-weill-early-education-school',
             usnews: null,
-            greatschools: null,
+            greatschools: 'https://www.greatschools.org/california/san-francisco/22228-Weill-Raphael-Children-Center/',
         },
     },
     {
@@ -3107,7 +3107,7 @@ export default [
         urls: {
             main: 'https://www.sfusd.edu/school/jefferson-early-education-school',
             usnews: null,
-            greatschools: null,
+            greatschools: 'https://www.greatschools.org/california/san-francisco/22222-Jefferson-Nursery/',
         },
     },
     {
