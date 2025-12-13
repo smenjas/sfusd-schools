@@ -2838,7 +2838,7 @@ export default [
         campus: '',
         types: ['Elementary', 'K-8', 'Middle'],
         charter: true,
-        start: '8:40',
+        start: '8:45',
         neighborhood: 'Russian Hill',
         address: '940 Filbert St',
         zip: '94133',
@@ -2862,7 +2862,7 @@ export default [
         female: 47,
         male: 53,
         seatsPerApp: null,
-        languages: [],
+        languages: ['Spanish'],
         feedsInto: [],
         urls: {
             main: 'https://www.newschoolsf.org/',
